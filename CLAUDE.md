@@ -31,6 +31,7 @@ The system expects three distinct LLM agent roles. A single conversation may swi
 - **Job**: deep-dive a specific entity, concept, or supply-chain bottleneck and extend the wiki accordingly.
 - **Reads**: web (via WebFetch / WebSearch), `raw/`, existing `wiki/` entity pages.
 - **Writes**: `philosophy/entities/*.md` (when adding a new ticker to coverage), new `wiki/` synthesis pages.
+- **Also writes**: `tech/<slug>.md` — technology-trend due-diligence pages (recommend-only; see the `tech/` layer note below).
 - **Mandatory**: every external claim needs a source line (URL + retrieval date). Claims without sourcing are deleted by the Risk Officer on review.
 
 ### 1.3 Risk Officer
@@ -119,6 +120,17 @@ Rules:
 - Internal references use `[[path/to/page]]` Obsidian style. Markdown URL links (`[text](url)`) are for external sources only.
 - Length: synthesis pages 300–800 words, entity pages 200–500 words, concept pages 200–400 words. Longer = needs a split.
 - Tone: clinical, falsifiable. No marketing language. No hype. "NVDA could rally" is forbidden; "if [[concepts/golden-cross]] confirms on the daily and [[concepts/distance-from-52w-high]] < 8%, the strategy-B trigger fires" is the target voice.
+
+
+## 6b. The `tech/` due-diligence layer
+
+`tech/` is the technology-trend due-diligence layer — upstream of the investment layer, recommend/research-only. Each page screens ONE hot narrative for 質變 (real qualitative change) vs 同溫層 (echo chamber) on the 5-axis rubric in `tech/00_framework.md` (A1 技術底蘊 / A2 需求真實性 / A3 資金·權威 / A4 供應鏈可投資性 / A5 顛覆向量), emitting a verdict ∈ {質變, 結構, 過熱, 太早}.
+
+- Frontmatter: `type: synthesis`, `domain: tech-trend`, plus `verdict`, `rubric`, `confidence`, the usual `as_of_timestamp` + `author_role`.
+- A verdict is a SCREEN OUTPUT, not a recommendation. It does not bypass the Risk Officer (§1.3), the position/concentration caps ([[philosophy/08-risk-and-position]]), or the 十足的證據 gate ([[philosophy/concepts/evidence-gated-rebalance]]).
+- Anti-echo-chamber mandate: weight CAPITAL + ADOPTION + AUTHORITY data over narrative; every page names its "echo-chamber gap."
+- Navigation hub: `tech/index.md`; scored matrix: `tech/scoreboard.md`; synergies: `tech/99_cross_synthesis.md`.
+- Verdict → quant bridge: `tech/cross-validation-quant.md` reconciles each verdict against `bubble_guard` + the evidence gate. The US-listed investable-node basket is wired into `src/sharks/scoring/fom.py` (`TECH_DD_NODES`) so a live FOM scan splits "結構 but healthy" from "結構 but 過熱 (bubble_guard −95)".
 
 ---
 

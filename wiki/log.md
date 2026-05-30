@@ -350,3 +350,12 @@ Principal set target FOM40/Value30/Moonshot20/Hedge10; classify real holdings. F
 - **`src/sharks/backtest/sleeve_classifier.py`** — tags each holding into FOM_CORE/VALUE/MOONSHOT/HEDGE/DEAD via leveraged registry + Buffett quality + curated beaten-quality/value-trap/dead sets; rolls up vs target, emits trim(over-cap)+add(under) actions. +12 tests. Also added TSLL (2x TSLA) to leveraged registry (was mis-classified FOM_CORE).
 - **Applied to real P1 (investable ~$10k)**: MOONSHOT **59.9%** (target 20% → OVER +39.9pp / +$4,013), VALUE 6.7% (target 30% → UNDER −$2,343), FOM_CORE 28.6% (−$1,141), HEDGE 4.7% (−$529). Trim order (worst-decay first): LABU(3x)/TARK(2x)/NOWL/AAPB/LULG/RBLU/OKLL/TSLL. Value-sleeve現有 NKE/LULU/STZ/MRNA; value-traps飆股化 UAA/VFC. Persisted outputs/sleeve-classification-p1.json.
 - Headline: P1 是「飆股 sleeve 爆表 ~3×上限、價值 sleeve 幾乎空」→ 縮槓桿換跌深品質股是主軸。
+
+## [2026-05-31 07:15 ET] build | tech/ DD layer integration (消化整合)
+
+Digest + integrate the tech/ technology-trend due-diligence layer. Full suite **384 passed / 0 failed**.
+
+- **FOM universe**: added `TECH_DD_NODES` (11 US-listed investable nodes from tech/cross-validation-quant §3: INTU/ADBE/LLY/NVO/UBER/DASH/SPOT/HSAI/MBLY/RXRX/SDGR) + IP_DEFENSIBILITY entries → universe 105→116. Lets the "live FOM scan" that page asked for actually run.
+- **Live scan executed** (tech/cross-validation-quant §3.1, as_of 2026-05-31): split the basket 結構但過熱 (MU −95 / LITE −55 / COHR −40 = memory/optical froth, DD confirmed) vs 結構但健康 (UBER/SPOT/DASH platforms + LLY/NVO GLP-1 all bubble_guard 0 = real cashflow). Mapped to sleeves: LLY/UBER/AVGO=FOM-core watch; MU/LITE/COHR=wait-for-pullback; RXRX/SDGR=ring-fenced moonshot.
+- **CLAUDE.md**: fixed orphan code-fence in §6b; added verdict→quant-bridge pointer (TECH_DD_NODES + the 結構健康/過熱 split).
+- tech/ master read (no page-level 質變; most hot themes 結構=已被定價; only GLP-1 near-質變現金流) is consistent with wiki/07_ai_bubble_audit late-cycle thesis + my term-structure work.

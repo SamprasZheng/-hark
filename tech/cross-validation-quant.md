@@ -54,6 +54,33 @@ Per [[../philosophy/concepts/evidence-gated-rebalance]]: 進攻需 ≥4/5 維（
 
 > 可由 `sharks fom-scan`（[[../wiki/22_streamlit_page11_deep_research_ai|deep-research]] / `src/sharks/scoring/fom.py`）對上述籃子執行；非美標的須等 [[../wiki/log]] 記錄的 ticker-suffix 支援。
 
+### §3.1 Live FOM scan result (as_of 2026-05-31)
+
+US-listed nodes now wired into `DEFAULT_UNIVERSE` (`TECH_DD_NODES`); live FOM +
+`bubble_guard` (as_of 2026-05-29 monthly), sorted by FOM. **結構但過熱** (avoid /
+wait for pullback) vs **結構但健康** (better entry) split:
+
+| Node | FOM | bubble_guard | read |
+|---|:--:|:--:|---|
+| MU | 49.9 | **−95** | 🔴 結構但過熱 — memory froth (DD confirmed) |
+| LITE | 53.9 | **−55** | 🔴 結構但過熱 — optical froth |
+| COHR | 53.1 | −40 | 🟠 mild-stress — optical |
+| FN | 55.1 | 0 | 🟢 結構但健康 — optical, cleaner than COHR/LITE |
+| AVGO / NVDA | 54.9 / 54.4 | +15 | 🟢 leadership healthy |
+| SPOT / UBER / DASH | 50.7 / 50.3 / 48.5 | 0 | 🟢 platforms — real FCF, not froth |
+| **LLY** | 48.5 | 0 | 🟢 GLP-1 近質變 cashflow, healthy bubble_guard |
+| NVO / ADBE / MBLY / INTU | 43.4 / 43.0 / 40.1 / 38.2 | 0 | 🟢 結構, not extended |
+| HSAI | 48.0 | +30 | 🟢 healthy bg but low IP (45) — sensor commoditising |
+| SDGR / RXRX | 40.5 / 37.5 | −15 | 🟠 太早 — AI-drug option, mild-stress |
+
+**Read**: the DD's headline ("equity ahead of fundamental in memory/optical") is
+re-confirmed mechanically — MU −95, LITE −55, COHR −40 are the only overheated
+nodes. The platforms (UBER/SPOT/DASH) and GLP-1 (LLY/NVO) are 結構 with *healthy*
+bubble_guard → the better-entry side of the split, consistent with "real cashflow,
+not narrative." Maps to sleeves ([[../philosophy/concepts/return-horizon-structure]]):
+LLY/UBER/AVGO-type = FOM-core watch; MU/LITE/COHR = wait-for-pullback (not chase);
+RXRX/SDGR = ring-fenced moonshot at most.
+
 ## §4. 一句話 / Bottom line
 
 DD 與量化在**最關鍵處一致**：AI 週期真實、但記憶體/CPO 的**股價已過熱**（bubble_guard −95 獨立確認 DD 的 equity-ahead-of-fundamental）；領導算力層健康；量子/端側不進攻。唯一進攻候選是 GLP-1，且仍須逐檔過 5 維證據閘。下一步＝對節點籃跑 live FOM 把「結構但健康」與「結構但過熱」分流。

@@ -134,6 +134,21 @@ COMPUTEX_LAPTOP = ["QCOM"]
 # analog names not yet in the coarser groups.
 SEMI_GRANULAR = ["SITM", "RMBS", "MXL", "SLAB", "SMTC", "SYNA"]
 
+# ── 2026-05-31 tech/ DD integration ─────────────────────────────────────────
+# The US-listed investable-node basket from tech/cross-validation-quant.md §3, so
+# the "live FOM scan" that page asks for can actually run (DD verdict × FOM ×
+# bubble_guard split). Names already covered elsewhere (MSFT/CRM/NOW/META/NFLX/
+# ARM/AVGO/COHR/LITE/AXTI/FN/QCOM/IONQ/QBTS/RGTI/PLTR) are deduped by set().
+# Non-US nodes (SK Hynix/Samsung/TSMC/Sumitomo/Bachem/Ypsomed…) await Phase-2
+# ticker-suffix support and are NOT added here.
+TECH_DD_NODES = [
+    "INTU", "ADBE",          # ai-eats-software captors (thick SaaS)
+    "LLY", "NVO",            # GLP-1 realized-cashflow 質變 (the one near-質變)
+    "UBER", "DASH", "SPOT",  # youth-culture platforms (real P&L)
+    "HSAI", "MBLY",          # autonomous-driving sensing/ADAS
+    "RXRX", "SDGR",          # AI-drug-discovery (太早→結構 option)
+]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -141,7 +156,7 @@ DEFAULT_UNIVERSE = sorted(set(
     BETA_ANCHORS + R2K_AI +
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
-    SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR
+    SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───
@@ -227,6 +242,18 @@ IP_DEFENSIBILITY = {
     "SLAB": 65,  # Silicon Labs — IoT/wireless MCUs
     "SMTC": 60,  # Semtech — LoRa + signal integrity
     "SYNA": 55,  # Synaptics — edge-AI human interface (Serenity-flagged)
+    # tech/ DD nodes (2026-05-31)
+    "INTU": 78,  # Intuit — entrenched SMB/tax workflow, AI-captor not -victim
+    "ADBE": 70,  # Adobe — creative moat, GenAI both threat and tool
+    "LLY":  82,  # Eli Lilly — GLP-1 manufacturing + patent moat (近質變現金流)
+    "NVO":  78,  # Novo Nordisk — GLP-1 duopoly; orals/去中介 risk noted
+    "UBER": 68,  # Uber — two-sided network, real FCF; AV is the swing factor
+    "DASH": 62,  # DoorDash — delivery network density; thin margins
+    "SPOT": 58,  # Spotify — scale + podcasts; label-pricing dependency
+    "HSAI": 45,  # Hesai — LiDAR volume leader but commoditising sensor
+    "MBLY": 50,  # Mobileye — ADAS incumbent; vision-vs-hybrid contested
+    "RXRX": 35,  # Recursion — AI-drug platform, 太早, optionality not cashflow
+    "SDGR": 38,  # Schrodinger — physics-based drug sim; long-dated option
 }
 
 # ─── Data pull ───
