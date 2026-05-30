@@ -252,3 +252,21 @@ Private local git initialised in `$hark` (`git init -b main`, no remote, no push
 - **Existing file updates**: [[12_employee_concentration]] — added pointer banner to `personal/`, corrected 670→750萬 tax note, marked old house assumptions superseded by personal/03, added See-also links. `wiki/index.md` — added 個人財務諮詢 section. (No trading-side numbers altered.)
 - **Open (Phase 0 inputs, marked `TBD`, not fabricated)**: loan balances/rates/terms; Gogoro payment; living expenses; cash buffer; net-salary confirm; bank-recognized income for DBR; 2025 crypto loss + harvestable US losses; immediately-sellable vested NVDA; existing insurance policies; life-event timeline/budgets; 其他小存股 holdings.
 - **Boundaries respected**: no stock-pick advice, no order placement, no money movement; buying decisions deferred to $hark rubric. No edits to `src/`, `raw/`, `philosophy/`, `sharks.md`.
+
+## [2026-05-30 03:30 ET] build | Continuation — Fix E, Fix A/D promotion, funding_chain (3 more commits)
+
+Extends the 02:30 build entry. Full suite **258 passed / 0 failed** across 12 commits.
+
+- `033df07` **Fix E sector-flow** — `src/sharks/regime/sector_flow.py`: rank XL* sector ETFs by relative strength vs benchmark, `detect_rotation` (leaders/laggards/rotating_in/rotating_out), `sector_flow_score` 0-100 FOM factor. Pure-logic, 14 tests with synthetic prices.
+- `e7e9e35` **Fix A/D promotion** — `philosophy/concepts/regime-gated-scoring.md` (canonical concept), `watchlist/universe.yaml` `tier2b_fom_expansion` group + PIT snapshot `watchlist/history/universe-2026-05-28.yaml`, `docs/ROADMAP.md` Phase 3 §7 note, proposal status proposal→promoted.
+- `bff2753` **funding_chain** — `src/sharks/regime/funding_chain.py`: tier-1/2/3 indicator taxonomy (SOFR-OIS / SOFR-IORB / ccy-basis / CDX-IG-fin / HY-OAS daily; NFCI/FSI weekly; SLOOS quarterly weight-0), `funding_stress_score` → CALM/WATCH/STRESS/RUPTURE. Logic complete + 14 tests; `fetch_funding_indicators` is an explicit Phase 2 stub (FRED ALFRED). FRA-OIS deliberately absent (LIBOR ceased 2023).
+
+**regime/ modules now**: classifier, breadth_indicator, liquidity_signals, sector_flow, macro_analog, funding_chain.
+
+**Gap audit — still open**:
+- **3 concept pages from the ai-quant proposal NOT yet promoted**: `funding-chain-rupture.md`, `macro-analog-matching.md` (code exists → these would document it like regime-gated-scoring did), `institutional-btc-anchor.md` (thesis only, no code). ← natural next close-loop.
+- **CLAUDE.md §2 paper-trade amendment** — constitutional change, needs human.
+- **Strategy D (long-horizon dividend)** — proposal text only, no code.
+- **Phase 2 data layer**: FRED ALFRED + DuckDB/Parquet + content-hash manifests; MCP server wrapper. Blocks funding_chain live values + RAG-lake population.
+- **Deferred by design**: Fix F (regime sensitivity report), leveraged_etf_scorer (P1's 28 槓桿 ETF), Taiwan/Korea ticker suffix handling, QLoRA fine-tuning (until ≥500 RAG pairs + LLM-pollution protocol live).
+- **Folder rename `$hark`→`sharks`**: declined by principal.
