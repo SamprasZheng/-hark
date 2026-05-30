@@ -376,6 +376,38 @@ def bubble_guard(closes: pd.DataFrame, ticker: str, as_of: pd.Timestamp) -> floa
 _DEFAULT_WEIGHTS = REGIME_PROFILES["neutral"]["weights"]
 _DEFAULT_BUB_FLOOR = REGIME_PROFILES["neutral"]["bubble_guard_floor"]
 
+# ─── Fix B (2026-05-30): multi-horizon weight profiles ───
+# A regime-INDEPENDENT lens that re-weights the same five dimension scores under
+# short / medium / long emphasis, so a name carries three side-by-side FOMs:
+#   - 3m  (短打 / breakout): momentum-heavy, bubble_guard floored at -50 so a
+#          strong-momentum extension is not drowned (same insight as late_bull).
+#   - 12m (balanced): identical to the canonical neutral weights.
+#   - 36m (長壓 / value-mean-revert): contrarian + quality heavy, full bubble
+#          penalty (no floor) because long-horizon entries care about extension.
+# Each weights table sums to 1.0 (asserted at module load below).
+HORIZON_PROFILES: dict[str, dict] = {
+    "3m": {
+        "weights": {"momentum": 0.55, "contrarian": 0.05, "cyclic": 0.15,
+                    "quality": 0.05, "bubble_guard": 0.20},
+        "bubble_guard_floor": -50,
+    },
+    "12m": {
+        "weights": {"momentum": 0.25, "contrarian": 0.25, "cyclic": 0.15,
+                    "quality": 0.15, "bubble_guard": 0.20},
+        "bubble_guard_floor": -100,
+    },
+    "36m": {
+        "weights": {"momentum": 0.15, "contrarian": 0.30, "cyclic": 0.10,
+                    "quality": 0.30, "bubble_guard": 0.15},
+        "bubble_guard_floor": -100,
+    },
+}
+
+for _h, _prof in HORIZON_PROFILES.items():
+    _t = round(sum(_prof["weights"].values()), 6)
+    if _t != 1.0:
+        raise ValueError(f"HORIZON_PROFILES[{_h!r}] weights sum to {_t}, not 1.0")
+
 
 @dataclass
 class FOMScore:
@@ -400,17 +432,23 @@ class FOMScore:
         """Bubble guard reading after regime-supplied floor is applied."""
         return float(max(self.bubble_guard_val, self.bubble_guard_floor))
 
+    def _weighted_base(self, weights: dict, bub_floor: float) -> float:
+        """Blend the five dimension scores under an arbitrary weights table +
+        bubble_guard floor. Shared by the regime-gated base_score and the
+        multi-horizon lens so they can never drift apart."""
+        bub = max(self.bubble_guard_val, bub_floor)
+        return (
+            weights["momentum"] * self.momentum
+            + weights["contrarian"] * self.contrarian
+            + weights["cyclic"] * self.cyclic
+            + weights["quality"] * self.quality
+            # normalise the floored bubble_guard from [-100, +100] to [0, 100]
+            + weights["bubble_guard"] * ((bub + 100) / 2)
+        )
+
     @property
     def base_score(self) -> float:
-        w = self.weights
-        return (
-            w["momentum"] * self.momentum
-            + w["contrarian"] * self.contrarian
-            + w["cyclic"] * self.cyclic
-            + w["quality"] * self.quality
-            # normalise the floored bubble_guard from [-100, +100] to [0, 100]
-            + w["bubble_guard"] * ((self.bubble_guard_clamped + 100) / 2)
-        )
+        return self._weighted_base(self.weights, self.bubble_guard_floor)
 
     @property
     def persistence_boost(self) -> float:
@@ -419,6 +457,22 @@ class FOMScore:
     @property
     def final_fom(self) -> float:
         return float(self.base_score * (1.0 + self.persistence_boost))
+
+    @property
+    def horizon_scores(self) -> dict[str, float]:
+        """Regime-independent multi-horizon lens (Fix B). Returns fom_3m / fom_12m
+        / fom_36m computed from the same dimension scores under the short /
+        medium / long weight profiles, each carrying the persistence boost so the
+        numbers are comparable to final_fom. This is an analytical breakdown for
+        '短打 vs 長壓' signal separation, NOT a replacement for the regime-gated
+        final_fom (which remains the primary single number)."""
+        boost = 1.0 + self.persistence_boost
+        return {
+            f"fom_{h}": round(
+                self._weighted_base(prof["weights"], prof["bubble_guard_floor"]) * boost, 2
+            )
+            for h, prof in HORIZON_PROFILES.items()
+        }
 
 
 def score_ticker(
@@ -515,20 +569,27 @@ def main(out_dir: Path, use_regime: bool = True) -> int:
         "tickers_scored": len(scores),
         "regime": regime,
         "scoring_method": scoring_method,
-        "ranked_full": [asdict(s) | {"base_score": s.base_score, "final_fom": s.final_fom} for s in scores],
+        "horizon_profiles": {h: prof["weights"] for h, prof in HORIZON_PROFILES.items()},
+        "ranked_full": [
+            asdict(s) | {"base_score": s.base_score, "final_fom": s.final_fom,
+                         "horizon_scores": s.horizon_scores}
+            for s in scores
+        ],
         "top_3_picks": [
             {"rank": i + 1, "ticker": s.ticker, "final_fom": round(s.final_fom, 2),
              "momentum": round(s.momentum, 1), "contrarian": round(s.contrarian, 1),
              "cyclic": round(s.cyclic, 1), "quality": round(s.quality, 1),
              "bubble_guard": round(s.bubble_guard_val, 1), "sector": s.sector_etf,
-             "ip_defensibility": s.ip_defensibility}
+             "ip_defensibility": s.ip_defensibility,
+             "horizon_scores": s.horizon_scores}
             for i, s in enumerate(scores[:3])
         ],
         "top_50_watchlist": [
             {"rank": i + 1, "ticker": s.ticker, "final_fom": round(s.final_fom, 2),
              "momentum": round(s.momentum, 1), "contrarian": round(s.contrarian, 1),
              "cyclic": round(s.cyclic, 1), "quality": round(s.quality, 1),
-             "bubble_guard": round(s.bubble_guard_val, 1), "sector": s.sector_etf}
+             "bubble_guard": round(s.bubble_guard_val, 1), "sector": s.sector_etf,
+             "horizon_scores": s.horizon_scores}
             for i, s in enumerate(scores[:50])
         ],
         "bubble_alerts_negative_guard": [
