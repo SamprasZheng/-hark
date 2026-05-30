@@ -43,6 +43,10 @@ LEVERAGED_ETF_REGISTRY: dict[str, dict] = {
     "OKLL": {"underlying": "OKLO", "factor": 2, "name": "2x OKLO Daily"},
     "CRWG": {"underlying": "CRWV", "factor": 2, "name": "Leverage Shares 2x CRWV"},
     "TSLL": {"underlying": "TSLA", "factor": 2, "name": "Direxion 2x TSLA Daily Bull"},
+    "MSTX": {"underlying": "MSTR", "factor": 2, "name": "Defiance 2x MSTR Daily"},
+    "CONL": {"underlying": "COIN", "factor": 2, "name": "GraniteShares 2x COIN Daily"},
+    "FBL": {"underlying": "META", "factor": 2, "name": "GraniteShares 2x META Daily"},
+    "MSFU": {"underlying": "MSFT", "factor": 2, "name": "Direxion 2x MSFT Daily Bull"},
     # 3x index
     "LABU": {"underlying": "XBI", "factor": 3, "name": "Direxion 3x Biotech Bull"},
     "TQQQ": {"underlying": "QQQ", "factor": 3, "name": "ProShares 3x QQQ"},

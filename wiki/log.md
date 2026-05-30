@@ -367,3 +367,12 @@ Resumed after tech/ integration. Full suite **390 passed / 0 failed**.
 - **`src/sharks/backtest/value_screener.py`** — beaten-down-QUALITY screen for the value sleeve: dd −20..−70% + survivor (5y in [−25%,+250%], so NOT a momentum monster) + stabilising (3m>−20%) + vol≤55% (value=stable, not moonshot), ranked by IP-led quality-weighted value_score. +6 tests. Universe = DEFAULT_UNIVERSE + curated QUALITY_COMPOUNDERS (281 names; honest note: full S&P500/R2000 needs a vendor — lxml absent, iShares anti-bot — and scanning 2000 junk micro-caps is the wrong tool for a QUALITY screen).
 - **Result (as_of 2026-05-29)**: top low-vol cigar-butts = RSG/PAYX/ADP/CTAS/VRSK/TMUS/SPGI/KMB/BJ/BKNG/HD (vol 18-25%, beaten 20-44%); high-IP beaten = NOW(ip90,−40%,+15% 3m)/INTU(−58%)/CRM(ip88,−29%)/ISRG/NVO/UBER/SNPS. Filtered OUT momentum-in-pullback (PLTR vol65/CRWV vol179/UEC) — those are FOM/moonshot not value. outputs/value-screen.json.
 - These are the rotation targets for the P1 value-sleeve shortfall (~$2,343 under target) once moonshots are trimmed. WATCHLIST only — each must clear 十足的證據 + fundamentals confirm.
+
+## [2026-05-31 09:00 ET] build | 飆股獵手 moonshot hunter + universe→415 + OTC handling + value-candidate FOM scan
+
+Full suite **430 passed / 0 failed**.
+
+- **Value candidates FOM+bubble_guard** (Tier1+Tier2): ALL 18 healthy bubble_guard (0..+30), NONE overheated (beaten names already corrected). By 36m value-horizon: UBER 56.7 / BKNG 53.9 / CRM 52.8 / RSG 52.7 / CTAS 51.9 / TMUS 51.8 / NOW 51.1 / SNPS 51.1 / ISRG 50.9 → stage-in cleared (not 過熱).
+- **`src/sharks/scoring/moonshot_hunter.py`** — 飆股獵手: deliberate INVERSE of FOM (hype_score rewards the parabola bubble_guard penalises). Signals = volume_surge + hype (price) + insider_buying/bigtech_partnership/supply_chain_design_win (A/B-grade evidence). PURE-HYPE-NO-EVIDENCE warning (= 複委託 graveyard pattern) when price-heat high but 0 confirmed catalysts; EVIDENCE-BACKED-MOONSHOT only with ≥1 A/B catalyst. +25 tests. Concept `moonshot-hunter.md`.
+- **Leveraged registry**: +MSTX(2x MSTR)/CONL(2x COIN)/FBL(2x META)/MSFU(2x MSFT) per principal's moonshot ETF list (TSLL/LULG/CRWG/AAPB/UVIX/UVXY/SQQQ/TQQQ already in).
+- **`src/sharks/scoring/universe.py`** — full_universe() 415 (DEFAULT 116 + EXTENDED ~300), OTC OFF by default (OTC_WATCH genuine pink ADRs only), `buy_warning()` fires before any OTC/leveraged buy (如果真的要買就提醒我), `data/universe_extra.txt` drop-in = path to 1000 via vendor CSV. +14 tests. Honest: clean 500-1000 needs a vendor list (lxml absent, iShares anti-bot).

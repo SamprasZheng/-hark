@@ -70,6 +70,7 @@ Validation & ensemble (added 2026-05-31):
 - [[concepts/hotspot-sector-rotation]] — predict next-quarter sector leaders; seasonality beats momentum (measured)
 - [[concepts/nasdaq100-calibration]] — 對答案 2000-2026 + train/test split; optimal weights invert with horizon
 - [[concepts/return-horizon-structure]] — term-structure: daily reversal → monthly momentum → annual value (the 3-sleeve basis)
+- [[concepts/moonshot-hunter]] — 飆股獵手: evidence-gated high-variance scorer (volume/insider/partnership), the deliberate inverse of FOM
 
 Analyst Models (externally sourced, internalised into the framework):
 - [[concepts/chip-flow-single-point-breakout]] — single-point chip-flow breakout (reference analyst-model implementation)
@@ -107,6 +108,7 @@ Institutional:
 - `raw/` — read-only ingest of external sources (Fed releases, earnings transcripts, KOL feeds, Finviz CSVs)
 - `watchlist/universe.yaml` — the structured ticker universe
 - `outputs/` — daily `picks-YYYY-MM-DD.json` machine-readable outputs
+- `tech/` — technology-trend due-diligence (質變-vs-同溫層 screen; recommend-only; hub `tech/index.md`)
 - `src/sharks/` — the Python implementation (Phase 2+)
 - `docs/` — roadmap, safety checklist, open-source inspirations
 
