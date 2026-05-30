@@ -217,3 +217,19 @@ Where `<action>` ∈ `{ingest, query, lint, recommendation, halt, universe, raw_
   - **Macro-analog dimension reduction**: 3-4 axis regime cube (Growth / Inflation / Liquidity / Credit), mechanism-set output not single-year nearest neighbour, decision-support framing not predictive quant. ML clustering forbidden until ≥ 50 labelled events × ≥ 5 per archetype.
 - **Constitutional impact** captured but NOT executed in this commit: ~~Do not place trades~~ → "Do not place real-money trades; paper trading allowed under Risk Officer audit; real-money graduation criteria documented". Human edits [[../CLAUDE]] after proposal approval per `_proposals/` workflow §3-4.
 - **Post-commit execution sequence** (per [[~/claude/plans/working-tree-playful-map]] §5): (1) Fix A pytest suite; (2) RAG example library prototype (replaces QLoRA in priority); (3) `docs/LLM-BACKTEST-PROTOCOL.md` runbook; (4) vintage / DuckDB storage layer; (5) QLoRA deferred indefinitely.
+
+## [2026-05-30 02:30 ET] build | Implementation session — git init + 7 commits (Fix A pytest, RAG, Serenity, LLM protocol, RSU overlay, macro-analog, Fix B)
+
+Private local git initialised in `$hark` (`git init -b main`, no remote, no push). Seven commits on `main`, full test suite **230 passed / 0 failed** (started 189/8 pre-existing failures → all cleaned).
+
+- `8cb8729` Initial — Phase 1 scaffold + Fix A regime classifier + Fix D universe 59→87 + 2 proposals + `raw/principal/` trade ingest.
+- `ddf5f4d` Fix A pytest — `tests/test_classifier.py` (39 tests): 5 regime labels, weights sum to 1, canonical-neutral backward compat, bubble_guard floor mechanic. + repaired the 2 new proposals' wikilinks.
+- `d70ebf7` RAG library — `src/sharks/ai/rag_library.py` + `rag_retrieve.py` + `data/recommendations_lake/` schema (22 tests). PIT-honest example retrieval, REPLACES QLoRA at current data scale.
+- `7d6e9c9` Serenity integration — `watchlist/serenity-supply-chain.yaml` (CPO/HBM/passives map) + `philosophy/concepts/serenity-supply-chain-bottleneck.md` analyst model + universe 87→91 (TSEM/MRVL/VPG/VSH). Also cleaned all 8 pre-existing `test_philosophy_links` failures + added 3 missing concepts to `index.md`.
+- `9ceba44` LLM-backtest pollution runbook (`docs/LLM-BACKTEST-PROTOCOL.md`, 5 defenses) + NVDA RSU `concentration_context` block in `portfolio_audit.py` (RSU 89.2% / P1 7.8% of true exposure; audit schema_version 1→2).
+- `2f7ade0` Macro-analog matcher — `src/sharks/regime/macro_analog.py` mechanism-set overlap (decision-support, NOT prediction; banned-key guard) + `data/macro_analog_events/` (2000-dotcom, 2008-subprime) (15 tests).
+- `c439b86` Fix B multi-horizon — `FOMScore.horizon_scores` → fom_3m/12m/36m via `HORIZON_PROFILES`; output JSON carries horizon breakdown (13 tests).
+
+**Tag**: `baseline-2026-05-30` at the initial commit.
+
+**Still open** (not built this session): Fix E sector-flow (needs yfinance live data — logic testable with synthetic), `src/sharks/regime/funding_chain.py` (needs FRED ALFRED + market-data clients — Phase 2), vintage/DuckDB storage layer (Phase 2), the human-review-then-promote step for both `_proposals/` (CLAUDE.md §2 paper-trade amendment, ROADMAP patches, concept-page promotion). **Folder rename `$hark`→`sharks` explicitly declined by principal.**
