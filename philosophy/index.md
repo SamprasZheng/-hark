@@ -50,13 +50,19 @@ Behavioural (Andy's constitution principles, formalised):
 - [[concepts/objective-watershed]] — pre-committed price levels driving bias
 - [[concepts/farmer-mindset]] — explicit rejection of crowded-trade thinking
 - [[concepts/separation-mind]] — 分別心 detection and inoculation
+- [[concepts/evidence-gated-rebalance]] — 十足的證據 discipline: default-hold, offense needs full evidence, defense may move fast (added 2026-05-31)
 
 Cyclical (added 2026-05-29):
 - [[concepts/multi-scale-cycles]] — aggregator: BTC halving + Presidential + Calendar + Sector
 - [[concepts/btc-halving-cycle]] — 4-year cycle phases
+- [[concepts/institutional-btc-anchor]] — counter-thesis: institutional float-locking may compress the 4-year cycle (added 2026-05-30)
 - [[concepts/election-cycle-year-2]] — Y2 midterm + post-Nov 100% rule
 - [[concepts/seasonal-monthly]] — SPX monthly seasonality + September weakness
 - [[concepts/sector-seasonality]] — per-sector best/worst month tables
+
+Macro / systemic (added 2026-05-30):
+- [[concepts/funding-chain-rupture]] — latency-stratified funding-stress leading indicators (why bubbles pop)
+- [[concepts/macro-analog-matching]] — 100-year regime-cube analog matching, decision-support not prediction
 
 Analyst Models (externally sourced, internalised into the framework):
 - [[concepts/chip-flow-single-point-breakout]] — single-point chip-flow breakout (reference analyst-model implementation)

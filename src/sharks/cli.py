@@ -36,6 +36,39 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_health_check(args: argparse.Namespace) -> int:
+    """Daily portfolio health-check + market-hotspot scan (mature-analyst posture).
+
+    Real implementation (not a stub): composes the regime classifier, funding-chain
+    stress, the latest portfolio-audit, leveraged-decay flags, and sector hotspots
+    into a recommend-only daily report. RECOMMEND-ONLY — never trades.
+    """
+    from pathlib import Path
+
+    from sharks.daily_health_check import run_health_check
+
+    report = run_health_check(out_dir=Path(args.out_dir), write=not args.dry_run)
+    posture = report["posture"]
+    print(f"posture        : {posture['posture']}  (systemic_risk={posture['systemic_risk']})")
+    print(f"regime         : {report['regime']['label']}")
+    print(f"funding stress : {report['funding_stress']['verdict']} "
+          f"(live={report['funding_stress'].get('live_data', False)})")
+    print(f"sizing         : {posture['sizing_guidance']}")
+    print("recommendations:")
+    for rec in report["recommendations"]:
+        tk = f" {rec.get('ticker')}" if rec.get("ticker") else ""
+        print(f"  - [{rec['type']}] {rec['action']}{tk}")
+    ph = report.get("position_health", {})
+    if ph.get("available"):
+        print(f"sell candidates: {[r['ticker'] for r in ph.get('sell_candidates', [])]}")
+        print(f"trim candidates: {[r['ticker'] for r in ph.get('trim_candidates', [])]}")
+    if posture["deploy_bear_hedges"]:
+        print("bear hedges    : ACTIVATED (也怕大空頭 — systemic trigger live)")
+    else:
+        print("bear hedges    : on standby (no systemic trigger)")
+    return 0
+
+
 def _cmd_wiki_lint(args: argparse.Namespace) -> int:
     print(
         f"[stub] sharks wiki lint called. "
@@ -85,6 +118,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="path to the raw/ source file to compile",
     )
     p_ingest.set_defaults(func=_cmd_ingest)
+
+    # `sharks health-check` — daily portfolio health-check + hotspot scan (REAL)
+    p_health = subparsers.add_parser(
+        "health-check",
+        help="daily portfolio health-check + market-hotspot scan (mature-analyst, recommend-only)",
+    )
+    p_health.add_argument(
+        "--out-dir", default="outputs",
+        help="directory holding portfolio-audit-*.json + where the report is written",
+    )
+    p_health.add_argument(
+        "--dry-run", action="store_true",
+        help="print the summary but do not write outputs/daily-health-check-*.json",
+    )
+    p_health.set_defaults(func=_cmd_health_check)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")

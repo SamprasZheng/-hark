@@ -50,10 +50,30 @@ LEVERAGED_ETF_REGISTRY: dict[str, dict] = {
     "FNGU": {"underlying": "NYFANG", "factor": 3, "name": "MicroSectors 3x FANG+"},
     # 5x (rare; Leverage Shares / European-style)
     "5QQQ": {"underlying": "QQQ", "factor": 5, "name": "Leverage Shares 5x QQQ"},
-    # Inverse
+    # Inverse index (bear hedges — leverage decay applies)
     "SBIT": {"underlying": "BTC-USD", "factor": -1, "name": "ProShares Short BTC -1x"},
     "SQQQ": {"underlying": "QQQ", "factor": -3, "name": "ProShares 3x Short QQQ"},
+    "SOXS": {"underlying": "SOXX", "factor": -3, "name": "Direxion 3x Semis Bear"},
+    "SPXU": {"underlying": "SPY", "factor": -3, "name": "ProShares 3x Short SP500"},
+    "SDOW": {"underlying": "DIA", "factor": -3, "name": "ProShares 3x Short Dow30"},
+    # VIX-futures vol products — decay is dominated by CONTANGO ROLL, not leverage
+    # variance; the f·(f-1)·σ² model UNDERSTATES their bleed by a wide margin.
+    # Long-vol (UVXY/UVIX) = crash insurance with brutal carry; short-vol (SVIX)
+    # = carry trade that blows up in a crash (cf. XIV, Feb 2018, -96% in a day).
+    "UVXY": {"underlying": "VIX", "factor": 1.5, "name": "ProShares Ultra VIX Short-Term Futures (1.5x)", "vix_futures": True},
+    "UVIX": {"underlying": "VIX", "factor": 2, "name": "Volatility Shares 2x VIX Futures", "vix_futures": True},
+    "VXX": {"underlying": "VIX", "factor": 1, "name": "iPath B S&P500 VIX Short-Term Futures (1x)", "vix_futures": True},
+    "SVIX": {"underlying": "VIX", "factor": -1, "name": "Volatility Shares -1x VIX Futures", "vix_futures": True},
+    "SVXY": {"underlying": "VIX", "factor": -0.5, "name": "ProShares Short VIX Short-Term Futures (-0.5x)", "vix_futures": True},
 }
+
+# The bear-hedge menu — products a defensive book ("也怕大空頭") can use to hedge a
+# systemic drawdown. Long-vol + inverse index. These are TACTICAL crash insurance,
+# never buy-and-hold: index inverse bleeds via leverage decay, VIX bleeds via
+# contango roll (~5-10%/month in calm markets). Size tiny; expect to bleed in calm.
+BEAR_HEDGE_TICKERS = ["SBIT", "SQQQ", "SOXS", "SPXU", "SDOW", "UVXY", "UVIX", "VXX"]
+# Short-vol products are NOT hedges — they are risk-ON carry trades with tail risk.
+SHORT_VOL_TICKERS = ["SVIX", "SVXY"]
 
 # Default annualised vol when the caller has no estimate (single-stock leverage
 # underlyings are high-vol; 0.45 is a conservative single-stock placeholder).
@@ -90,11 +110,21 @@ def score_leveraged_etf(
                 "note": "not in LEVERAGED_ETF_REGISTRY — add mapping to score"}
 
     factor = spec["factor"]
+    is_vix = spec.get("vix_futures", False)
     decay = volatility_drag(factor, annual_vol)
     abs_f = abs(factor)
     weak_underlying = underlying_fom is not None and underlying_fom < 50
 
-    if factor < 0:
+    if is_vix:
+        # VIX-futures products: the f·(f-1)·σ² leverage-decay model does NOT
+        # capture their dominant bleed (contango roll). Branch first.
+        if factor > 0:
+            # long-vol: a crash hedge that bleeds carry every calm day
+            verdict = "VOL-HEDGE-DECAY"
+        else:
+            # short-vol: a carry trade with crash tail risk — NOT a hedge
+            verdict = "SHORT-VOL-TAIL-RISK"
+    elif factor < 0:
         verdict = "INVERSE-HEDGE"
     elif abs_f >= 5:
         verdict = "AVOID"
@@ -113,21 +143,32 @@ def score_leveraged_etf(
     else:
         adjusted = None
 
+    if is_vix:
+        note = (
+            "VIX-futures product: dominant bleed is CONTANGO ROLL (~5-10%/mo in "
+            "calm markets), NOT the leverage-decay figure above (which understates "
+            "it). Long-vol = crash insurance, size tiny, expect to bleed daily. "
+            "Short-vol = carry trade with crash tail risk (cf. XIV Feb-2018 -96%)."
+        )
+    else:
+        note = (
+            "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. "
+            "Verdict is decay-first. Inverse funds are hedge instruments."
+        )
+
     return {
         "ticker": ticker,
         "known": True,
         "name": spec["name"],
         "underlying": spec["underlying"],
         "factor": factor,
+        "vix_futures": is_vix,
         "annual_vol_assumed": annual_vol,
         "annual_decay_pct": round(decay * 100, 1),
         "underlying_fom": underlying_fom,
         "decay_adjusted_score": adjusted,
         "verdict": verdict,
-        "note": (
-            "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. "
-            "Verdict is decay-first. Inverse funds are hedge instruments."
-        ),
+        "note": note,
     }
 
 
@@ -151,3 +192,31 @@ def audit_leveraged_holdings(
         out.append(score_leveraged_etf(ticker, underlying_fom=fom, annual_vol=vol))
     out.sort(key=lambda r: r["annual_decay_pct"], reverse=True)
     return out
+
+
+def bear_hedge_menu(annual_vol: float = DEFAULT_ANNUAL_VOL) -> dict:
+    """Defensive-hedge reference card for a book that 'also fears a big bear'
+    (也怕大空頭). Lists the inverse-index + long-vol instruments available as
+    *tactical* crash insurance, with their decay/carry character. NOT a
+    recommendation to hold — these all bleed in calm markets; they are sized
+    small and deployed only when a systemic-risk signal fires (see
+    src/sharks/regime/funding_chain.py + wiki/10_defensive_hedging.md).
+    """
+    hedges = [score_leveraged_etf(t, annual_vol=annual_vol) for t in BEAR_HEDGE_TICKERS]
+    short_vol = [score_leveraged_etf(t, annual_vol=annual_vol) for t in SHORT_VOL_TICKERS]
+    return {
+        "note": (
+            "Bear-market hedge menu. Inverse-index funds (SQQQ/SOXS/SPXU/SDOW, "
+            "-3x) bleed via leverage decay; VIX-futures (UVXY/UVIX/VXX) bleed via "
+            "contango roll. Both are TACTICAL crash insurance — deploy only on a "
+            "systemic-risk trigger, size ≤ a few % of NAV, expect carry bleed. "
+            "SBIT (-1x BTC) is the BTC-specific hedge."
+        ),
+        "inverse_and_long_vol_hedges": hedges,
+        "short_vol_DANGER": short_vol,
+        "deploy_when": (
+            "funding_chain stress = STRESS/RUPTURE, or regime = risk_off/"
+            "capitulation, or a confirmed systemic catalyst — never as buy-and-hold."
+        ),
+        "see": ["wiki/10_defensive_hedging.md", "src/sharks/regime/funding_chain.py"],
+    }

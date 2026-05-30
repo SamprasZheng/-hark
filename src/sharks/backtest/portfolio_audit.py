@@ -22,6 +22,10 @@ from sharks.scoring.fom import (
     fetch_monthly, momentum_score, contrarian_score, cyclic_score,
     quality_score, bubble_guard, IP_DEFENSIBILITY,
 )
+from sharks.scoring.leveraged_etf import (
+    audit_leveraged_holdings, bear_hedge_menu, is_leveraged_etf,
+    score_leveraged_etf,
+)
 
 # ─── User's actual portfolios (2026-05-30) ───
 # Format: ticker -> {percent_of_account, decoded_name, pct_account}
@@ -285,6 +289,33 @@ def main():
                            "verdict": verdict, "rationale": rationale,
                            "fom_breakdown": breakdown})
 
+    # ─── Leveraged-ETF decay audit (wired from sharks.scoring.leveraged_etf) ───
+    # Compute a base FOM for each leveraged underlying we have data for, so the
+    # decay-aware scorer can produce a decay_adjusted_score. Then audit every
+    # leveraged holding in P1 by its structural decay (worst-decay first).
+    p1_holdings_pct = {t: (d.get("pct") or 0.0) for t, d in PORTFOLIO_1.items()}
+    underlyings = {d["leveraged_of"] for d in PORTFOLIO_1.values() if d.get("leveraged_of")}
+    underlying_foms: dict[str, float] = {}
+    for u in underlyings:
+        if u in closes.columns:
+            _, _, ubd = fom_verdict(closes, u, today)
+            if ubd and ubd.get("final_fom") is not None:
+                underlying_foms[u] = ubd["final_fom"]
+    p1_leveraged_audit = audit_leveraged_holdings(
+        p1_holdings_pct, underlying_foms=underlying_foms
+    )
+    # Tag each leveraged P1 verdict back onto the per-ticker result for the reader.
+    lev_by_ticker = {r["ticker"]: r for r in p1_leveraged_audit}
+    for r in p1_results:
+        lev = lev_by_ticker.get(r["ticker"])
+        if lev:
+            r["leveraged_scorer"] = {
+                "factor": lev["factor"],
+                "annual_decay_pct": lev["annual_decay_pct"],
+                "decay_adjusted_score": lev["decay_adjusted_score"],
+                "decay_verdict": lev["verdict"],
+            }
+
     # Categorize verdicts
     def categorize(results):
         cats = {"SELL": [], "TRIM": [], "HOLD": [], "ADD": []}
@@ -302,12 +333,15 @@ def main():
 
     report = {
         "as_of": datetime.now(timezone.utc).isoformat(),
-        "schema_version": 2,
+        "schema_version": 3,
         "concentration_context": build_concentration_context(),
         "portfolio_1_audit": p1_results,
         "portfolio_2_audit": p2_results,
         "p1_summary": categorize(p1_results),
         "p2_summary": categorize(p2_results),
+        "p1_leveraged_audit": p1_leveraged_audit,
+        "leveraged_underlying_foms": {k: round(v, 1) for k, v in underlying_foms.items()},
+        "bear_hedge_menu": bear_hedge_menu(),
     }
     out_path = out_dir / f"portfolio-audit-{today.date()}.json"
     out_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")

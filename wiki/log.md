@@ -270,3 +270,23 @@ Extends the 02:30 build entry. Full suite **258 passed / 0 failed** across 12 co
 - **Phase 2 data layer**: FRED ALFRED + DuckDB/Parquet + content-hash manifests; MCP server wrapper. Blocks funding_chain live values + RAG-lake population.
 - **Deferred by design**: Fix F (regime sensitivity report), leveraged_etf_scorer (P1's 28 槓桿 ETF), Taiwan/Korea ticker suffix handling, QLoRA fine-tuning (until ≥500 RAG pairs + LLM-pollution protocol live).
 - **Folder rename `$hark`→`sharks`**: declined by principal.
+
+## [2026-05-31 00:30 ET] build | Position consume + leveraged scorer wired + 3 concept pages promoted
+
+Continuation of the 2026-05-30 session. Full suite **282 passed / 0 failed**.
+
+- **Position consume** — `raw/principal/2026-05-30-snapshot-full.md` (A-grade source): all 14 broker screenshots digested into 5 pools. P1 "Individual" (~$11.4K, 33 positions, TARK 13.3% + ~44% leveraged ETFs); P2 複委託 graveyard (Evergrande/Fisker/Farfetch/GreenGiant/IMTE/NU-Ride all −90~−100%, survivors WOLF +88%/AAPB +22%/ICLN); 台股 9A92 dividend sleeve (0056/00878/00929/00965/00983A, all green, the model sleeve); 海外 DCA (GOOG/TSLA/NFLX); NVDA RSU vest schedule overlay. Order-Status screen confirms principal already SOLD ORCX/QBTX/QUBX/RGTX/SMCL (2x single-stock names) — self-directed de-leveraging.
+- **Leveraged scorer wired into audit** — `src/sharks/scoring/leveraged_etf.py` extended: added inverse-index (SOXS/SPXU/SDOW, −3x) + VIX-futures (UVXY 1.5x / UVIX 2x / VXX 1x long-vol; SVIX/SVXY short-vol) with `vix_futures` contango-aware branch (VOL-HEDGE-DECAY vs SHORT-VOL-TAIL-RISK) + `bear_hedge_menu()` for 也怕大空頭 defensive reference. `portfolio_audit.py` now emits `p1_leveraged_audit` (worst-decay first: LABU 3x → 60.8% decay → SELL; TARK 2x → TRIM on weak ARKK), `leveraged_underlying_foms`, `bear_hedge_menu`. schema_version 2→3. +6 tests.
+- **3 concept pages PROMOTED** to `philosophy/concepts/` (canonical, indexed): `funding-chain-rupture.md` (latency-stratified Tier-1/2/3 indicators, SOFR-OIS not FRA-OIS), `macro-analog-matching.md` (3-4 axis regime cube, mechanism-set output, BANNED_OUTPUT_KEYS non-prediction guardrail), `institutional-btc-anchor.md` (4-year-cycle counter-thesis; `btc-halving-cycle.md` cross-referenced). ai-quant proposal gains a Promotion-status table.
+
+**Still open**: daily health-check capability (next), Strategy D, CLAUDE.md §2 paper-trade amendment (human), Phase 2 data layer (FRED ALFRED + DuckDB), open-source-inspirations #10/#11 entries.
+
+## [2026-05-31 01:15 ET] build | Daily health-check capability + evidence-gated rebalance discipline
+
+Closes the 2026-05-30 request set. Full suite **307 passed / 0 failed**.
+
+- **Daily health-check** — `src/sharks/daily_health_check.py` (+ `sharks health-check` CLI, real not stub). Composes regime classifier + funding_chain stress + latest portfolio-audit + leveraged-decay flags + sector_flow hotspots into a recommend-only daily report (`outputs/daily-health-check-<date>.json`). Governing posture is a 交易老手's: **default to inaction; offense needs 十足的證據; defense may move fast; systemic risk overrides to DEFENSIVE + activates the bear-hedge menu**. Today's run → regime late_bull → NEUTRAL-CAUTIOUS, funding CALM (stub), DEFAULT-HOLD + STRUCTURAL-DECAY trim on LABU (60.8%/yr), hedges on standby.
+- **Evidence gate** — `evidence_gate(evidence, action, systemic_risk)` encodes the 5-dimension 十足的證據 quorum (消息/資金/交易量/進出口/營利). Asymmetry is mechanical: offense needs ≥4/5 incl. mandatory earnings + a primary catalyst; defense clears on a systemic trigger OR ≥2/5. Absence of evidence ≠ evidence (every dim defaults UNCONFIRMED; only A/B-grade sources clear). +21 tests.
+- **Concept page** — `philosophy/concepts/evidence-gated-rebalance.md` (canonical, indexed) documents the discipline; cross-links regime-gated-scoring + funding-chain-rupture + farmer-mindset.
+
+**Session deliverable summary (2026-05-30 → 05-31)**: position consume (5 pools), leveraged scorer wired into audit (+VIX/inverse hedges + bear-hedge menu), 3 macro concept pages promoted (funding-chain / macro-analog / institutional-btc), evidence-gated daily health-check built. All local-only, recommend-only, no real trades.

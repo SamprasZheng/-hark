@@ -29,7 +29,7 @@ Each cycle's peak multiple has compressed:
 - h2020: 6.7× from entry
 - h2024 to date: 1.7× from entry
 
-This is consistent with the broader analyst consensus ("4-year cycle weakening, not broken"). ETF flows + institutional adoption dampen amplitude; pattern timing remains but magnitude compresses.
+This is consistent with the broader analyst consensus ("4-year cycle weakening, not broken"). ETF flows + institutional adoption dampen amplitude; pattern timing remains but magnitude compresses. The amplitude-dampening mechanism is developed as a standalone counter-thesis in [[institutional-btc-anchor]] — the halving clock may still set *timing* while institutional float-locking compresses *magnitude*.
 
 ## Phases within the cycle
 
@@ -90,6 +90,7 @@ If h2024 fails to print a meaningful bear market (no Phase D drawdown > 50% from
 
 ## See also
 
+- [[institutional-btc-anchor]] — counter-thesis: institutional float-locking may break/compress this cycle
 - [[../../wiki/06_cycle_framework]] §1 — full empirical data
 - [[multi-scale-cycles]] — broader framework
 - [[../03-long-short-taxonomy]] — quadrant routing for crypto positions

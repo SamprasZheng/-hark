@@ -85,6 +85,39 @@ class TestScore:
         assert out["annual_decay_pct"] == 16.0
 
 
+class TestVixAndBearHedges:
+    def test_uvxy_long_vol_hedge(self):
+        out = score_leveraged_etf("UVXY")
+        assert out["vix_futures"] is True
+        assert out["verdict"] == "VOL-HEDGE-DECAY"
+
+    def test_uvix_long_vol_hedge(self):
+        assert score_leveraged_etf("UVIX")["verdict"] == "VOL-HEDGE-DECAY"
+
+    def test_svix_short_vol_tail_risk(self):
+        out = score_leveraged_etf("SVIX")
+        assert out["verdict"] == "SHORT-VOL-TAIL-RISK"
+
+    def test_inverse_index_still_hedge_not_vix(self):
+        for t in ["SOXS", "SPXU", "SQQQ", "SDOW"]:
+            out = score_leveraged_etf(t)
+            assert out["vix_futures"] is False
+            assert out["verdict"] == "INVERSE-HEDGE"
+
+    def test_vix_note_mentions_contango(self):
+        assert "CONTANGO" in score_leveraged_etf("UVXY")["note"].upper()
+
+    def test_bear_hedge_menu_shape(self):
+        from sharks.scoring.leveraged_etf import bear_hedge_menu
+        m = bear_hedge_menu()
+        hedge_tickers = [h["ticker"] for h in m["inverse_and_long_vol_hedges"]]
+        assert "UVXY" in hedge_tickers and "SQQQ" in hedge_tickers
+        danger = [h["ticker"] for h in m["short_vol_DANGER"]]
+        assert "SVIX" in danger
+        # short-vol must NOT be presented as a hedge
+        assert "SVIX" not in hedge_tickers
+
+
 class TestAuditHoldings:
     def test_only_leveraged_scored_sorted_by_decay(self):
         holdings = {"NVDA": 0.1, "LABU": 0.05, "ORCX": 0.045, "AAPL": 0.02}

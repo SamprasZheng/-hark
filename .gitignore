@@ -62,3 +62,6 @@ raw/market_data/*.parquet
 .scratch/
 *.tmp
 .karpathy-gist-raw.txt
+
+# Derived OCR working copies of broker screenshots (originals kept as provenance)
+raw/portfolio/_resized/

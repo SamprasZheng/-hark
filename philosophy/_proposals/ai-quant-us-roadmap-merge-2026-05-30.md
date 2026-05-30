@@ -22,6 +22,23 @@ source_user_input: 2026-05-30 chat session — Project AI-Quant-US plan paste + 
 
 > Draft proposal — a documentation-only merge of a user-supplied AI-quant trading architecture into the existing `$hark` Phase 2-6 roadmap. **No code is written in this proposal**; the proposal records direction, identifies overlap with the existing roadmap, flags constitutional conflict, and absorbs a second reviewer's audit which surfaced one foundational issue (LLM-in-the-loop backtest pollution) and several 2026-time-relevance corrections to the original draft.
 
+## Promotion status (updated 2026-05-31)
+
+Tracking which proposed destinations have landed as the proposal is incrementally executed:
+
+| Proposed destination | Status | Note |
+|---|---|---|
+| `philosophy/concepts/funding-chain-rupture.md` | ✅ PROMOTED 2026-05-31 | concept page live; `src/sharks/regime/funding_chain.py` implemented (fetch is Phase-2 stub) |
+| `philosophy/concepts/macro-analog-matching.md` | ✅ PROMOTED 2026-05-31 | concept page live; `src/sharks/regime/macro_analog.py` + `data/macro_analog_events/` implemented |
+| `philosophy/concepts/institutional-btc-anchor.md` | ✅ PROMOTED 2026-05-31 | concept page live; `btc-halving-cycle.md` cross-referenced |
+| `docs/LLM-BACKTEST-PROTOCOL.md` | ✅ DONE | runbook written (§11 defenses) |
+| `philosophy/references/open-source-inspirations.md` | ⏳ pending | RAG (#11) + AWQ/Ollama (#10) entries — `rag_library.py`/`rag_retrieve.py` already coded |
+| `philosophy/10-strategies.md` (Strategy D) | ⏳ pending | long-horizon dividend-cycle strategy — human-edit step |
+| `docs/ROADMAP.md` Phase 2-6 patches | ⏳ pending | human-edit step |
+| `CLAUDE.md` §2 paper-trade amendment | ⏳ pending | human-edit step (constitutional) |
+
+The three concept pages above are now canonical (`type: concept`, not `status: proposal`) and indexed in `philosophy/index.md`. Their implementation modules already exist under `src/sharks/regime/`. The remaining destinations are deliberately human-edit steps (constitution, roadmap, strategies) per the `_proposals/` workflow.
+
 ## 1. Background
 
 User supplied a "Project AI-Quant-US" architecture (OpenClaw agent cluster + NemoClaw guardrails + MCP data server + QLoRA Llama-3-8B + AutoAWQ INT4 + vectorbt real-time backtest + Alpaca/IBKR execution). The proposal sits behind several user-clarified constraints:
