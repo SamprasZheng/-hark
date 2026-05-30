@@ -1,6 +1,6 @@
 ---
 type: reference
-status: proposal
+status: promoted
 tags: [fom, regime, universe, scoring, proposal, fix-a, fix-d]
 title: FOM regime gating (Fix A) + universe expansion (Fix D) — proposal
 author_role: compiler
@@ -9,6 +9,7 @@ proposed_destinations:
   - watchlist/universe.yaml
   - philosophy/06-cycle_framework.md
 proposed_at: 2026-05-30T01:10:00-04:00
+promoted_at: 2026-05-30T03:00:00-04:00
 source_paths:
   - src/sharks/regime/classifier.py
   - src/sharks/scoring/fom.py
@@ -17,6 +18,15 @@ source_paths:
   - outputs/breadth-indicator-2026-05-30.json
   - outputs/liquidity-signals-2026-05-30.json
 ---
+
+> **PROMOTED 2026-05-30.** Canonical artifacts now live: the concept page
+> `philosophy/concepts/regime-gated-scoring.md` (documenting Fix A), the
+> universe-of-record `watchlist/universe.yaml` `tier2b_fom_expansion` group
+> (mirroring Fix D), and the `docs/ROADMAP.md` Phase 3 §7 note. Code is in
+> `src/sharks/regime/classifier.py` + `src/sharks/scoring/fom.py` with 39
+> classifier tests + 13 horizon tests. This file is retained as the design
+> rationale + validation record. Still deferred (separate proposals): Fix F
+> regime sensitivity report, `leveraged_etf_scorer`, Taiwan ticker suffixes.
 
 # FOM regime gating + universe expansion — PROPOSAL
 

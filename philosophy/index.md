@@ -43,6 +43,7 @@ Structural:
 - [[concepts/liquidity-fishbowl]] — regime-aware sizing
 - [[concepts/cycle-resonance]] — 半年調整 / 兩個月上漲 6m bucket trigger
 - [[concepts/last-snow]] — peak macro bearishness + structural bottom co-occurrence
+- [[concepts/regime-gated-scoring]] — FOM weights as a function of the detected market regime (Fix A)
 - [[concepts/buffett-3m]] — 3-month Buffett-tier quality screen
 
 Behavioural (Andy's constitution principles, formalised):

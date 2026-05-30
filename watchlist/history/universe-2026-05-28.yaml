@@ -1,5 +1,5 @@
 schema_version: 1
-as_of: 2026-05-30
+as_of: 2026-05-28
 notes: |
   Phase 1 universe seed. Tier 1 + Tier 2 are concrete tickers; Tier 3 mid-cap pool
   remains empty until the Phase 4 Finviz screener is live (see
@@ -31,27 +31,6 @@ tiers:
       screener using the filter set in philosophy/04-sector-and-finviz.md.
       Stays empty in Phase 1.
     tickers: []
-
-  tier2b_fom_expansion:
-    description: |
-      Fix D (2026-05-30) FOM-universe expansion, mirrored from
-      src/sharks/scoring/fom.py DEFAULT_UNIVERSE so the universe-of-record and
-      the scorer agree. Promoted from
-      philosophy/_proposals/fom-regime-and-universe-2026-05-30.md.
-      US-listed only; non-US bottleneck pure plays (Taiwan/Japan/Korea/China)
-      await Phase 2 ticker-suffix support and live in
-      watchlist/serenity-supply-chain.yaml.
-    groups:
-      hardware_oem: [DELL, HPE, HPQ]
-      speculative_narrative: [MSTR, COIN, HOOD, PLTR, APP, CVNA]
-      quantum: [QBTS, IONQ, RGTI]
-      thematic_2026_buys: [RIVN, NTLA, UEC, BLDP, AOSL, LPL, TBCH, CRWV, ALGM]
-      wiki16_themes: [DNN, CCJ, BEAM, NEM, VAL, AESI, GLD]
-      serenity_supply_chain: [TSEM, MRVL, VPG, VSH]
-    notes: |
-      FOM-scoring-universe members, NOT position recommendations. Several carry
-      limited price history (CRWV, TBCH, QBTS, IONQ) → momentum defaults to
-      neutral 50 until enough history accrues.
 
 sector_buckets:
   - name: technology

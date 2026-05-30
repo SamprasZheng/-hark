@@ -64,7 +64,7 @@ Phase-by-phase plan for the Sharks system. Phase 1 (this scaffold) is complete o
 4. **Daily 10-signal generator**: `sharks pick` CLI command emits `outputs/picks-YYYY-MM-DD.json` (validated against schema) + companion `wiki/05_recommendations/YYYY-MM-DD.md`
 5. **Risk Officer agent**: gating pass before write; veto on [[../philosophy/06-exclusions]], [[../philosophy/08-risk-and-position]] violations
 6. **Mode switch logic**: `src/sharks/mode/decide.py` per [[../philosophy/07-mode-switch]] decision function spec
-7. **Macro regime detector**: `src/sharks/regime/cycle.py` + `src/sharks/regime/last_snow.py` + `src/sharks/regime/liquidity.py`
+7. **Macro regime detector**: `src/sharks/regime/cycle.py` + `src/sharks/regime/last_snow.py` + `src/sharks/regime/liquidity.py`. **(Partially delivered ahead of schedule, 2026-05-30)**: `src/sharks/regime/classifier.py` (Fix A — labels bull_trend / late_bull / neutral / risk_off / capitulation from breadth + liquidity + SPX-vs-200dma and gates FOM weights; see `philosophy/concepts/regime-gated-scoring.md`), `breadth_indicator.py`, `liquidity_signals.py`, `sector_flow.py` (Fix E — XL* rotation), `macro_analog.py` (mechanism-set historical analogs). Remaining: `cycle.py` + `last_snow.py` + `funding_chain.py` (needs FRED ALFRED client).
 8. **Wiki lint command**: `sharks wiki lint` verifies frontmatter, link resolution, `as_of_timestamp` presence, log format
 
 **Acceptance criteria**:
