@@ -1,0 +1,27 @@
+{
+  "event_id": "2000-dotcom",
+  "label": "Dotcom bubble top + unwind",
+  "period": "1999-Q4 to 2002-Q3",
+  "regime_cube": {
+    "growth": "late_expansion",
+    "inflation": "low_stable",
+    "liquidity": "tightening",
+    "credit": "complacent_then_widening"
+  },
+  "mechanisms": [
+    "equity_valuation_extreme",
+    "narrow_leadership_concentration",
+    "fed_tightening_into_slowdown",
+    "ipo_supply_glut",
+    "margin_debt_peak",
+    "single_theme_euphoria"
+  ],
+  "trigger": "Fed hiked into a decelerating economy while IPO supply glut exhausted the marginal buyer; valuation had no fundamental floor for the no-earnings cohort.",
+  "outcomes": {
+    "t_plus_1y": "Nasdaq approx -39%, SPX approx -10%",
+    "t_plus_3y": "Nasdaq trough approx -78% (Oct 2002)",
+    "t_plus_5y": "SPX recovered to near prior peak; Nasdaq still far below 2000 high"
+  },
+  "pit_note": "What was visible in real time: extreme P/S on no-earnings names, record margin debt, Fed funds rising through 1999-2000. NOT visible: the depth or the exact top date.",
+  "source_grade": "human_curated"
+}

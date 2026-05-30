@@ -1,0 +1,27 @@
+{
+  "event_id": "2008-subprime",
+  "label": "Subprime credit crisis + GFC",
+  "period": "2007-Q2 to 2009-Q1",
+  "regime_cube": {
+    "growth": "rolling_over",
+    "inflation": "spiking_then_collapsing",
+    "liquidity": "seizing",
+    "credit": "rupturing"
+  },
+  "mechanisms": [
+    "funding_chain_rupture",
+    "credit_spread_widening",
+    "bank_solvency_doubt",
+    "leverage_unwind",
+    "housing_collateral_collapse",
+    "fed_tightening_into_slowdown"
+  ],
+  "trigger": "ABCP + repo funding chain seized as subprime collateral re-priced; leverage at broker-dealers forced fire-sale deleveraging; a solvency (not just liquidity) crisis at systemic nodes.",
+  "outcomes": {
+    "t_plus_1y": "SPX approx -40% peak-to-trough into Q1 2009",
+    "t_plus_3y": "SPX recovered most of the drawdown by 2011",
+    "t_plus_5y": "New highs by 2013; financials structurally re-regulated"
+  },
+  "pit_note": "Real-time leading markers: IG-HY divergence then convergence, TED/LIBOR-OIS blowout, ABCP runoff, money-market 'breaking the buck'. The 2026 funding-chain-rupture concept is built to catch this class early.",
+  "source_grade": "human_curated"
+}
