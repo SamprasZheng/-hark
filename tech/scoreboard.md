@@ -28,6 +28,19 @@ Scored matrix of the 9 Phase-A trend pages on the [[00_framework]] rubric. Each 
 
 \* `ai-pharma-glp1` is a composite: GLP-1 sub-thread = **結構→質變 (0.85)** on realized cash flow; AI-drug-discovery sub-thread = **太早→結構 (0.60)**. The page verdict is the blend.
 
+## Phase B 矩陣（含多時程 / multi-horizon, 2026-05-31）
+
+| 趨勢 | headline | T0 (0–1y) | T1 (1–3y) | T2 (3–5y) | T3 (5–10y) | A1·A2·A3·A4·A5 | Σ | conf |
+|---|---|---|---|---|---|---|:--:|:--:|
+| [[ai-coding-agents]] | 結構 | 質變 | 結構 | 結構/質變 | open | 2·2·2·1·2 | **9** | 0.78 |
+| [[ar-vr-smart-glasses]] | 結構 | 結構 | 結構 | 太早 | 質變(條件) | 2·2·2·2·1 | **9** | 0.78 |
+| [[luxury-and-apparel]] | 結構(分化) | 過熱出清 | 結構 | 結構 | 結構 | 2·2·2·2·1 | **9** | 0.74 |
+| [[ip-economy-collectibles]] | 結構 | 過熱 | 結構 | 結構 | 質變 | 2·2·2·1·1 | **8** | 0.74 |
+| [[defense-tech]] | 結構 | 結構 | 結構 | 質變 | 質變 | 2·2·2·1·1 | **8** | 0.78 |
+| [[satcom-future]] | 結構 | 結構 | 結構化中 | 太早→結構 | 太早 | 2·2·2·1·1 | **8** | 0.78 |
+
+**Phase B 讀法**: headline 全 **結構**，但多時程才是重點。**T0 已實現**只有 `ai-coding`（質變）；`luxury`/`ip-economy` 在 T0 是 **過熱/出清**。**T3 (5–10 年) 質變候選** = IP-economy、defense-autonomy、AR(條件式)、ai-coding(open)；**satcom 的 D2C-取代基地台 連 T3 仍偏太早**。跨全部 15 條最強的 desk 結論：**受益者 ≠ 該價位的股票** — Phase B 每一條都點名股價已被搶跑（Hermès、Cursor-as-platform、Pop Mart、PLTR/Anduril >85× P/S、Starlink $1.25T、Meta 眼鏡補貼）。alpha 在二階節點、條件達標的抄底、與等回檔。詳見 [[99_cross_synthesis]] §B + [[_weekly-watch]]。
+
 ## 一句話讀法 / The one-line read
 
 > **沒有一條在頁面層級評到「質變」。** 你列的熱門題目幾乎全是 **結構**（真實但大致已被定價），外加兩個明確的陷阱：**端側 AI 過熱、量子破 BTC 太早**。唯一最接近「有現金流的質變」是 **GLP-1**。

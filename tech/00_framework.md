@@ -61,6 +61,33 @@ A verdict is **not** a recommendation. It is a screen output that the Risk Offic
 | [[model-leadership-and-data]] | 大模型 vs 小模型; mass-data vs leaderboard; Nobel | 領先者是誰、數據是否反映、諾貝爾方向 |
 | [[youth-culture-shifts]] | 外送/Uber, social ubiquity, youth health | 文化生活型態質變 → 科技需求 |
 
+## Phase-B upgrade (2026-05-31): time axis + milestones + sourcing
+
+Phase A scored each trend at a single horizon. Phase B adds four things the principal asked for ("拉長時間 / 拆分細化 / 記錄→每周更新 / 給建議"):
+
+- **Time axis (T0–T3)** — every Phase-B trend carries a `verdict_by_horizon`: T0 now (0–1y) / T1 (1–3y) / T2 (3–5y) / T3 (5–10y era-impact). A trend can be 太早 at T0 yet 質變 at T2–T3 (AR glasses, defense-autonomy, IP-economy). Maps onto the FOM `HORIZON_PROFILES` (T0→3m, T1→12m, T2/T3→36m).
+- **Milestone ladder** — 4–6 falsifiable, datable checkpoints per trend, tracked weekly in [[_weekly-watch]]; completion gates FOM promotion ([[fom-integration]] §2c).
+- **Sourcing discipline (考證)** — every figure carries a Grade × Verification tag per [[_sourcing-protocol]] (the fix for the Phase-A SEC-403 / Q-vs-FY weakness).
+- **Recommendations + FOM routing** — each page ends with a caveated desk view; the cross-trend call lives in [[99_cross_synthesis]] §B; verdict × `bubble_guard` routes a name to a sleeve (Core / Value-on-pullback / Moonshot) via [[fom-integration]] (observe-first — out of `final_fom` until IC-validated).
+
+## Trend registry — Phase B (multi-horizon)
+
+| Page | Trend | T0 → T3 arc |
+|---|---|---|
+| [[ai-coding-agents]] | Claude Code vs Codex vs Cursor | 質變 → … → open (value to labs+distribution) |
+| [[ar-vr-smart-glasses]] | smart glasses / AR | 結構 → 太早 → 質變(條件) |
+| [[luxury-and-apparel]] | 精品 + 服裝 | 過熱出清 → 結構 (品牌離散) |
+| [[ip-economy-collectibles]] | POPMART / IP復刻 / 電影重生 | 過熱 → 結構 → 質變 |
+| [[defense-tech]] | 國防 + 自主/無人 | 結構 → 質變 |
+| [[satcom-future]] | 衛星通訊 / D2C | 結構 → 太早 (取代基地台) |
+
+Deep dives: [[optical-supply-chain-deep]] (CPO 二階 — metrology 最未擁擠) · [[glp1-supply-chain]] (GLP-1 製造瓶頸 + 去中介風險).
+
+## Framework operating docs
+
+- [[scoreboard]] — scored matrix (both phases) · [[99_cross_synthesis]] — synergy lattice + recommendations · [[cross-validation-quant]] — verdicts × FOM × bubble_guard
+- [[_weekly-watch]] — the weekly milestone tracker · [[_sourcing-protocol]] — 考證 discipline · [[fom-integration]] — verdict → FOM sleeve routing
+
 See [[scoreboard]] for the scored matrix and [[99_cross_synthesis]] for the cross-trend 綜效 lattice and the culture→demand→supply-chain map.
 
 ## See also

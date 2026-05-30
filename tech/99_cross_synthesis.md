@@ -109,6 +109,34 @@ Across all 9 pages, the nodes with verifiable **pricing power / hard-to-second-s
 - **Quantify the "second-derivative un-crowded" basket** (InP substrate, HBM metrology, CDMO) vs the crowded first-derivative — a future FOM/bubble_guard cross-run.
 - **Wire verdicts into the evidence gate** — each 結構 verdict should map to the 5-dim 十足的證據 quorum before any offense ([[../philosophy/concepts/evidence-gated-rebalance]]).
 
+## §B. Phase B (2026-05-31) — 時代影響、跨交互與綜合建議
+
+Phase B added 6 trends + the time axis (T0–T3). Headline verdicts are all 結構, but the multi-horizon arcs + every desk view converge on one sentence that now spans all 15 trends:
+
+> **趨勢是真的，但顯而易見的受益者股價已被搶跑 — alpha 在「未擁擠的二階節點」、「條件達標的抄底」、或「等回檔」。**
+
+### B1. 跨交互的時代影響 / Era-impact cross-interaction lattice
+
+Four convergences where Phase-B trends amplify each other (the principal's 「交互可能帶來的時代影響」):
+
+1. **AI × 自主 × 國防 × 衛星 (hard-power 重組)** — [[defense-tech]] × [[satcom-future]] × [[model-leadership-and-data]] × [[autonomous-driving]] (+ [[quantum-vs-bitcoin]] PQC). Software-defined warfare + 消耗性自主蜂群 + LEO/D2C 韌性通訊 + 共用邊緣感知矽 + 後量子 C2. 時代影響: 2025–2035 軍工再平台化；同一套 autonomy/sensor/edge 堆疊服務無人機、robotaxi、USV；頻譜+軌道槽成國安資產。受益者已搶跑（PLTR/Anduril）；未擁擠的邊是共用矽 + 台灣 satcom 上游。
+2. **AI 吃軟體的矛頭 = coding** — [[ai-coding-agents]] × [[ai-eats-software]] × [[model-leadership-and-data]]. Coding 同時是各 lab 最大營收 + SaaS 替代的矛頭；價值 model→workflow→distribution 遷移，wrapper(Cursor) 是脆弱中段。時代影響: 開發者→審查者；Stack-Overflow 級知識站被吃；軟體毛利兩極化（捕獲者 vs 商品化）。
+3. **後手機的 edge 形態 = 眼鏡** — [[ar-vr-smart-glasses]] × [[ai-edge-devices]] × [[model-leadership-and-data]] × [[memory-supercycle]]. Ray-Ban 靠放棄 AR 證明形態；on-device SLM agent 是殺手 app 門檻；與手機/車共用 ISP/NPU/SLAM 矽 + 記憶體含量。時代影響: 首個可信的後智慧手機介面，但真 AR 被 etendue 卡在 T2+。
+4. **情緒/身分消費** — [[ip-economy-collectibles]] × [[luxury-and-apparel]] × [[youth-culture-shifts]]. Gen-Z 槓鈴（Hermès+Temu 強、輕奢被掏空）；IP/Labubu 作身分符號；dupe 文化。時代影響: 消費護城河從「品質/價格」轉向「IP/身分/稀缺」；無 IP 飛輪或真稀缺的品牌被掏空。
+
+### B2. 綜合建議 / Consolidated desk view — routed by FOM sleeve ([[fom-integration]])
+
+**研究用途，非投資建議；全部仍受 Risk Officer + 倉位/集中度上限 + 5 維證據閘約束。** 買的是「條件」，不是「故事」。
+
+- **Core-eligible (質變 / 結構-healthy + 一個 ✅ 里程碑)**: GLP-1 現金流 (LLY/NVO，注意 [[glp1-supply-chain]] 去中介)；獲利平台 (UBER/SPOT，真 FCF)；模型戰下的算力 picks-and-shovels (HBM/SK Hynix，但僅在 WAIT 名單回檔時)；歐洲國防 primes (RHM/Hensoldt，已簽 backlog)；Hermès-級品質。
+- **Value-on-pullback / 抄底 (條件閘 — 買條件非故事)**: Nike (庫存重置 ✅、品牌重置 ⏳ → 分批)；Disney (DTC 轉正 ✅)；Viasat (去槓桿 ✅)；美國國防 primes (若降評過頭的現金流抄底)；Kering (僅在 Demna 銷售轉正才成立 — 目前 ❌、value-trap)。
+- **避開 Core / 僅 Moonshot ring-fence ≤5% (過熱/太早/搶跑)**: 量子 (IONQ/QBTS/RGTI，太早)；AI-PC 超級循環敘事 ([[ai-edge-devices]] 過熱)；PLTR/Anduril (對的命題、>85× P/S 搶跑)；Pop Mart 在 +184% 高基期 (過度擁擠)；ASTS (二元募資賭注)；Cursor-as-equity (負毛利 wrapper + 未上市)。
+- **真正的早期邊 = 未擁擠二階節點**: 光互連 hybrid-bond **量測** (Auros/Onto/FormFactor — [[optical-supply-chain-deep]]，CPO 敘事忽略的節點)；HBM 量測；GLP-1 API/fill-finish (但盯 LLY/NVO 自建)；AR 微顯示/波導；台灣 satcom RF/濾波/PCB 上游。
+
+### B3. The standing loop
+
+All breakout/falsifier conditions live in [[_weekly-watch]] and are re-checked weekly (couples to `scripts/daily_routine.ps1`); a milestone flip updates the FOM sleeve routing ([[fom-integration]] §2c–§4). This is the principal's 「記錄 → 每周更新 → 里程碑是否完成」 made operational.
+
 ## See also
 
 - [[00_framework]] · [[scoreboard]] — the rubric + scored matrix

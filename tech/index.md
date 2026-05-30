@@ -17,6 +17,7 @@ The technology due-diligence layer of `$hark`. Each page screens one hot narrati
 - [[scoreboard]] — scored matrix of all trends + verdicts + echo-chamber-gap/falsifier table
 - [[99_cross_synthesis]] — cross-trend 綜效 lattice, culture→supply-chain map, consolidated chokepoints, master read
 - [[cross-validation-quant]] — verdicts × `bubble_guard` × evidence-gate reconciliation (DD ↔ quant agreement)
+- [[_weekly-watch]] — **weekly milestone tracker** (記錄→每周更新→里程碑是否完成) · [[_sourcing-protocol]] — 考證 discipline · [[fom-integration]] — verdict → FOM sleeve routing
 
 ## Trend pages (Phase A — 2026-05-31)
 
@@ -33,6 +34,17 @@ The technology due-diligence layer of `$hark`. Each page screens one hot narrati
 | [[quantum-vs-bitcoin]] | 太早 | 7 | 105 物理量子位元 vs 需 ~13M；Q-Day ~2033；BTC 可先 soft-fork |
 
 \* composite: GLP-1 = 結構→質變 (0.85); AI-drug-discovery = 太早→結構 (0.60).
+
+## Phase B trend pages (multi-horizon T0→T3)
+
+| Trend | headline | T0 → T3 | One-line |
+|---|---|---|---|
+| [[ai-coding-agents]] | 結構 | 質變→open | Claude Code vs Codex：模型廠+通路贏，Cursor wrapper 負毛利脆弱 |
+| [[ar-vr-smart-glasses]] | 結構 | 結構→質變(條件) | Ray-Ban 靠放棄 AR 才贏；真 AR 撞 etendue 物理 T2+ |
+| [[luxury-and-apparel]] | 結構(分化) | 過熱出清→結構 | 非崩盤是品牌離散；Hermès 複利 vs Gucci −19%；Nike 分批抄底 |
+| [[ip-economy-collectibles]] | 結構 | 過熱→質變 | POPMART：護城河是造星流水線非單一 Labubu；抄底 Disney 飛輪 |
+| [[defense-tech]] | 結構 | 結構→質變 | 歐洲重整=NOW；軟體吃國防=T2-T3；受益者≠該價位(PLTR>85×) |
+| [[satcom-future]] | 結構 | 結構→太早 | Starlink 已質變但已定價；D2C 物理封頂=補盲；台灣上游 |
 
 ## Deep dives (二階供應鏈 / second-derivative)
 
