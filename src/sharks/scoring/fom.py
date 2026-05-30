@@ -118,13 +118,30 @@ WIKI_16_THEMES = ["DNN", "CCJ", "BEAM", "NEM", "VAL", "AESI", "GLD"]
 # pure plays (Taiwan/Japan/Korea/China small caps) await Phase 2 suffix support.
 SERENITY_SUPPLY_CHAIN = ["TSEM", "MRVL", "VPG", "VSH"]
 
+# ── 2026-05-30 expansion (user heatmap + theme directives) ──────────────────
+# Space / SpaceX-IPO + space-boom theme. RKLB already in R2K_AI; set() dedupes.
+SPACE = ["LUNR", "RDW", "ASTS", "PL", "RKLB"]
+
+# Agentic-AI software pure plays (distinct from the infra names already covered).
+AGENTIC_AI = ["AI", "BBAI", "SOUN", "PLTR"]
+
+# Computex N1x laptop launch cohort (US-listed). MSFT/NVDA/ARM/DELL/AAPL already
+# in other groups; QCOM (Snapdragon X) is the missing AI-PC SoC name. MediaTek
+# (2454.TW) + Lenovo (0992.HK) await Phase 2 suffix support.
+COMPUTEX_LAPTOP = ["QCOM"]
+
+# Granular semis visible in the user's Finviz heatmap — timing/connectivity/
+# analog names not yet in the coarser groups.
+SEMI_GRANULAR = ["SITM", "RMBS", "MXL", "SLAB", "SMTC", "SYNA"]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
     CONTRARIAN_SW + BUBBLE_WATCH + DC_INFRA + MATERIALS + DEFENSE +
     BETA_ANCHORS + R2K_AI +
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
-    THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN
+    THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
+    SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───
@@ -190,6 +207,26 @@ IP_DEFENSIBILITY = {
     "MRVL": 80,  # Marvell — custom silicon + optical DSP
     "VPG":  60,  # Vishay Precision Group — foil sensors niche
     "VSH":  50,  # Vishay — commodity passives
+    # 2026-05-30 expansion — space
+    "LUNR": 40,  # Intuitive Machines — lunar lander, gov-contract revenue
+    "RDW":  40,  # Redwire — space infra components
+    "ASTS": 45,  # AST SpaceMobile — direct-to-cell, high-narrative
+    "PL":   45,  # Planet Labs — earth-observation data recurring
+    "RKLB": 60,  # Rocket Lab — launch + space systems, the space pure-play leader
+    # agentic AI
+    "AI":   45,  # C3.ai — enterprise AI apps, narrative-heavy
+    "BBAI": 30,  # BigBear.ai — small, gov AI, low moat
+    "SOUN": 35,  # SoundHound — voice AI, high-narrative
+    "PLTR": 80,  # Palantir — sticky gov+commercial data platform, strong moat
+    # Computex AI-PC SoC
+    "QCOM": 75,  # Qualcomm — Snapdragon X AI-PC SoC + mobile modem moat
+    # granular semis
+    "SITM": 70,  # SiTime — MEMS timing, niche leader
+    "RMBS": 65,  # Rambus — memory interface IP
+    "MXL":  55,  # MaxLinear — broadband/connectivity analog
+    "SLAB": 65,  # Silicon Labs — IoT/wireless MCUs
+    "SMTC": 60,  # Semtech — LoRa + signal integrity
+    "SYNA": 55,  # Synaptics — edge-AI human interface (Serenity-flagged)
 }
 
 # ─── Data pull ───
