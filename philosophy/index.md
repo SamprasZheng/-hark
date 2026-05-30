@@ -64,6 +64,10 @@ Macro / systemic (added 2026-05-30):
 - [[concepts/funding-chain-rupture]] — latency-stratified funding-stress leading indicators (why bubbles pop)
 - [[concepts/macro-analog-matching]] — 100-year regime-cube analog matching, decision-support not prediction
 
+Validation & ensemble (added 2026-05-31):
+- [[concepts/fom-predictive-validity]] — IC study: does FOM actually forecast? (recalibration heartbeat)
+- [[concepts/analyst-persona-ensemble]] — analysts/ council → bounded FOM weight tilts, conviction-blended
+
 Analyst Models (externally sourced, internalised into the framework):
 - [[concepts/chip-flow-single-point-breakout]] — single-point chip-flow breakout (reference analyst-model implementation)
 - [[concepts/serenity-supply-chain-bottleneck]] — supply-chain bottleneck pick-and-shovel (Serenity @aleabitoreddit)
