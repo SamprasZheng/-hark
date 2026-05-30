@@ -69,6 +69,26 @@ def _cmd_health_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_tech_dd(args: argparse.Namespace) -> int:
+    """tech/ due-diligence → FOM sleeve overlay (observe-first, recommend-only).
+
+    Annotates the broad tech/ DD registry with verdict × bubble_guard sleeve
+    routing + a bounded weight tilt. OBSERVE-ONLY — does not touch final_fom.
+    See tech/fom-integration.md.
+    """
+    from pathlib import Path
+
+    from sharks.scoring.tech_dd import build_report, main as _tech_dd_main
+
+    if args.dry_run:
+        rep = build_report(out_dir=Path(args.out_dir))
+        counts = {s: len(v) for s, v in rep["buckets"].items()}
+        print(f"[dry-run] tech-dd overlay (observe-first). "
+              f"coverage={rep['coverage']} fom_used={rep['fom_report_used']} buckets={counts}")
+        return 0
+    return _tech_dd_main(Path(args.out_dir))
+
+
 def _cmd_wiki_lint(args: argparse.Namespace) -> int:
     print(
         f"[stub] sharks wiki lint called. "
@@ -133,6 +153,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="print the summary but do not write outputs/daily-health-check-*.json",
     )
     p_health.set_defaults(func=_cmd_health_check)
+
+    # `sharks tech-dd` — tech/ DD → FOM sleeve overlay (REAL, observe-first)
+    p_techdd = subparsers.add_parser(
+        "tech-dd",
+        help="tech/ due-diligence → FOM sleeve overlay (observe-first, recommend-only)",
+    )
+    p_techdd.add_argument(
+        "--out-dir", default="outputs",
+        help="dir holding fom-monthly-*.json + where tech-dd-overlay.json is written",
+    )
+    p_techdd.add_argument(
+        "--dry-run", action="store_true",
+        help="print the sleeve-bucket summary but do not write outputs/tech-dd-overlay.json",
+    )
+    p_techdd.set_defaults(func=_cmd_tech_dd)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")

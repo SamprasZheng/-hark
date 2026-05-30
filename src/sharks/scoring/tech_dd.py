@@ -1,0 +1,385 @@
+"""tech/ due-diligence → FOM overlay (the `tech_dd` bridge).
+
+Turns the qualitative, multi-horizon verdicts produced by the `tech/` layer
+(`tech/scoreboard.md` + the per-trend pages, gated weekly by
+`tech/_weekly-watch.md`) into a BOUNDED, OBSERVE-FIRST overlay on the FOM scorer.
+It is the runnable implementation of the design in `tech/fom-integration.md`.
+
+For each covered ticker it produces:
+  - a DD verdict ∈ {質變, 結構, 過熱, 太早, 受損} + optional per-ticker flags,
+  - a sleeve SUGGESTION in the EXISTING four-sleeve vocabulary
+    (FOM_CORE / VALUE / MOONSHOT) — reconciled against
+    `backtest.sleeve_classifier.classify_sleeve`, and
+  - a bounded weight tilt applied through the SAME machinery as the
+    analyst-persona ensemble (`analysts.persona.apply_persona_tilt`).
+
+Guardrails (so the DD layer can never blow up the scorer or the book):
+  * OBSERVE-FIRST — this overlay is an ANNOTATION. It is NOT folded into
+    `final_fom`; the report carries a hypothetical `dd_tilted_base` for
+    comparison only, until a walk-forward shows the tilt adds IC (per
+    `philosophy/concepts/fom-predictive-validity` + `nasdaq100-calibration`:
+    don't fit the narrative into the score).
+  * 太早 / 過熱 / front-run → MOONSHOT ring-fence only (≤ the 20% sleeve cap,
+    no leverage) — matches the principal's Alpha-sleeve rule.
+  * Nothing here trades, sets price targets, or overrides the Risk Officer,
+    the position / sector caps, or the 5-dim 十足的證據 gate.
+
+Pure logic + a thin `main()` that reads the latest `outputs/fom-monthly-*.json`
+for `bubble_guard` (no network, no new dependency). Curated verdicts are the
+judgment layer — review, don't trust blindly.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from dataclasses import dataclass, field
+from datetime import date, datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+from sharks.analysts.persona import DIMENSIONS, apply_persona_tilt
+
+# ─── Vocabulary ──────────────────────────────────────────────────────────────
+VERDICTS = ("質變", "結構", "過熱", "太早", "受損")
+# 質變 real qualitative change (data-backed) · 結構 real but largely priced ·
+# 過熱 narrative > data (echo-chamber) · 太早 real tech, no near-term P&L/timeline ·
+# 受損 structurally impaired (a loser / value-trap).
+
+FLAGS = (
+    "cashflow",            # realized P&L 質變 engine
+    "froth",               # parabolic / late-stage (usually bubble_guard ≤ -40)
+    "front_run",           # right thesis, valuation already reflects it
+    "bottom_fish",         # 抄底 turnaround candidate (condition-gated)
+    "second_derivative",   # un-crowded pick-and-shovel node (the real early edge)
+    "loser",               # structurally eaten / impaired
+)
+
+# Sleeve labels MIRROR backtest.sleeve_classifier (FOM_CORE / VALUE / MOONSHOT).
+DD_MAX_TILT = 0.06   # DD nudges even more gently than a persona (0.08 ceiling)
+DEFAULT_BASE = {"momentum": 0.25, "contrarian": 0.25, "cyclic": 0.15,
+                "quality": 0.15, "bubble_guard": 0.20}
+
+
+@dataclass(frozen=True)
+class TechDD:
+    ticker: str
+    verdict: str
+    trend: str                       # source tech/ page slug
+    flags: tuple = ()
+    milestone_score: float = 0.33    # fraction of the trend's milestone ladder ✅ (tech/_weekly-watch)
+    note: str = ""
+
+
+def _dd(*args) -> TechDD:
+    return TechDD(*args)
+
+
+# ─── The DD registry (broad; per-ticker verdicts from the 15 tech/ pages) ──────
+# US-listed only. Curated judgment layer — verdicts/flags trace to a tech/ page.
+_ENTRIES = [
+    # memory + HBM/optical metrology (memory-supercycle, optical-supply-chain-deep)
+    ("MU",  "結構", "memory-supercycle", ("froth",), 0.33, "DRAM/HBM pure-play; bubble_guard -95"),
+    ("WDC", "結構", "memory-supercycle", ("froth",), 0.30, ""),
+    ("STX", "結構", "memory-supercycle", ("froth",), 0.30, ""),
+    ("FORM", "結構", "optical-supply-chain-deep", ("second_derivative",), 0.40, "HBM/CPO probe-card metrology"),
+    ("ONTO", "結構", "optical-supply-chain-deep", ("second_derivative",), 0.40, "Dragonfly HBM 2.5D/3D metrology"),
+    ("CAMT", "結構", "optical-supply-chain-deep", ("second_derivative",), 0.38, "inspection/metrology crossover"),
+    ("AEHR", "過熱", "optical-supply-chain-deep", ("froth",), 0.20, "+5000%/1y on tiny rev"),
+    # CPO / optical interconnect (optical-interconnect-cpo)
+    ("AXTI", "過熱", "optical-interconnect-cpo", ("froth",), 0.20, "InP substrate; vertical on $27M rev"),
+    ("LITE", "結構", "optical-interconnect-cpo", ("froth",), 0.33, "CW laser/EML; NVDA $4B; bg -55"),
+    ("COHR", "結構", "optical-interconnect-cpo", (), 0.35, "EML duopoly; bg -40 mild"),
+    ("FN",   "結構", "optical-interconnect-cpo", (), 0.40, "system assembly; bg ~0 cleaner"),
+    ("MRVL", "結構", "optical-interconnect-cpo", (), 0.38, "custom silicon + optical DSP"),
+    ("AAOI", "過熱", "optical-interconnect-cpo", ("froth",), 0.20, "pluggable; parabolic"),
+    ("ALAB", "過熱", "optical-interconnect-cpo", ("froth",), 0.22, "connectivity; parabolic"),
+    ("CRDO", "過熱", "optical-interconnect-cpo", ("froth",), 0.25, "interconnect; rich"),
+    # leadership compute (model-leadership-and-data)
+    ("NVDA", "結構", "model-leadership-and-data", (), 0.45, "DRIVE+training; bubble_guard +15 healthy"),
+    ("AVGO", "結構", "model-leadership-and-data", (), 0.42, "custom ASIC; +15"),
+    ("TSM",  "結構", "optical-interconnect-cpo", (), 0.42, "COUPE CPO chip; upstream chokepoint"),
+    ("AMD",  "結構", "ai-edge-devices", (), 0.35, ""),
+    ("ARM",  "結構", "ai-edge-devices", (), 0.38, "NPU royalty on ~every edge SoC"),
+    ("QCOM", "結構", "ai-edge-devices", (), 0.36, "Snapdragon X / AR SoC / Ride"),
+    ("INTC", "結構", "ai-edge-devices", (), 0.28, "turnaround risk"),
+    ("AAPL", "結構", "ai-edge-devices", (), 0.35, "VP stalled but core fine"),
+    # autonomous (autonomous-driving)
+    ("HSAI", "結構", "autonomous-driving", (), 0.35, "LiDAR volume leader; commoditising"),
+    ("MBLY", "結構", "autonomous-driving", (), 0.33, "ADAS incumbent; vision-vs-hybrid contested"),
+    ("LAZR", "受損", "autonomous-driving", ("loser",), 0.00, "Volvo-dropped, Ch.11; commoditised"),
+    ("TSLA", "結構", "autonomous-driving", ("front_run",), 0.30, "robotaxi narrative; L2 today"),
+    # pharma + GLP-1 (ai-pharma-glp1, glp1-supply-chain)
+    ("LLY",  "質變", "ai-pharma-glp1", ("cashflow",), 0.55, "GLP-1 realized cashflow engine"),
+    ("NVO",  "結構", "ai-pharma-glp1", ("cashflow",), 0.40, "GLP-1 #2; orals/去中介 risk"),
+    ("RXRX", "太早", "ai-pharma-glp1", (), 0.20, "AI-drug platform; option not cashflow"),
+    ("SDGR", "太早", "ai-pharma-glp1", (), 0.22, "physics+AI sim; long-dated option"),
+    ("TMO",  "結構", "glp1-supply-chain", ("second_derivative",), 0.38, "merchant fill-finish post-Catalent"),
+    # quantum (quantum-vs-bitcoin)
+    ("IONQ", "太早", "quantum-vs-bitcoin", (), 0.10, "no near-term economics"),
+    ("QBTS", "太早", "quantum-vs-bitcoin", (), 0.10, "annealing, not Shor-capable"),
+    ("RGTI", "太早", "quantum-vs-bitcoin", (), 0.08, "rev collapse; narrative-only"),
+    # software (ai-eats-software, ai-coding-agents)
+    ("MSFT", "結構", "ai-eats-software", ("cashflow",), 0.45, "captor + Copilot/Coding distribution moat"),
+    ("CRM",  "結構", "ai-eats-software", (), 0.35, "captor; data+workflow"),
+    ("NOW",  "結構", "ai-eats-software", (), 0.38, "captor; workflow lock-in"),
+    ("ADBE", "結構", "ai-eats-software", (), 0.30, "contested; Firefly monetization slow"),
+    ("INTU", "結構", "ai-eats-software", ("cashflow",), 0.38, "SMB/tax workflow captor"),
+    ("PLTR", "過熱", "ai-eats-software", ("front_run",), 0.35, "right thesis, fwd P/S >85x"),
+    ("CHGG", "受損", "ai-eats-software", ("loser",), 0.00, "-99%; eaten by ChatGPT/AI Overviews"),
+    # youth-culture platforms (youth-culture-shifts)
+    ("UBER", "結構", "youth-culture-shifts", ("cashflow",), 0.42, "delivery×mobility×ads FCF flywheel"),
+    ("DASH", "結構", "youth-culture-shifts", ("cashflow",), 0.38, "GAAP-positive; thin margin"),
+    ("META", "結構", "youth-culture-shifts", ("cashflow",), 0.42, "attention monopoly + Ray-Ban"),
+    ("NFLX", "結構", "youth-culture-shifts", ("cashflow",), 0.40, "streaming > linear"),
+    ("SPOT", "結構", "youth-culture-shifts", ("cashflow",), 0.38, "scale + podcasts"),
+    ("GOOGL", "結構", "youth-culture-shifts", (), 0.35, "search-share erosion vector"),
+    # luxury + apparel (luxury-and-apparel)
+    ("NKE",  "結構", "luxury-and-apparel", ("bottom_fish",), 0.40, "inventory reset ✅, brand reset ⏳"),
+    ("LULU", "結構", "luxury-and-apparel", (), 0.30, "Americas soft; neutral-bearish"),
+    ("ONON", "結構", "luxury-and-apparel", ("front_run",), 0.33, "real share gain, valuation reflects"),
+    ("DECK", "結構", "luxury-and-apparel", (), 0.35, "Hoka share gain"),
+    ("PDD",  "結構", "luxury-and-apparel", ("froth",), 0.25, "Temu; de-minimis/tariff policy risk"),
+    # IP / entertainment (ip-economy-collectibles)
+    ("DIS",  "結構", "ip-economy-collectibles", ("bottom_fish",), 0.50, "DTC turn ✅; flywheel reignition"),
+    ("HAS",  "結構", "ip-economy-collectibles", ("bottom_fish",), 0.38, "Wizards/MTG bright; toys weak"),
+    ("MAT",  "結構", "ip-economy-collectibles", ("bottom_fish",), 0.33, "needs next IP film after Barbie"),
+    ("SONY", "結構", "ip-economy-collectibles", (), 0.38, "IP + microdisplay (also AR)"),
+    # AR/VR (ar-vr-smart-glasses)
+    ("HIMX", "結構", "ar-vr-smart-glasses", ("second_derivative",), 0.33, "display driver / LCoS"),
+    ("KOPN", "太早", "ar-vr-smart-glasses", ("froth",), 0.18, "microdisplay spec, tiny"),
+    # satcom (satcom-future)
+    ("ASTS", "太早", "satcom-future", ("froth",), 0.20, "D2C binary funding/execution bet"),
+    ("GSAT", "結構", "satcom-future", (), 0.33, "Apple/partner-funded D2D"),
+    ("IRDM", "結構", "satcom-future", (), 0.38, "profitable niche MSS"),
+    ("VSAT", "結構", "satcom-future", ("bottom_fish",), 0.40, "deleveraging GEO turnaround"),
+    ("SATS", "受損", "satcom-future", ("loser",), 0.10, "EchoStar going-concern; spectrum liquidation"),
+    ("RKLB", "結構", "satcom-future", ("front_run",), 0.33, "space pure-play leader; priced"),
+    # defense (defense-tech)
+    ("LMT",  "結構", "defense-tech", ("bottom_fish",), 0.38, "de-rated; cash-flow defensive"),
+    ("RTX",  "結構", "defense-tech", ("bottom_fish",), 0.38, "record backlog $251B"),
+    ("NOC",  "結構", "defense-tech", ("bottom_fish",), 0.36, ""),
+    ("GD",   "結構", "defense-tech", (), 0.35, ""),
+    ("AVAV", "結構", "defense-tech", ("front_run",), 0.33, "drones; priced"),
+    ("KTOS", "結構", "defense-tech", ("front_run",), 0.32, "Valkyrie drones; priced"),
+]
+
+TECH_DD: dict[str, TechDD] = {e[0]: _dd(*e) for e in _ENTRIES}
+
+# Non-US nodes covered by the tech/ pages but awaiting Phase-2 ticker-suffix
+# support (documented for breadth; NOT scanned until suffixes land). See
+# watchlist/serenity-supply-chain.yaml for the supply-chain subset.
+TECH_DD_NONUS = {
+    # memory
+    "000660.KS": ("結構", "memory-supercycle", "SK Hynix — HBM4 pricing-power chokepoint"),
+    "005930.KS": ("結構", "memory-supercycle", "Samsung — HBM4 recovery optionality"),
+    # optical / CPO
+    "8053.T": ("結構", "optical-supply-chain-deep", "Sumitomo — InP substrate + EML (the calm one)"),
+    "5801.T": ("結構", "optical-supply-chain-deep", "Furukawa — DFB CW laser"),
+    "2455.TW": ("結構", "optical-interconnect-cpo", "VPEC — InP epi foundry"),
+    "3008.TW": ("結構", "ar-vr-smart-glasses", "Largan — precision optics"),
+    "322310.KQ": ("結構", "optical-supply-chain-deep", "Auros — hybrid-bond metrology (most un-crowded)"),
+    "0522.HK": ("結構", "optical-supply-chain-deep", "ASMPT — CPO coupling + TCB/hybrid bond"),
+    # luxury
+    "MC.PA": ("結構", "luxury-and-apparel", "LVMH — recovering"),
+    "RMS.PA": ("結構", "luxury-and-apparel", "Hermès — quality compounder"),
+    "CFR.SW": ("結構", "luxury-and-apparel", "Richemont"),
+    "KER.PA": ("受損", "luxury-and-apparel", "Kering/Gucci — value-trap until Demna sell-through"),
+    # IP
+    "9992.HK": ("結構", "ip-economy-collectibles", "Pop Mart — star-machine, tightest valuation"),
+    "8136.T": ("結構", "ip-economy-collectibles", "Sanrio — asset-light licensing"),
+    "7832.T": ("結構", "ip-economy-collectibles", "Bandai Namco — IP flywheel"),
+    # AR
+    "EL.PA": ("結構", "ar-vr-smart-glasses", "EssilorLuxottica — Ray-Ban brand+channel+assembly"),
+    # defense
+    "RHM.DE": ("結構", "defense-tech", "Rheinmetall — signed backlog, the highest-conviction"),
+    "HAG.DE": ("結構", "defense-tech", "Hensoldt — book-to-bill 1.5-2.0x"),
+    "SAAB-B.ST": ("結構", "defense-tech", "Saab"),
+    # GLP-1 supply
+    "BANB.SW": ("結構", "glp1-supply-chain", "Bachem — peptide API duopoly"),
+    "YPSN.SW": ("結構", "glp1-supply-chain", "Ypsomed — auto-injector"),
+}
+
+
+# ─── Pure logic: tilt, sleeve routing, milestone gate ──────────────────────────
+def _dd_clamp(tilt: dict) -> dict:
+    """Clamp each dimension delta into [-DD_MAX_TILT, +DD_MAX_TILT]."""
+    return {d: max(-DD_MAX_TILT, min(DD_MAX_TILT, float(tilt.get(d, 0.0)))) for d in DIMENSIONS}
+
+
+def dd_verdict_tilt(verdict: str, flags=()) -> dict:
+    """Map a DD verdict (+ flags) to a bounded per-dimension weight tilt.
+    The regime/quant decides; DD only nudges (|delta| <= DD_MAX_TILT)."""
+    flags = set(flags)
+    t = {d: 0.0 for d in DIMENSIONS}
+    base = {
+        "質變": {"momentum": 0.03, "quality": 0.03},
+        "結構": {"quality": 0.02, "momentum": -0.01},
+        "過熱": {"momentum": -0.06},
+        "太早": {"momentum": -0.04, "quality": -0.02},
+        "受損": {"momentum": -0.06, "quality": -0.06},
+    }.get(verdict, {})
+    for k, v in base.items():
+        t[k] += v
+    if "second_derivative" in flags:
+        t["contrarian"] += 0.03      # reward the not-yet-crowded node
+    if "bottom_fish" in flags:
+        t["contrarian"] += 0.03
+        t["quality"] += 0.02
+    if "front_run" in flags:
+        t["momentum"] -= 0.04        # do not chase the priced-in darling
+    if "froth" in flags:
+        t["momentum"] -= 0.03
+    if "cashflow" in flags:
+        t["quality"] += 0.02
+    return _dd_clamp(t)
+
+
+def dd_sleeve(verdict: str, bubble_guard: Optional[float] = None,
+              milestone_score: float = 0.0, flags=()) -> dict:
+    """Route a name to a sleeve (FOM_CORE / VALUE / MOONSHOT) + a posture.
+    Mirrors tech/fom-integration.md §2a. bubble_guard is the FOM late-cycle
+    reading (negative = stress); None = route on the verdict alone."""
+    flags = set(flags)
+    frothy = (bubble_guard is not None and bubble_guard <= -40) or ("froth" in flags)
+
+    if verdict == "受損" or "loser" in flags:
+        return {"sleeve": "MOONSHOT", "posture": "avoid",
+                "reason": "structurally impaired / value-trap — avoid or tax-loss only"}
+    if verdict == "太早":
+        return {"sleeve": "MOONSHOT", "posture": "ring_fence",
+                "reason": "no near-term P&L / timeline — Moonshot ring-fence ≤20%, no leverage"}
+    if verdict == "過熱" or "front_run" in flags:
+        return {"sleeve": "MOONSHOT", "posture": "ring_fence",
+                "reason": "narrative > data / valuation front-run — ring-fence; wait for pullback"}
+    if verdict == "質變":
+        if milestone_score >= 0.5 and (bubble_guard is None or bubble_guard >= -20):
+            return {"sleeve": "FOM_CORE", "posture": "core",
+                    "reason": "realized-cashflow 質變 + milestone met — core-eligible (still gated by evidence + caps)"}
+        return {"sleeve": "FOM_CORE", "posture": "core_watch",
+                "reason": "質變 but milestone/bubble_guard not yet clear — core watch"}
+    if verdict == "結構":
+        if frothy:
+            return {"sleeve": "VALUE", "posture": "value_on_pullback",
+                    "reason": "real but overheated (bubble_guard low / froth) — Value sleeve only on a confirmed, quality-filtered pullback"}
+        if "bottom_fish" in flags:
+            posture = "core_watch" if milestone_score >= 0.5 else "value_on_pullback"
+            return {"sleeve": "VALUE", "posture": posture,
+                    "reason": "beaten-down QUALITY 抄底 (撿菸頭) — condition-gated; margin of safety in the quality filter"}
+        if "second_derivative" in flags:
+            return {"sleeve": "FOM_CORE", "posture": "core_watch",
+                    "reason": "un-crowded second-derivative node — the early edge; build on confirmation"}
+        if bubble_guard is not None and bubble_guard >= 0:
+            posture = "core" if milestone_score >= 0.5 else "core_watch"
+            return {"sleeve": "FOM_CORE", "posture": posture, "reason": "結構 + healthy bubble_guard — better-entry side"}
+        return {"sleeve": "FOM_CORE", "posture": "core_watch", "reason": "結構 — default core watch"}
+    return {"sleeve": "FOM_CORE", "posture": "core_watch", "reason": "uncovered verdict — default core watch"}
+
+
+def annotate_ticker(ticker: str, bubble_guard: Optional[float] = None,
+                    base_weights: Optional[dict] = None) -> Optional[dict]:
+    """Full DD annotation for one ticker (pure). Returns None if not covered.
+    `dd_tilted_base` is OBSERVE-ONLY — it is never the live final_fom."""
+    dd = TECH_DD.get(ticker.upper())
+    if dd is None:
+        return None
+    base = dict(base_weights or DEFAULT_BASE)
+    tilt = dd_verdict_tilt(dd.verdict, dd.flags)
+    sleeve = dd_sleeve(dd.verdict, bubble_guard, dd.milestone_score, dd.flags)
+    out = {
+        "ticker": dd.ticker,
+        "dd_verdict": dd.verdict,
+        "trend": dd.trend,
+        "flags": list(dd.flags),
+        "milestone_score": dd.milestone_score,
+        "note": dd.note,
+        "bubble_guard": bubble_guard,
+        "dd_sleeve": sleeve["sleeve"],
+        "posture": sleeve["posture"],
+        "reason": sleeve["reason"],
+        "dd_tilt": tilt,
+        "dd_tilted_base": apply_persona_tilt(base, tilt),   # observe-only
+    }
+    # Cross-check against the structural character-set classifier (打臉/agreement).
+    try:
+        from sharks.backtest.sleeve_classifier import classify_sleeve
+        struct = classify_sleeve(dd.ticker)
+        out["structural_sleeve"] = struct["sleeve"]
+        out["sleeve_agreement"] = (struct["sleeve"] == sleeve["sleeve"])
+    except Exception:  # pragma: no cover - classifier optional
+        out["structural_sleeve"] = None
+        out["sleeve_agreement"] = None
+    return out
+
+
+# ─── FOM bubble_guard loader (no network) ──────────────────────────────────────
+def load_fom_bubble_guard(out_dir: Path) -> dict:
+    """Read the latest outputs/fom-monthly-*.json → {ticker: {bubble_guard, final_fom}}.
+    Returns {} if no FOM report is present (routing then falls back to verdict-only)."""
+    files = sorted(Path(out_dir).glob("fom-monthly-*.json"))
+    if not files:
+        return {}
+    data = json.loads(files[-1].read_text(encoding="utf-8"))
+    rows = data.get("ranked_full") or data.get("top_50_watchlist") or []
+    bg = {}
+    for r in rows:
+        t = r.get("ticker")
+        if not t:
+            continue
+        bg[t] = {"bubble_guard": r.get("bubble_guard_val", r.get("bubble_guard")),
+                 "final_fom": r.get("final_fom")}
+    return bg
+
+
+def build_report(out_dir: Path = Path("outputs"), base_weights: Optional[dict] = None) -> dict:
+    """Annotate the whole DD registry, bucket by suggested sleeve, sort. Observe-first."""
+    bg_map = load_fom_bubble_guard(out_dir)
+    annotated = []
+    for t in TECH_DD:
+        bg = (bg_map.get(t) or {}).get("bubble_guard")
+        row = annotate_ticker(t, bubble_guard=bg, base_weights=base_weights)
+        if row:
+            row["final_fom"] = (bg_map.get(t) or {}).get("final_fom")
+            annotated.append(row)
+
+    buckets: dict[str, list] = {"FOM_CORE": [], "VALUE": [], "MOONSHOT": []}
+    for r in annotated:
+        buckets.setdefault(r["dd_sleeve"], []).append(r)
+    for s in buckets:
+        buckets[s].sort(key=lambda r: (-(r["milestone_score"]), -((r.get("final_fom") or 0))))
+
+    disagreements = [
+        {"ticker": r["ticker"], "dd_sleeve": r["dd_sleeve"], "structural_sleeve": r["structural_sleeve"]}
+        for r in annotated if r.get("sleeve_agreement") is False
+    ]
+    return {
+        "observe_first": True,
+        "note": ("OBSERVE-ONLY overlay. dd_tilted_base is hypothetical; final_fom is "
+                 "unchanged. Verdicts are screen outputs — Risk Officer + caps + the "
+                 "5-dim evidence gate still govern. See tech/fom-integration.md."),
+        "fom_report_used": bool(bg_map),
+        "coverage": {"us_listed": len(TECH_DD), "non_us_documented": len(TECH_DD_NONUS)},
+        "buckets": buckets,
+        "sleeve_disagreements_vs_structural": disagreements,
+    }
+
+
+def main(out_dir: Path = Path("outputs")) -> int:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    report = build_report(out_dir)
+    # stamp time at write (not in pure logic, to keep build_report deterministic/testable)
+    report["as_of"] = datetime.now(timezone.utc).isoformat()
+    counts = {s: len(v) for s, v in report["buckets"].items()}
+    out_path = out_dir / "tech-dd-overlay.json"
+    out_path.write_text(json.dumps(report, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+    print(f"wrote {out_path}", file=sys.stderr)
+    print(f"  coverage: {report['coverage']}  fom_used={report['fom_report_used']}", file=sys.stderr)
+    print(f"  sleeve buckets: {counts}", file=sys.stderr)
+    if report["sleeve_disagreements_vs_structural"]:
+        print(f"  DD vs structural-classifier disagreements: "
+              f"{[d['ticker'] for d in report['sleeve_disagreements_vs_structural']]}", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

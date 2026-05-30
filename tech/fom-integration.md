@@ -52,9 +52,16 @@ Add a `TECH_DD` table `{ticker: {verdict, horizon:{T0..T3}, milestone_score 0–
 
 A name promotes **watch → Core-eligible only when** its milestone ladder ([[_weekly-watch]]) crosses a threshold: **≥1 breakout milestone ✅ AND no falsifier ❌**. Encode as `milestone_score` (fraction of ladder ticked) that gates 2a. This is the principal's *「每周里程碑完成 → 才行動」* link made mechanical.
 
-## §3. Concrete code sketch (PROPOSAL — human applies; do not let an agent edit `src/` unreviewed)
+## §3. Implementation — `src/sharks/scoring/tech_dd.py` ✅ (2026-05-31, principal-authorized)
 
-`src/sharks/scoring/tech_dd.py`:
+**Implemented + tested + runnable** (observe-first):
+- `src/sharks/scoring/tech_dd.py` — `TECH_DD` registry (**71 US-listed nodes + 21 documented non-US**), `dd_verdict_tilt`, `dd_sleeve`, `annotate_ticker`, `build_report`, `main`. Reuses `analysts.persona.apply_persona_tilt` (bounded ±0.06) and cross-checks `backtest.sleeve_classifier.classify_sleeve` (the DD-vs-structural disagreement list is the cross-check signal).
+- CLI: `sharks tech-dd [--dry-run]` (mirrors `sharks health-check`); also `python -m sharks.scoring.tech_dd`.
+- Output: `outputs/tech-dd-overlay.json` — sleeve buckets + per-name posture/reason + observe-only `dd_tilted_base` + `sleeve_disagreements_vs_structural`.
+- Tests: `tests/test_tech_dd.py` — **29 passing** (registry integrity, tilt bounds, sleeve routing, observe-first, CLI wiring).
+- First live run (reading the latest `fom-monthly-*.json`): **FOM_CORE 33 / VALUE 17 / MOONSHOT 21**.
+
+`final_fom` is still untouched (observe-first). Original design sketch — `src/sharks/scoring/tech_dd.py`:
 
 ```python
 # verdict + horizon + milestone state per DD node, sourced from tech/scoreboard.md
