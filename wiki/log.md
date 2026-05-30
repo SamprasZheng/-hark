@@ -359,3 +359,11 @@ Digest + integrate the tech/ technology-trend due-diligence layer. Full suite **
 - **Live scan executed** (tech/cross-validation-quant §3.1, as_of 2026-05-31): split the basket 結構但過熱 (MU −95 / LITE −55 / COHR −40 = memory/optical froth, DD confirmed) vs 結構但健康 (UBER/SPOT/DASH platforms + LLY/NVO GLP-1 all bubble_guard 0 = real cashflow). Mapped to sleeves: LLY/UBER/AVGO=FOM-core watch; MU/LITE/COHR=wait-for-pullback; RXRX/SDGR=ring-fenced moonshot.
 - **CLAUDE.md**: fixed orphan code-fence in §6b; added verdict→quant-bridge pointer (TECH_DD_NODES + the 結構健康/過熱 split).
 - tech/ master read (no page-level 質變; most hot themes 結構=已被定價; only GLP-1 near-質變現金流) is consistent with wiki/07_ai_bubble_audit late-cycle thesis + my term-structure work.
+
+## [2026-05-31 08:00 ET] build | Value-sleeve screener (跌深品質股) — beaten-down quality watchlist
+
+Resumed after tech/ integration. Full suite **390 passed / 0 failed**.
+
+- **`src/sharks/backtest/value_screener.py`** — beaten-down-QUALITY screen for the value sleeve: dd −20..−70% + survivor (5y in [−25%,+250%], so NOT a momentum monster) + stabilising (3m>−20%) + vol≤55% (value=stable, not moonshot), ranked by IP-led quality-weighted value_score. +6 tests. Universe = DEFAULT_UNIVERSE + curated QUALITY_COMPOUNDERS (281 names; honest note: full S&P500/R2000 needs a vendor — lxml absent, iShares anti-bot — and scanning 2000 junk micro-caps is the wrong tool for a QUALITY screen).
+- **Result (as_of 2026-05-29)**: top low-vol cigar-butts = RSG/PAYX/ADP/CTAS/VRSK/TMUS/SPGI/KMB/BJ/BKNG/HD (vol 18-25%, beaten 20-44%); high-IP beaten = NOW(ip90,−40%,+15% 3m)/INTU(−58%)/CRM(ip88,−29%)/ISRG/NVO/UBER/SNPS. Filtered OUT momentum-in-pullback (PLTR vol65/CRWV vol179/UEC) — those are FOM/moonshot not value. outputs/value-screen.json.
+- These are the rotation targets for the P1 value-sleeve shortfall (~$2,343 under target) once moonshots are trimmed. WATCHLIST only — each must clear 十足的證據 + fundamentals confirm.
