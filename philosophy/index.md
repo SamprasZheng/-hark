@@ -69,6 +69,7 @@ Validation & ensemble (added 2026-05-31):
 - [[concepts/analyst-persona-ensemble]] — analysts/ council → bounded FOM weight tilts, conviction-blended
 - [[concepts/hotspot-sector-rotation]] — predict next-quarter sector leaders; seasonality beats momentum (measured)
 - [[concepts/nasdaq100-calibration]] — 對答案 2000-2026 + train/test split; optimal weights invert with horizon
+- [[concepts/return-horizon-structure]] — term-structure: daily reversal → monthly momentum → annual value (the 3-sleeve basis)
 
 Analyst Models (externally sourced, internalised into the framework):
 - [[concepts/chip-flow-single-point-breakout]] — single-point chip-flow breakout (reference analyst-model implementation)
