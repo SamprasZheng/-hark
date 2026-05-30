@@ -49,6 +49,9 @@ if ($isWeekly) {
 
     Log "WEEKLY: FOM predictive-validity IC re-check (recalibration)..."
     python -m sharks.backtest.fom_validation_backtest 2>&1 | Tee-Object -FilePath $log -Append
+
+    Log "WEEKLY: hotspot prediction (next-quarter sector leaders, seasonality-led)..."
+    python -m sharks.backtest.hotspot_backtest 2>&1 | Tee-Object -FilePath $log -Append
 } else {
     Log "Not the weekly day ($WEEKLY_DAY) — skipping FOM scan + IC re-check (不過多操作)."
 }

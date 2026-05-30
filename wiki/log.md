@@ -300,3 +300,14 @@ Response to principal challenge: "昨天建議的股票沒大漲，FOM 是否失
 - **Daily/weekly routine** — `scripts/daily_routine.ps1` (DAILY 倉位健檢 = audit+health-check; WEEKLY Mon = FOM scan + IC re-check; earnings-season exception flag) + `scripts/install_scheduled_tasks.ps1` (user-scope schtasks installer — NOT auto-registered; principal runs it). Cadence = 以周為單位，每日不過多操作.
 - **Concept pages** (canonical, indexed): `fom-predictive-validity.md`, `analyst-persona-ensemble.md`.
 - Committed the `analysts/` roster (principal confirmed it is the intentional persona home) + Serenity KOL research notes (`serenity.md`).
+
+## [2026-05-31 03:30 ET] build | Hotspot-prediction backtest — seasonality beats momentum (measured)
+
+The 預測下一個熱點+驗證 loop. Full suite **351 passed / 0 failed**.
+
+- **Hotspot sector-rotation backtest** — `src/sharks/backtest/hotspot_backtest.py`: walk-forward predicts next-quarter sector leaders from momentum-persistence + PIT seasonality, grades each via rank IC + precision@k vs a random baseline, emits a live next-hotspot watchlist. llm_involvement=none. +11 tests.
+- **Finding (2016-2026, 121 quarterly predictions, counter-intuitive)**: sector **momentum-persistence is ~NOISE** (IC_IR 0.52, beats random 54.5%) — chasing hot sectors does not predict next-quarter leaders. **Seasonality / 景氣循環 is the REAL edge** (IC_IR 2.78, beats random 65.3%). Blend sweep: IC_IR rises monotonically 0.54→2.78 as weight shifts mom→seasonality → DEFAULT_BLEND set seasonality-dominant (0.2/0.8), not overfit to 0.0/1.0. Verdict PREDICTIVE-EDGE. Current call (2026-05, Jun-Aug): SOXX / XLK / XBI (watchlist only, evidence-gated).
+- **Concept page** `hotspot-sector-rotation.md` (canonical, indexed) — documents the seasonality>momentum finding; pairs with `sector-seasonality` as its walk-forward validation.
+- Wired the hotspot backtest into the WEEKLY routine pass (`scripts/daily_routine.ps1`).
+
+**Profit-max direction (next)**: the blend sweep IS the start of 回測獲利最大化 — reweighting toward the edge-bearing component. Full optimizer (holding period × cadence × sizing on the validated seasonality signal) is the natural follow-on.
