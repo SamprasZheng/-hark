@@ -311,3 +311,14 @@ The 預測下一個熱點+驗證 loop. Full suite **351 passed / 0 failed**.
 - Wired the hotspot backtest into the WEEKLY routine pass (`scripts/daily_routine.ps1`).
 
 **Profit-max direction (next)**: the blend sweep IS the start of 回測獲利最大化 — reweighting toward the edge-bearing component. Full optimizer (holding period × cadence × sizing on the validated seasonality signal) is the natural follow-on.
+
+## [2026-05-31 04:30 ET] build | NASDAQ-100 對答案 + train/test FOM calibration (honest, anti-overfit)
+
+Principal test: 2000-2026 NDX TOP3 對答案 + 先校年再月 + 不同時間跨度參數可能不同. Refused the in-sample-fit-to-answer move; split time instead. Full suite **360 passed / 0 failed**.
+
+- **`src/sharks/backtest/nasdaq100_calibration.py`** — answer key (actual top-3/period) vs FOM PIT top-3, year+month; calibrate 10 weight archetypes on 2000-2014 TRAIN, validate on held-out 2015-2026 TEST. llm_involvement=none. +8 tests.
+- **Finding 1 — FOM does NOT pick moonshots**: mean overlap with actual annual top-3 = 0.36/3. Misses BKNG+343/TSLA+743/MU+240. Beats QQQ on average (+17%/yr, survivorship-inflated) via solid names, but gets CRUSHED at cycle tops (2000 -46/2001 -54/2007 -58/2021 -52) — the IC top-tail mean-reversion seen year by year.
+- **Finding 2 — optimal weights INVERT with horizon (principal's hypothesis confirmed)**: ANNUAL → defensive_value/contrarian wins, momentum worst tier; MONTHLY → momentum_heavy wins. Validates existing HORIZON_PROFILES (3m momentum 0.55 / 36m contrarian+quality). 「不同時間跨度的參數可能不同」 = data-confirmed.
+- **Finding 3 — tuning helped monthly, HURT annually (why we didn't overfit)**: OOS annual tuned-best +12.2% LOST to untuned canonical +15.1%; OOS monthly tuned momentum +2.25% beat canonical +0.90%. "Fit to the answer" would have made the annual book worse — the train/test split caught it. NO retune applied to fom.py (canonical robust OOS).
+- **Week/Day withheld** (monthly bars; needs daily data + re-tuned lookbacks — separate build).
+- **Concept page** `nasdaq100-calibration.md` (canonical, indexed).

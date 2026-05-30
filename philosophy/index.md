@@ -68,6 +68,7 @@ Validation & ensemble (added 2026-05-31):
 - [[concepts/fom-predictive-validity]] — IC study: does FOM actually forecast? (recalibration heartbeat)
 - [[concepts/analyst-persona-ensemble]] — analysts/ council → bounded FOM weight tilts, conviction-blended
 - [[concepts/hotspot-sector-rotation]] — predict next-quarter sector leaders; seasonality beats momentum (measured)
+- [[concepts/nasdaq100-calibration]] — 對答案 2000-2026 + train/test split; optimal weights invert with horizon
 
 Analyst Models (externally sourced, internalised into the framework):
 - [[concepts/chip-flow-single-point-breakout]] — single-point chip-flow breakout (reference analyst-model implementation)
