@@ -233,3 +233,22 @@ Private local git initialised in `$hark` (`git init -b main`, no remote, no push
 **Tag**: `baseline-2026-05-30` at the initial commit.
 
 **Still open** (not built this session): Fix E sector-flow (needs yfinance live data — logic testable with synthetic), `src/sharks/regime/funding_chain.py` (needs FRED ALFRED + market-data clients — Phase 2), vintage/DuckDB storage layer (Phase 2), the human-review-then-promote step for both `_proposals/` (CLAUDE.md §2 paper-trade amendment, ROADMAP patches, concept-page promotion). **Folder rename `$hark`→`sharks` explicitly declined by principal.**
+
+## [2026-05-30 14:00 TW] ingest | Personal financial-advisor system — `wiki/personal/` 8-page cluster + MOC
+
+- **Scope**: net-new personal-finance / long-range-tax / risk planning system, extending `$hark/wiki/` per principal direction ("擴充 $hark"). Distinct from the trading wiki (01–22) — placed in new subfolder `wiki/personal/` to avoid the numeric trading namespace and keep finances separated.
+- **Driver**: principal is NVIDIA TW employee; income + assets ~89% NVDA (salary+RSU+ESPP+personal); ~NT$4M unsecured debt (玉山/國泰/永豐) from early-2025 crypto wipeout; monthly fixed outflow > net salary (gap funded by selling vests); committed pre-sale home (三重市政帝景, ~1,788萬, 1400萬 mortgage, ~2030 交屋); upcoming life events (marriage/children/education/parents' health).
+- **Master principle captured**: 房/債/稅 must hold on a fixed schedule WITHOUT relying on offense (trading/raises); Alpha = accelerator, loss = bounded local damage (anti-2025).
+- **8 pages + MOC created** under `wiki/personal/`:
+  - [[personal/01_financial_profile]] — hub / single source of truth (balance sheet, income statement, monthly cashflow gap −22~27K, life-stage roadmap, 2025 context)
+  - [[personal/02_debt_and_consolidation]] — DBR-22x as 2030-mortgage gating risk; 聯徵 30-day rate-shopping; consolidate-vs-not (目標函數 = 核貸過關); cites 金管會 + 聯徵
+  - [[personal/03_house_funding_plan]] — real pre-sale schedule (150萬 paid → 55/46/46萬 → 91萬 交屋 → 1400萬 loan); mortgage stress test 2.0/2.3/3.0/4.0% → 5.2/5.4/5.9/6.7萬; cites 央行
+  - [[personal/04_long_range_tax_plan]] — **corrected to 750萬 基本所得額** (dropped stale 670萬); AMT = overseas≥100萬 AND 基本所得額>750萬; unremitted realized overseas income reportable; rolling per-sale ledger; cites 財政部
+  - [[personal/05_equity_monetization_schedule]] — **default-monetization-machine hard rule** (強制變現 = 稅 + 6mo cashflow gap + next house payment + quarterly debt target; remainder → hold/rotate-to-$hark/Alpha)
+  - [[personal/06_cashflow_offense_and_guardrails]] — offense levers (NVIDIA perf / ESPP $97 lock / overseas income) + Alpha sleeve ≤5% liquid NAV, ban margin/naked-options/crypto-leverage, monthly+annual loss caps + 30-day cooldown
+  - [[personal/07_stress_tests]] — 5 scenarios (NVDA−50% / 6mo unemployment / 2030 rate 3.5–4% / low RSU refresh / family medical +20萬) with pass matrix
+  - [[personal/08_insurance_and_family_risk]] — emergency fund ~78萬 (biggest gap), term-life/disability/critical-illness/實支實付 priority, avoid 儲蓄險/投資型, life events
+  - [[personal/index]] — MOC + capital-flow reconciliation (4-year sources ~NT$8–10M vs uses ~NT$8.2M+ → tight, NVDA-dependent) + stress matrix + Phase-0 input checklist + advisory cadence
+- **Existing file updates**: [[12_employee_concentration]] — added pointer banner to `personal/`, corrected 670→750萬 tax note, marked old house assumptions superseded by personal/03, added See-also links. `wiki/index.md` — added 個人財務諮詢 section. (No trading-side numbers altered.)
+- **Open (Phase 0 inputs, marked `TBD`, not fabricated)**: loan balances/rates/terms; Gogoro payment; living expenses; cash buffer; net-salary confirm; bank-recognized income for DBR; 2025 crypto loss + harvestable US losses; immediately-sellable vested NVDA; existing insurance policies; life-event timeline/budgets; 其他小存股 holdings.
+- **Boundaries respected**: no stock-pick advice, no order placement, no money movement; buying decisions deferred to $hark rubric. No edits to `src/`, `raw/`, `philosophy/`, `sharks.md`.

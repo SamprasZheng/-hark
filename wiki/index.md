@@ -17,6 +17,7 @@ Phase 1 placeholder. This index becomes the live MOC for the compiled state laye
 - **Backtest log**: [[04_backtest_log]]
 - **Positions**: [[positions]]
 - **Recommendations**: [[05_recommendations/README]]
+- **個人財務諮詢**: [[personal/index]] — 債務 / 現金流 / 買房 / 稅務 / 變現 / 壓測 / 保險
 
 ## See also
 
