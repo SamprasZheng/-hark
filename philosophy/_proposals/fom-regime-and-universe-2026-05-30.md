@@ -24,7 +24,7 @@ source_paths:
 
 ## 1. Why
 
-The pre-Fix FOM (`final_fom` in [[../../src/sharks/scoring/fom]]) systematically under-rated high-momentum ATH-extension supply-chain leaders. Three structural causes:
+The pre-Fix FOM (`final_fom` in `src/sharks/scoring/fom.py`) systematically under-rated high-momentum ATH-extension supply-chain leaders. Three structural causes:
 
 1. **`contrarian` 25 % weight is mean-reversion-biased**. `contrarian_score` returns `dist_score = 20` whenever the ticker is within 5 % of its 52-week high — a hard penalty applied uniformly across market regimes.
 2. **`bubble_guard` 20 % weight stacks late-cycle penalties**. The 6-m and 12-m return triggers (`fom.py:275-285`) deduct up to ~95 points on a sustained breakout, which dominates the 20 % weight allocation and effectively zeros that dimension's contribution to `base_score`.
@@ -36,7 +36,7 @@ The universe (`DEFAULT_UNIVERSE`, 59 tickers) compounded the issue by **missing 
 
 ## 2. Fix A — Regime classifier and weight gating
 
-A new module [[../../src/sharks/regime/classifier]] reads the latest `outputs/breadth-indicator-*.json` and `outputs/liquidity-signals-*.json` and labels the market state into one of five regimes:
+A new module `src/sharks/regime/classifier.py` reads the latest `outputs/breadth-indicator-*.json` and `outputs/liquidity-signals-*.json` and labels the market state into one of five regimes:
 
 | Regime | Trigger | Momentum / Contrarian / Cyclic / Quality / BubbleGuard | BubbleGuard floor |
 |---|---|---|---|
@@ -116,18 +116,18 @@ def test_weights_sum_to_one():
         assert round(sum(profile["weights"].values()), 6) == 1.0
 ```
 
-These tests are deferred to the next session per [[../../docs/ROADMAP]] Phase 1 + Section 5 of [[working-tree-playful-map]] (the post-commit execution sequence places the pytest suite as step 1).
+These tests are deferred to the next session per [[../../docs/ROADMAP]] Phase 1 + Section 5 of the session plan file at `~/.claude/plans/working-tree-playful-map.md` (outside this repo) (the post-commit execution sequence places the pytest suite as step 1).
 
 ## 7. Acceptance checklist for human reviewer
 
-- [ ] `REGIME_PROFILES` weights all sum to 1.0 (already asserted at runtime in [[../../src/sharks/regime/classifier]]).
+- [ ] `REGIME_PROFILES` weights all sum to 1.0 (already asserted at runtime in `src/sharks/regime/classifier.py`).
 - [ ] Five labels are exhaustive for the breadth × liquidity × SPX-vs-200dma space the classifier branches over.
 - [ ] `late_bull` bubble_guard floor of -50 is the right number (NOT -40 or -60) — sensitivity analysis welcome.
 - [ ] Universe placements correct: DELL/HPE/HPQ → HARDWARE_OEM (cycle leaders), MSTR/COIN/HOOD/PLTR/APP/CVNA → SPECULATIVE_NARRATIVE (narrative tier), QBTS/IONQ/RGTI → QUANTUM (high-narrative-low-IP).
 - [ ] [[../../wiki/log]] entry for this proposal is filed.
-- [ ] [[../../watchlist/universe.yaml]] update is queued (human edits to mirror `DEFAULT_UNIVERSE` additions).
-- [ ] Cross-reference added in [[../../philosophy/06-cycle_framework]] to point at the regime classifier as the cycle framework's operational hook.
+- [ ] `watchlist/universe.yaml` update is queued (human edits to mirror `DEFAULT_UNIVERSE` additions).
+- [ ] Cross-reference added in [[../../wiki/06_cycle_framework]] to point at the regime classifier as the cycle framework's operational hook.
 
 ## 8. Out of scope for this proposal
 
-Tracked in [[working-tree-playful-map]] §4 (deferred follow-ons): Fix B (multi-horizon FOM_3m/12m/36m), Fix E (sector flow via XL* rotation), Fix F (regime sensitivity report), `leveraged_etf_scorer`, Taiwan ticker suffix handling.
+Tracked in the session plan file at `~/.claude/plans/working-tree-playful-map.md` (outside this repo) §4 (deferred follow-ons): Fix B (multi-horizon FOM_3m/12m/36m), Fix E (sector flow via XL* rotation), Fix F (regime sensitivity report), `leveraged_etf_scorer`, Taiwan ticker suffix handling.
