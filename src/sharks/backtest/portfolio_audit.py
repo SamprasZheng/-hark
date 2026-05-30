@@ -90,6 +90,44 @@ PORTFOLIO_2 = {
     "EXTR": {"name": "Extreme Networks", "pct": None},
 }
 
+# ─── Concentration context (the elephant the audit does NOT score) ───
+# NVDA RSU/ESPP employer-comp exposure dominates total liquid-ish exposure but
+# is intentionally OUTSIDE PORTFOLIO_1 / PORTFOLIO_2 (those are the actively
+# managed brokerage books). Without surfacing this, an audit verdict like
+# "P1 is 100% leveraged-ETF risk" misleads — P1 is only ~8% of true exposure.
+# Figures are point-in-time estimates from raw/principal/2026-05-29-snapshot-*.md
+# and wiki/12_employee_concentration.md. Update when a fresh snapshot lands.
+CONCENTRATION_CONTEXT_USD = {
+    "nvda_rsu_espp": 130_000,   # unvested employer comp; next vest 2026-06-17
+    "us_broker_p1": 11_374,     # inferred from TARK 13.04% = $1,483.20 snapshot
+    "taiwan_9a92_etf": 1_320,   # 台股 domestic ETF satellite
+    "complementary_p2": 3_000,  # 複委託 (8840) — small, not fully snapshotted; rough est
+}
+
+
+def build_concentration_context() -> dict:
+    """Surface the NVDA-RSU-dominated true exposure alongside the active-book
+    audit, so downstream consumers don't mistake P1's internal mix for the
+    principal's actual risk profile. Not scored — framed only."""
+    c = CONCENTRATION_CONTEXT_USD
+    total = sum(c.values())
+    shares = {k: round(v / total * 100, 1) for k, v in c.items()} if total else {}
+    return {
+        "note": (
+            "NVDA RSU/ESPP is NOT in portfolio_1_audit / portfolio_2_audit by "
+            "design (those are the actively managed brokerage books). It "
+            "dominates true exposure, so read the audit verdicts as applying to "
+            "the ~10% active sleeve, not the whole book. The concentration lever "
+            "is the RSU vest/sale schedule, not active-book rebalancing."
+        ),
+        "exposure_usd": dict(c),
+        "exposure_share_pct": shares,
+        "total_liquidish_usd": total,
+        "see": "wiki/12_employee_concentration.md",
+        "as_of_basis": "raw/principal/2026-05-29-snapshot-p1.md + wiki/12_employee_concentration.md",
+        "figures_are_estimates": True,
+    }
+
 # Inline Buffett 3M (from earlier)
 BUFFETT_3M = {
     "AAPL": 75, "KO": 75, "JNJ": 76, "PG": 73, "WMT": 71,
@@ -264,7 +302,8 @@ def main():
 
     report = {
         "as_of": datetime.now(timezone.utc).isoformat(),
-        "schema_version": 1,
+        "schema_version": 2,
+        "concentration_context": build_concentration_context(),
         "portfolio_1_audit": p1_results,
         "portfolio_2_audit": p2_results,
         "p1_summary": categorize(p1_results),
