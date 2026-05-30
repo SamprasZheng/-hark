@@ -43,7 +43,7 @@ Three layers, each into a different `src/sharks/` module path. **All three borro
 
 - **`as_of_timestamp` on every feature row**: Qlib's native data API treats time as a single index. We wrap it so every feature row carries `as_of_timestamp` (the latest source timestamp that contributed to it) plus `source_grade` (the worst grade among contributing sources). The Risk Officer rejects any feature row where `as_of_timestamp > trade.signal_time` or `source_grade ∈ {D, E}` for a tier-1 holding.
 - **Walk-forward enforcement**: Qlib's `Workflow` supports walk-forward; the `$hark` wrapper makes it *mandatory* (no full-history fit allowed) per [[../04-sector-and-finviz]] Rule 1.
-- **Factor pruning**: do not adopt Alpha158 wholesale. Start with the 12 factors whose economic story aligns with the existing [[../concepts]] dictionary (e.g. KMID — body-to-range ratio — maps to TD-9 setup-9 "exhaustion"; KMA20 — distance from 20MA — maps to [[../concepts/golden-cross]]). Add new factors only when a [[../concepts]] page is written first; this preserves the philosophy-first discipline.
+- **Factor pruning**: do not adopt Alpha158 wholesale. Start with the 12 factors whose economic story aligns with the existing `philosophy/concepts/` dictionary (e.g. KMID — body-to-range ratio — maps to TD-9 setup-9 "exhaustion"; KMA20 — distance from 20MA — maps to [[../concepts/golden-cross]]). Add new factors only when a `philosophy/concepts/` page is written first; this preserves the philosophy-first discipline.
 - **Model zoo gating**: every model in the zoo must pass an interpretability test before reaching `wiki/05_recommendations/`. LightGBM / Linear → OK; Transformer / TFT → research-only until SHAP / attention-attribution wrappers exist.
 
 ## License

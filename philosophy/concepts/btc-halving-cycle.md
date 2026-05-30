@@ -77,7 +77,7 @@ This is consistent with the broader analyst consensus ("4-year cycle weakening, 
 - The system is NOT a BTC pure-play; max BTC notional 4% of portfolio per [[../06-exclusions]]
 
 ### For equities (risk-on / risk-off proxy):
-- BTC cycle bias contributes to `combined_cycle_bias` per [[multi-scale-cycles-concept]]
+- BTC cycle bias contributes to `combined_cycle_bias` per [[multi-scale-cycles]]
 - Phase D coincides historically with risk-asset volatility — discounts tier 2/3 cap
 - Phase B coincides historically with risk-on melt-ups — supports full tier 2/3 caps
 
@@ -91,7 +91,7 @@ If h2024 fails to print a meaningful bear market (no Phase D drawdown > 50% from
 ## See also
 
 - [[../../wiki/06_cycle_framework]] §1 — full empirical data
-- [[multi-scale-cycles-concept]] — broader framework
+- [[multi-scale-cycles]] — broader framework
 - [[../03-long-short-taxonomy]] — quadrant routing for crypto positions
 - [[../10-strategies]] — Strategy C for crypto whale-tracking
 - [[../../raw/macro/principal-cycles-2026-05-29]] — principal directive source

@@ -110,13 +110,21 @@ THEMATIC_2026_BUYS = ["RIVN", "NTLA", "UEC", "BLDP", "AOSL", "LPL", "TBCH", "CRW
 # already in other groups. Mirrors principal's identified 2026 thesis themes.
 WIKI_16_THEMES = ["DNN", "CCJ", "BEAM", "NEM", "VAL", "AESI", "GLD"]
 
+# Serenity (@aleabitoreddit) supply-chain bottleneck names — US-listed subset
+# only. The bulk of the CPO / SiPh chain is already covered by OPTICAL + SIPH
+# groups above (those were themselves Serenity-XFAB inspired). These are the
+# remaining US names from watchlist/serenity-supply-chain.yaml +
+# philosophy/concepts/serenity-supply-chain-bottleneck.md. Non-US bottleneck
+# pure plays (Taiwan/Japan/Korea/China small caps) await Phase 2 suffix support.
+SERENITY_SUPPLY_CHAIN = ["TSEM", "MRVL", "VPG", "VSH"]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
     CONTRARIAN_SW + BUBBLE_WATCH + DC_INFRA + MATERIALS + DEFENSE +
     BETA_ANCHORS + R2K_AI +
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
-    THEMATIC_2026_BUYS + WIKI_16_THEMES
+    THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───
@@ -177,6 +185,11 @@ IP_DEFENSIBILITY = {
     # Wiki 16 themes
     "DNN":  35, "CCJ": 50, "BEAM": 55, "NEM": 60,
     "VAL":  30, "AESI": 35, "GLD": 75,
+    # Serenity supply-chain (US-listed subset)
+    "TSEM": 72,  # Tower Semi — specialty/SiPh foundry ("photonics TSMC")
+    "MRVL": 80,  # Marvell — custom silicon + optical DSP
+    "VPG":  60,  # Vishay Precision Group — foil sensors niche
+    "VSH":  50,  # Vishay — commodity passives
 }
 
 # ─── Data pull ───

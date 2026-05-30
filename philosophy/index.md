@@ -43,6 +43,7 @@ Structural:
 - [[concepts/liquidity-fishbowl]] — regime-aware sizing
 - [[concepts/cycle-resonance]] — 半年調整 / 兩個月上漲 6m bucket trigger
 - [[concepts/last-snow]] — peak macro bearishness + structural bottom co-occurrence
+- [[concepts/buffett-3m]] — 3-month Buffett-tier quality screen
 
 Behavioural (Andy's constitution principles, formalised):
 - [[concepts/objective-watershed]] — pre-committed price levels driving bias
@@ -55,6 +56,10 @@ Cyclical (added 2026-05-29):
 - [[concepts/election-cycle-year-2]] — Y2 midterm + post-Nov 100% rule
 - [[concepts/seasonal-monthly]] — SPX monthly seasonality + September weakness
 - [[concepts/sector-seasonality]] — per-sector best/worst month tables
+
+Analyst Models (externally sourced, internalised into the framework):
+- [[concepts/chip-flow-single-point-breakout]] — single-point chip-flow breakout (reference analyst-model implementation)
+- [[concepts/serenity-supply-chain-bottleneck]] — supply-chain bottleneck pick-and-shovel (Serenity @aleabitoreddit)
 
 ## Entity coverage
 

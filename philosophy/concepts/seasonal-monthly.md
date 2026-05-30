@@ -56,7 +56,7 @@ Similar shape, more volatile:
 
 ### Calendar bias as part of multi-scale framework
 
-Per [[multi-scale-cycles-concept]], `calendar_bias` contributes to overall sizing:
+Per [[multi-scale-cycles]], `calendar_bias` contributes to overall sizing:
 - Nov: `+0.7`
 - Dec, Apr, May, Jul: `+0.5`
 - Oct: `+0.2` (recovery, volatile)
@@ -91,6 +91,6 @@ Per [[multi-scale-cycles-concept]], `calendar_bias` contributes to overall sizin
 ## See also
 
 - [[../../wiki/06_cycle_framework]] §3 — full table
-- [[multi-scale-cycles-concept]] — broader framework
+- [[multi-scale-cycles]] — broader framework
 - [[sector-seasonality]] — per-sector month-by-month variant
 - [[election-cycle-year-2]] — November 2026 specifically aligns with post-midterm

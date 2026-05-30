@@ -77,7 +77,7 @@ def test_fingpt_deterministic():
 
 ## Risks / open questions for the human reviewer
 
-1. **GPU memory budget**: the operator's RTX 5070 has 12 GB VRAM (per [[../../../memory/project_nemoclaw_local_gpu]] — unverified VRAM exact figure). FinGPT-Llama2-7B-LoRA in 4-bit should fit; 13B variants likely will not without offload.
+1. **GPU memory budget**: the operator's RTX 5070 has 12 GB VRAM (per the Claude memory note `project_nemoclaw_local_gpu`, outside this repo — unverified VRAM exact figure). FinGPT-Llama2-7B-LoRA in 4-bit should fit; 13B variants likely will not without offload.
 2. **Model staleness**: published FinGPT LoRAs are trained on pre-2024 corpora. 2025–2026 finance vocabulary (e.g. "vibe trading", "AI bubble audit", "ODC") will not be in their training distribution. The Phase 5 self-fine-tune is the answer; until then, scores on novel terms should be weighted down.
 3. **Chinese / Traditional Chinese inputs**: many KOL feeds the operator reads are Chinese. FinGPT-ChatGLM variants handle this; FinGPT-Llama variants do not natively. Choice of base affects sentence-coverage on the actual `raw/kol_signals/` pipeline.
 4. **Hallucination on numerical extraction**: FinGPT is sentiment-strong, number-extraction-weak. Do NOT use it to extract earnings figures into `raw/earnings/` — that stays human-curated or rule-based parser-curated.

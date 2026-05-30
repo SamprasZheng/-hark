@@ -19,7 +19,7 @@ Format: `## [YYYY-MM-DD HH:MM ET] <action> | <short title>`
 Notes:
 - The four-dimension signal taxonomy ([[02-signal-taxonomy]]) integrates the codex review's conflict-arbitration rules and the gemini review's long-short symmetry
 - Risk and point-in-time pages ([[08-risk-and-position]], [[09-point-in-time]]) are codex review's two Critical items, treated as non-negotiable in Phase 2+
-- All [[entity]] pages carry `last_earnings_date: TBD` — Compiler will populate in Phase 2 first run
+- All entity pages carry `last_earnings_date: TBD` — Compiler will populate in Phase 2 first run
 
 Next session expectations:
 - The `wiki/` layer remains stub. Phase 2 implementation will start populating `wiki/01_macro_state.md` from real `raw/macro/` ingest

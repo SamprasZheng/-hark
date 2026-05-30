@@ -115,6 +115,6 @@ When entering seasonally weak month:
 ## See also
 
 - [[../../wiki/06_cycle_framework]] §4 — full sector data
-- [[sell-in-may-and-september-weak]] — broad-index monthly seasonality
-- [[multi-scale-cycles-concept]] — broader framework
+- [[seasonal-monthly]] — broad-index monthly seasonality
+- [[multi-scale-cycles]] — broader framework
 - [[../04-sector-and-finviz]] — existing sector framework (this proposes adding seasonal triggers)

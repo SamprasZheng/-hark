@@ -63,5 +63,5 @@ In each Y2 that printed strong, an extraneous macro catalyst (Fed pivot, geopoli
 
 - [[../../wiki/06_cycle_framework]] §2 — full data and current-position read
 - [[../../wiki/03_alpha_library]] §B — cycle-resonance instances
-- [[multi-scale-cycles-concept]] — broader framework this fits into
+- [[multi-scale-cycles]] — broader framework this fits into
 - [[btc-halving-cycle]] — co-occurring cycle in 2026
