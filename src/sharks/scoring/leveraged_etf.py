@@ -42,6 +42,7 @@ LEVERAGED_ETF_REGISTRY: dict[str, dict] = {
     "RBLU": {"underlying": "RBLX", "factor": 2, "name": "2x RBLX Daily"},
     "OKLL": {"underlying": "OKLO", "factor": 2, "name": "2x OKLO Daily"},
     "CRWG": {"underlying": "CRWV", "factor": 2, "name": "Leverage Shares 2x CRWV"},
+    "TSLL": {"underlying": "TSLA", "factor": 2, "name": "Direxion 2x TSLA Daily Bull"},
     # 3x index
     "LABU": {"underlying": "XBI", "factor": 3, "name": "Direxion 3x Biotech Bull"},
     "TQQQ": {"underlying": "QQQ", "factor": 3, "name": "ProShares 3x QQQ"},
