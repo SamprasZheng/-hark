@@ -1,0 +1,534 @@
+"""Figure of Merit (FOM) — multi-dimensional ticker scoring.
+
+Five dimensions blended into a single 0-100 FOM score per ticker per as_of:
+
+  1. momentum    — 順勢 / AI cycle alignment, 1-3-12m return, supply-chain depth
+  2. contrarian  — 逆勢 / mispricing, distance from 52w high (positive = correction)
+  3. cyclic      — 週期 / from cycle_bias module, scaled to 0-100
+  4. quality     — alpha+beta blend, realised vol (lower=quality), liquidity
+  5. bubble_guard — -100 to +100, negative = late-cycle bubble stress
+
+Persistence boost: tickers appearing in N consecutive weekly outputs get +5%
+per week capped at +30%, weighted into final FOM.
+
+Output: ranked list with full breakdown for human review.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import sys
+import warnings
+from dataclasses import dataclass, asdict, field
+from datetime import date, datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+
+import numpy as np
+import pandas as pd
+import yfinance as yf
+
+from .cycle_bias import combined_cycle_bias, TICKER_SECTOR
+from ..regime.classifier import classify_regime, REGIME_PROFILES
+
+# ─── Universe definitions (expanded with R2K + new names) ───
+
+INDICES = ["^GSPC", "^NDX", "^SOX", "^VIX", "^RUT"]
+
+MAG7 = ["NVDA", "AAPL", "MSFT", "GOOGL", "META", "AMZN", "TSLA"]
+
+SUPPLY_TIER2 = ["TSM", "ASML", "AVGO", "AMD", "ARM", "MU", "AMAT", "LRCX", "INTC"]
+
+# Memory (Phase 1 per Serenity)
+MEMORY = ["MU", "WDC", "STX", "SIMO"]
+
+# Optical (Phase 2)
+OPTICAL = ["LITE", "COHR", "CIEN", "ANET", "AAOI", "FN"]
+
+# SiPh / external light sources (Phase 3)
+SIPH = ["AXTI", "ALAB", "CRDO", "AEHR", "POET"]
+
+# Power semis (Serenity-XFAB inspired)
+POWER_SEMI = ["NVTS", "POWI", "WOLF", "ON", "MPWR"]
+
+# Contrarian software (principal-named: AI cannot replace IP)
+CONTRARIAN_SW = ["CRM", "NOW", "NFLX"]
+
+# Bubble-stress watchlist (principal-named: ORCL, OKLO, SMCI started falling)
+BUBBLE_WATCH = ["ORCL", "OKLO", "SMCI", "ARM", "AVGO"]
+
+# Datacenter infrastructure (Phase 4 hypothesis from prior session)
+DC_INFRA = ["VRT", "ETN", "GEV", "ASMI", "KLAC"]
+
+# Materials / packaging
+MATERIALS = ["GLW", "AMKR", "TER"]
+
+# Defense (Trump-policy hedge)
+DEFENSE = ["LMT", "RTX", "NOC"]
+
+# Beta anchors (boring large caps for portfolio stability)
+BETA_ANCHORS = ["JNJ", "PG", "KO", "WMT"]
+
+# R2K alpha candidates (small-cap AI-supply-chain or other secular)
+R2K_AI = ["RKLB", "ACHR", "CRSP"]
+
+# Russell 2000 ETF for broad small-cap exposure
+SECTOR_ETFS = ["IWM", "XLK", "XLY", "XLI", "XLB", "XLF", "XLV", "XLU", "XLE", "XHB", "XBI", "XLRE", "XLC", "XLP"]
+
+# Crypto co-asset
+CRYPTO = ["BTC-USD", "ETH-USD"]
+
+# ─── Fix D additions (2026-05-30): expand universe to cover principal's
+# actual holdings, historical 飆股 missed by prior universe, and 2026
+# thesis names from wiki/14 + wiki/16. Audit was previously blind to ~92%
+# of the principal's 2026-05-29 fills and to MSTR/QBTS/IONQ/PLTR/COIN/HOOD
+# which historically were飆股 candidates.
+
+# Server / PC OEMs in AI cycle (DELL = AI server hardware; HPE = enterprise
+# AI infra; HPQ = PC + peripherals via Poly).
+HARDWARE_OEM = ["DELL", "HPE", "HPQ"]
+
+# Narrative + retail squeeze pool — high vol, often cycle out of phase with
+# fundamental scorers. Includes Bitcoin proxy MSTR, crypto rails COIN/HOOD,
+# enterprise AI software story PLTR, ad-tech AppLovin APP, used-car CVNA.
+SPECULATIVE_NARRATIVE = ["MSTR", "COIN", "HOOD", "PLTR", "APP", "CVNA"]
+
+# Quantum computing pure plays (RGTI already proxied via BUBBLE_WATCH-adjacent
+# instruments; add the underlyings + IONQ + QBTS).
+QUANTUM = ["QBTS", "IONQ", "RGTI"]
+
+# 2026-05-29 fills basket (principal P2 / 複委託 + P1 buys not in any other
+# group). LPL/HPQ already covered by HARDWARE_OEM/MATERIALS; remaining new
+# tickers below. CRWV = CoreWeave neocloud.
+THEMATIC_2026_BUYS = ["RIVN", "NTLA", "UEC", "BLDP", "AOSL", "LPL", "TBCH", "CRWV", "ALGM"]
+
+# Wiki/16 §3 forward themes (uranium / biotech / gold / energy) — names not
+# already in other groups. Mirrors principal's identified 2026 thesis themes.
+WIKI_16_THEMES = ["DNN", "CCJ", "BEAM", "NEM", "VAL", "AESI", "GLD"]
+
+# ── Master universe assembly ───────────────────────────────────────────────
+DEFAULT_UNIVERSE = sorted(set(
+    MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
+    CONTRARIAN_SW + BUBBLE_WATCH + DC_INFRA + MATERIALS + DEFENSE +
+    BETA_ANCHORS + R2K_AI +
+    HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
+    THEMATIC_2026_BUYS + WIKI_16_THEMES
+))
+
+# ─── IP defensibility (qualitative Compiler input) ───
+# Ranked 0-100 for AI-substitution resistance / IP moat strength
+IP_DEFENSIBILITY = {
+    # Strong IP moat — recurring revenue, switching cost, customer data
+    "MSFT": 95, "GOOGL": 90, "META": 85, "AAPL": 90,
+    "NFLX": 80, "CRM": 88, "NOW": 90,
+    # Strong industrial moats
+    "TSM": 95, "ASML": 98, "NVDA": 92, "AVGO": 85,
+    # Defensible but not differentiated
+    "AMD": 70, "AMAT": 78, "LRCX": 78, "KLAC": 80, "ASMI": 75,
+    # Modest IP — commodity-ish but switching-cost
+    "MU": 60, "WDC": 55, "STX": 55,
+    # Optical primes (Phase 2 — supply chain depth but commodity-prone)
+    "LITE": 60, "COHR": 65, "CIEN": 65, "ANET": 80, "AAOI": 55, "FN": 55,
+    # Phase 3 specialty
+    "AXTI": 70, "ALAB": 75, "CRDO": 70, "AEHR": 65, "POET": 50,
+    # Power semi
+    "NVTS": 55, "POWI": 70, "WOLF": 60, "ON": 65, "MPWR": 75,
+    # Bubble watch — weak IP / high narrative
+    "ORCL": 75, "OKLO": 30, "SMCI": 40,
+    # ARM ambiguous — strong IP but valuation rich
+    "ARM": 85,
+    # DC infrastructure — strong moats in their niches
+    "VRT": 75, "ETN": 80, "GEV": 70,
+    # Materials
+    "GLW": 80, "AMKR": 55, "TER": 75,
+    # Defense
+    "LMT": 90, "RTX": 88, "NOC": 88,
+    # Beta anchors — classic moats
+    "JNJ": 90, "PG": 85, "KO": 88, "WMT": 80,
+    # Misc
+    "TSLA": 70, "AMZN": 88, "INTC": 60,
+    "RKLB": 60, "ACHR": 35, "CRSP": 55,
+    # ── Fix D (2026-05-30) additions ──
+    # Hardware OEMs — operating moats but commodity-prone
+    "DELL": 55, "HPE": 55, "HPQ": 50,
+    # Speculative narrative bucket — moat varies widely
+    "MSTR": 20,  # Bitcoin levered proxy, no operating IP
+    "COIN": 70,  # crypto exchange, regulated scale moat
+    "HOOD": 55,  # retail broker, scale moat
+    "PLTR": 80,  # enterprise Foundry stickiness
+    "APP":  70,  # AppLovin ad tech + game studios
+    "CVNA": 25,  # used-car retail, no IP
+    # Quantum pure plays — narrative > IP for now
+    "QBTS": 20, "IONQ": 25, "RGTI": 20,
+    # 2026-05-29 buys
+    "RIVN": 35,  # EV + Amazon contract; scale uncertain
+    "NTLA": 55,  # CRISPR gene editing
+    "UEC":  35,  # uranium miner
+    "BLDP": 25,  # hydrogen fuel cell — narrative-heavy
+    "AOSL": 55,  # auto/industrial power semi
+    "LPL":  35,  # LG Display panels — commodity-ish
+    "TBCH": 45,  # gaming headset brand
+    "CRWV": 65,  # CoreWeave neocloud
+    "ALGM": 65,  # Allegro Micro auto power
+    # Wiki 16 themes
+    "DNN":  35, "CCJ": 50, "BEAM": 55, "NEM": 60,
+    "VAL":  30, "AESI": 35, "GLD": 75,
+}
+
+# ─── Data pull ───
+def fetch_monthly(tickers: list[str], start: str, end: str) -> pd.DataFrame:
+    """Pull monthly close series."""
+    raw = yf.download(
+        tickers=tickers, start=start, end=end, interval="1mo",
+        auto_adjust=True, progress=False, group_by="ticker", threads=True,
+    )
+    closes = pd.DataFrame()
+    for t in tickers:
+        try:
+            if isinstance(raw.columns, pd.MultiIndex):
+                s = raw[t]["Close"]
+            else:
+                s = raw["Close"]
+            closes[t] = s
+        except (KeyError, ValueError):
+            pass
+    if closes.index.tz is not None:
+        closes.index = closes.index.tz_localize(None)
+    return closes.sort_index()
+
+
+# ─── Per-dimension scorers ───
+def momentum_score(closes: pd.DataFrame, ticker: str, as_of: pd.Timestamp) -> float:
+    """0-100, blends 1m + 3m + 12m return percentiles vs universe."""
+    s = closes.get(ticker)
+    if s is None or s.dropna().empty:
+        return 50.0  # neutral if missing
+    s = s.dropna()
+    pre = s.loc[:as_of]
+    if len(pre) < 3:
+        return 50.0
+    last = pre.iloc[-1]
+    # Returns
+    rets = {}
+    for n_months, weight in [(1, 0.20), (3, 0.30), (12, 0.50)]:
+        if len(pre) > n_months:
+            r = float(last / pre.iloc[-(n_months + 1)] - 1)
+        else:
+            r = 0.0
+        rets[n_months] = (r, weight)
+    # Convert each return to a score: -50%→0, 0%→50, +100%→100, clipped
+    score = 0.0
+    for n, (r, w) in rets.items():
+        clipped = max(-0.5, min(2.0, r))  # cap at +200%
+        normalized = (clipped + 0.5) / 2.5 * 100  # -50%→0, +200%→100
+        score += w * normalized
+    return float(max(0, min(100, score)))
+
+
+def contrarian_score(closes: pd.DataFrame, ticker: str, as_of: pd.Timestamp) -> float:
+    """0-100, higher = bigger 'mispricing' opportunity.
+    Inputs: distance from 52w high + IP defensibility + magnitude of correction.
+    """
+    s = closes.get(ticker)
+    if s is None or s.dropna().empty:
+        return 50.0
+    s = s.dropna()
+    last = s.loc[:as_of].iloc[-1] if not s.loc[:as_of].empty else None
+    if last is None:
+        return 50.0
+    window = s.loc[as_of - pd.Timedelta(days=365):as_of]
+    if window.empty:
+        return 50.0
+    high = window.max()
+    dist_from_high = float((high - last) / high) if high > 0 else 0.0
+    # Contrarian sweet spot: 10-40% below 52w high (real correction, not crash)
+    if dist_from_high < 0.05:
+        dist_score = 20  # too close to high, no opportunity
+    elif dist_from_high < 0.15:
+        dist_score = 50
+    elif dist_from_high < 0.30:
+        dist_score = 85  # sweet spot
+    elif dist_from_high < 0.50:
+        dist_score = 70
+    else:
+        dist_score = 40  # might be crash, not correction
+    # IP defensibility modulates the score
+    ip = IP_DEFENSIBILITY.get(ticker, 50)
+    # Final: weighted blend (dist contributes 60%, IP 40%)
+    score = 0.6 * dist_score + 0.4 * ip
+    return float(max(0, min(100, score)))
+
+
+def cyclic_score(ticker: str, as_of: pd.Timestamp) -> tuple[float, dict]:
+    """0-100 from cycle_bias, with breakdown."""
+    res = combined_cycle_bias(as_of.date(), ticker)
+    # Convert [-1, +1] → [0, 100]
+    score = (res.combined + 1.0) / 2.0 * 100
+    return float(max(0, min(100, score))), asdict(res)
+
+
+def quality_score(closes: pd.DataFrame, ticker: str, as_of: pd.Timestamp) -> float:
+    """0-100, alpha+beta blend: low vol = quality; positive 36m return = alpha."""
+    s = closes.get(ticker)
+    if s is None or s.dropna().empty:
+        return 50.0
+    s = s.dropna()
+    pre = s.loc[:as_of]
+    if len(pre) < 12:
+        return 50.0
+    # 36m total return
+    if len(pre) > 36:
+        r36 = float(pre.iloc[-1] / pre.iloc[-37] - 1)
+    else:
+        r36 = float(pre.iloc[-1] / pre.iloc[0] - 1)
+    # 24m realised vol (monthly log returns)
+    lr = np.log(pre.iloc[-25:] / pre.iloc[-25:].shift(1)).dropna()
+    rvol_ann = float(lr.std() * math.sqrt(12)) if len(lr) > 1 else 0.5
+    # Score: low vol better, positive return better
+    vol_score = max(0, 100 - rvol_ann * 100)  # 0% vol→100, 100% vol→0
+    return_score = max(0, min(100, (r36 + 0.5) / 2.5 * 100))  # -50%→0, +200%→100
+    score = 0.4 * vol_score + 0.6 * return_score
+    return float(max(0, min(100, score)))
+
+
+def bubble_guard(closes: pd.DataFrame, ticker: str, as_of: pd.Timestamp) -> float:
+    """-100 to +100. Negative = bubble stress, positive = healthy.
+    Inputs:
+      - momentum >> long-term avg → bubble risk
+      - parabolic 6m pattern → bubble risk
+      - distance from 52w high < 5% + high vol → late stage
+      - solid IP + reasonable valuation → positive
+    """
+    s = closes.get(ticker)
+    if s is None or s.dropna().empty:
+        return 0.0
+    s = s.dropna()
+    pre = s.loc[:as_of]
+    if len(pre) < 12:
+        return 0.0
+    last = pre.iloc[-1]
+    # 6m return
+    if len(pre) > 6:
+        r6 = float(last / pre.iloc[-7] - 1)
+    else:
+        r6 = 0.0
+    # 12m return
+    r12 = float(last / pre.iloc[-13] - 1) if len(pre) > 12 else 0.0
+    # 36m avg monthly return as baseline
+    if len(pre) > 36:
+        baseline = float(pre.iloc[-37:].pct_change().mean() * 12)
+    else:
+        baseline = 0.10
+    # Distance from 52w high
+    window = s.loc[as_of - pd.Timedelta(days=365):as_of]
+    high = window.max() if not window.empty else last
+    dist = float((high - last) / high) if high > 0 else 0.0
+    score = 0.0
+    # Parabolic warning
+    if r6 > 2.0:  # +200% in 6 months
+        score -= 50
+    elif r6 > 1.0:
+        score -= 25
+    elif r6 > 0.5:
+        score -= 10
+    # Overextension warning
+    if r12 > baseline * 5 and r12 > 1.5:
+        score -= 30
+    # At-the-top warning
+    if dist < 0.03 and r12 > 1.0:
+        score -= 15
+    # Healthy correction (recovery candidate)
+    if 0.15 < dist < 0.35 and r12 > -0.1:
+        score += 30
+    # Solid trend with breath
+    if 0.0 < r6 < 0.3 and 0.05 < dist < 0.20:
+        score += 20
+    # IP defensibility bonus
+    ip = IP_DEFENSIBILITY.get(ticker, 50)
+    if ip >= 85:
+        score += 15
+    elif ip <= 40:
+        score -= 15
+    return float(max(-100, min(100, score)))
+
+
+# ─── FOM aggregation ───
+# Default weights when no regime override is supplied. Matches the canonical
+# 25/25/15/15/20 from the original FOM doc-string. The regime classifier
+# (regime/classifier.py) supplies alternative weights when applied.
+_DEFAULT_WEIGHTS = REGIME_PROFILES["neutral"]["weights"]
+_DEFAULT_BUB_FLOOR = REGIME_PROFILES["neutral"]["bubble_guard_floor"]
+
+
+@dataclass
+class FOMScore:
+    ticker: str
+    as_of: str
+    sector_etf: Optional[str]
+    momentum: float
+    contrarian: float
+    cyclic: float
+    quality: float
+    bubble_guard_val: float
+    persistence_weeks: int = 0
+    cyclic_breakdown: dict = field(default_factory=dict)
+    ip_defensibility: int = 50
+    # Regime-aware scoring (defaults reproduce canonical FOM behaviour).
+    regime_label: str = "neutral"
+    weights: dict = field(default_factory=lambda: dict(_DEFAULT_WEIGHTS))
+    bubble_guard_floor: int = _DEFAULT_BUB_FLOOR
+
+    @property
+    def bubble_guard_clamped(self) -> float:
+        """Bubble guard reading after regime-supplied floor is applied."""
+        return float(max(self.bubble_guard_val, self.bubble_guard_floor))
+
+    @property
+    def base_score(self) -> float:
+        w = self.weights
+        return (
+            w["momentum"] * self.momentum
+            + w["contrarian"] * self.contrarian
+            + w["cyclic"] * self.cyclic
+            + w["quality"] * self.quality
+            # normalise the floored bubble_guard from [-100, +100] to [0, 100]
+            + w["bubble_guard"] * ((self.bubble_guard_clamped + 100) / 2)
+        )
+
+    @property
+    def persistence_boost(self) -> float:
+        return min(self.persistence_weeks * 0.05, 0.30)
+
+    @property
+    def final_fom(self) -> float:
+        return float(self.base_score * (1.0 + self.persistence_boost))
+
+
+def score_ticker(
+    closes: pd.DataFrame,
+    ticker: str,
+    as_of: pd.Timestamp,
+    persistence_weeks: int = 0,
+    regime: Optional[dict] = None,
+) -> FOMScore:
+    """Score a single ticker. If ``regime`` is supplied, its weights and
+    bubble_guard floor are stamped onto the FOMScore; otherwise the canonical
+    neutral weights apply (backward compatible with pre-regime callers)."""
+    mom = momentum_score(closes, ticker, as_of)
+    con = contrarian_score(closes, ticker, as_of)
+    cyc, cyc_breakdown = cyclic_score(ticker, as_of)
+    qual = quality_score(closes, ticker, as_of)
+    bub = bubble_guard(closes, ticker, as_of)
+    ip = IP_DEFENSIBILITY.get(ticker, 50)
+
+    if regime is None:
+        regime_label = "neutral"
+        weights = dict(_DEFAULT_WEIGHTS)
+        bub_floor = _DEFAULT_BUB_FLOOR
+    else:
+        regime_label = regime["label"]
+        weights = dict(regime["weights"])
+        bub_floor = int(regime["bubble_guard_floor"])
+
+    return FOMScore(
+        ticker=ticker,
+        as_of=as_of.isoformat()[:10],
+        sector_etf=TICKER_SECTOR.get(ticker),
+        momentum=mom,
+        contrarian=con,
+        cyclic=cyc,
+        quality=qual,
+        bubble_guard_val=bub,
+        persistence_weeks=persistence_weeks,
+        cyclic_breakdown=cyc_breakdown,
+        ip_defensibility=ip,
+        regime_label=regime_label,
+        weights=weights,
+        bubble_guard_floor=bub_floor,
+    )
+
+
+def rank_universe(
+    closes: pd.DataFrame,
+    universe: list[str],
+    as_of: pd.Timestamp,
+    persistence: dict[str, int] = None,
+    regime: Optional[dict] = None,
+) -> list[FOMScore]:
+    persistence = persistence or {}
+    scores = []
+    for t in universe:
+        if t not in closes.columns or closes[t].dropna().empty:
+            continue
+        s = score_ticker(closes, t, as_of, persistence_weeks=persistence.get(t, 0), regime=regime)
+        scores.append(s)
+    scores.sort(key=lambda x: x.final_fom, reverse=True)
+    return scores
+
+
+def main(out_dir: Path, use_regime: bool = True) -> int:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    today = pd.Timestamp("2026-05-29")
+    regime = classify_regime() if use_regime else None
+    if regime is not None:
+        print(
+            f"Regime: {regime['label']} ({', '.join(regime['reasons']) or 'no reasons'})",
+            file=sys.stderr,
+        )
+    print(f"FOM scoring as of {today.date()}, universe {len(DEFAULT_UNIVERSE)} tickers", file=sys.stderr)
+    closes = fetch_monthly(DEFAULT_UNIVERSE + INDICES + SECTOR_ETFS + CRYPTO, "2019-12-01", "2026-05-29")
+    print(f"  data: {len(closes.columns)} tickers with data", file=sys.stderr)
+    scores = rank_universe(closes, DEFAULT_UNIVERSE, today, regime=regime)
+
+    if regime is not None:
+        scoring_method = (
+            f"regime={regime['label']} weights="
+            + "/".join(f"{int(round(v*100))}%" for v in regime["weights"].values())
+            + " (momentum/contrarian/cyclic/quality/bubble_guard); "
+            + f"bubble_guard_floor={regime['bubble_guard_floor']}"
+        )
+    else:
+        scoring_method = "weighted 25%/25%/15%/15%/20% momentum/contrarian/cyclic/quality/bubble_guard"
+
+    report = {
+        "as_of": datetime.now(timezone.utc).isoformat(),
+        "schema_version": 2,
+        "scoring_window": {"start": "2019-12-01", "end": "2026-05-29"},
+        "universe_size": len(DEFAULT_UNIVERSE),
+        "tickers_scored": len(scores),
+        "regime": regime,
+        "scoring_method": scoring_method,
+        "ranked_full": [asdict(s) | {"base_score": s.base_score, "final_fom": s.final_fom} for s in scores],
+        "top_3_picks": [
+            {"rank": i + 1, "ticker": s.ticker, "final_fom": round(s.final_fom, 2),
+             "momentum": round(s.momentum, 1), "contrarian": round(s.contrarian, 1),
+             "cyclic": round(s.cyclic, 1), "quality": round(s.quality, 1),
+             "bubble_guard": round(s.bubble_guard_val, 1), "sector": s.sector_etf,
+             "ip_defensibility": s.ip_defensibility}
+            for i, s in enumerate(scores[:3])
+        ],
+        "top_50_watchlist": [
+            {"rank": i + 1, "ticker": s.ticker, "final_fom": round(s.final_fom, 2),
+             "momentum": round(s.momentum, 1), "contrarian": round(s.contrarian, 1),
+             "cyclic": round(s.cyclic, 1), "quality": round(s.quality, 1),
+             "bubble_guard": round(s.bubble_guard_val, 1), "sector": s.sector_etf}
+            for i, s in enumerate(scores[:50])
+        ],
+        "bubble_alerts_negative_guard": [
+            {"ticker": s.ticker, "bubble_guard": round(s.bubble_guard_val, 1),
+             "momentum": round(s.momentum, 1), "final_fom": round(s.final_fom, 2)}
+            for s in scores if s.bubble_guard_val <= -20
+        ],
+    }
+    out_path = out_dir / f"fom-monthly-{today.date()}.json"
+    out_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    print(f"wrote {out_path}", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(Path("outputs")))

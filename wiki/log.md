@@ -1,0 +1,219 @@
+# Wiki Log
+
+Chronological record of activity in the compiled wiki layer. Append-only.
+
+Format per [[../philosophy/09-point-in-time]] and [[../CLAUDE]]:
+
+```
+## [YYYY-MM-DD HH:MM TZ] <action> | <short title>
+```
+
+Where `<action>` ∈ `{ingest, query, lint, recommendation, halt, universe, raw_deletion, build}`.
+
+---
+
+## [2026-05-29 17:00 TW] proposal | AI-trading inspirations gap-fill — 3 accept-candidates + 2 rejections + matrix patch
+
+- **Scope**: external market scan of open-source AI-trading projects (LOBSTER, DeepLOB, FinRobot, FinGPT, Qlib, Backtrader+Gym/RL) audited against the existing 8-project list in [[../philosophy/references/open-source-inspirations]]. Gap = 5 projects; FinRobot already covered as inspiration #3. Rejection scope = inherited from [[../README]] "does NOT do HFT on US equities" structural rule.
+- **6 proposal pages dropped under `philosophy/_proposals/`** (agent-proposes / human-commits per [[../CLAUDE]] §1.2 + §9):
+  - [[../philosophy/_proposals/inspiration-09-fingpt]] — finance-domain LLM sentiment scorer for Compiler role; Phase 4; replaces VADER (inspiration #8) for finance text; runs locally on operator's RTX 5070 with 4-bit LoRA; license check pending
+  - [[../philosophy/_proposals/inspiration-10-qlib]] — Microsoft MIT-licensed AI quant platform; Alpha158 candidate factor pool + backtest engine + model zoo; ★★★★★ fit; Phase 4–5
+  - [[../philosophy/_proposals/inspiration-11-backtrader-finrl]] — license-split paired inspiration: Backtrader (GPLv3) design-only + FinRL (expected MIT) integrated; RL agent restricted to **sizing critic**, never entries/exits per constitutional + sample-efficiency + interpretability arguments; Phase 4–5
+  - [[../philosophy/_proposals/considered-and-rejected-lobster]] — NASDAQ microsecond LOB data; rejected on 5 grounds (README structural / horizon mismatch / cost / no interaction with bottleneck alpha / infra burden); falsifiability table for re-evaluation included
+  - [[../philosophy/_proposals/considered-and-rejected-deeplob]] — Oxford-Man CNN+LSTM LOB classifier; rejection inherits from LOBSTER + 4 additional DeepLOB-specific reasons (tick-horizon mismatch / streaming-vs-EOD / no interpretability / research-not-signal)
+  - [[../philosophy/_proposals/inspirations-matrix-patch]] — literal copy-paste diff blocks for Patch 1 (open-source-inspirations.md: 3 numbered entries + integration map update + see-also link), Patch 2 (docs/INSPIRATIONS.md: 3 matrix rows + 3 per-project notes), Patch 3 (new file philosophy/references/considered-and-rejected.md as rejection aggregator)
+- **Direction question (operator asked LOB-direction vs LLM-agent-direction)**: answered by the codebase itself — `$hark` is already an LLM-agent + multi-source-fusion system per [[../docs/ROADMAP]] Phase 3. Real question is gap-fill in the chosen direction: a finance-LLM (FinGPT), a quant factor library + backtest engine (Qlib), an RL sizing layer (FinRL). LOB direction structurally excluded by [[../README]].
+- **Hard constraints respected** (none crossed): zero edits to existing `$hark` files; zero writes outside `philosophy/_proposals/` and this log entry; no `sharks.md` touch; no `raw/` touch; no `src/sharks/` scaffold; no execution code; no brokerage / wallet integration; no autonomous-loop wiring.
+- **Open verification work for the human reviewer**: (a) verify license files at FinGPT / Qlib / Backtrader / FinRL repos before any code copy; (b) Phase-4 sprint-0 backtest engine 3-way decision (Qlib vs vectorbt vs from-scratch Backtrader-design); (c) before training PPO sizing critic, benchmark a deterministic [[../philosophy/concepts/cycle-resonance]]-gated Kelly sizer.
+- **Files**: 6 created under `philosophy/_proposals/`, 1 updated (this log entry). 0 wiki content pages, 0 philosophy/ commits (proposals only). Rate-limit hits: 0 (no web fetches; facts cited from training knowledge with `**Unconfirmed:**` markers where verification needed).
+
+## [2026-05-29 05:30 ET] build | FOM scoring system + AI Bubble Audit + IPO verification + 5 concepts accepted
+
+- **New code modules**:
+  - `src/sharks/scoring/cycle_bias.py` — multi-scale cycle bias scorer (BTC halving + Presidential + Calendar + Sector → combined ∈ [-1, +1])
+  - `src/sharks/scoring/fom.py` — Figure of Merit multi-dimensional scorer (Momentum / Contrarian / Cyclic / Quality / BubbleGuard), 5 dimensions weighted 25/25/15/15/20 with persistence boost
+- **Universe expanded** to 59 tickers: Mag 7 + AI supply chain Phase 1/2/3 + power semis (Serenity-inspired) + contrarian software (CRM/NOW/NFLX) + bubble watch (ORCL/OKLO/SMCI/ARM/AVGO) + DC infra (VRT/ETN/GEV) + materials (GLW/AMKR/TER) + defense (LMT/RTX/NOC) + beta anchors (JNJ/PG/KO/WMT) + R2K alpha (RKLB/ACHR/CRSP) + IWM ETF for R2K broad
+- **Pages written**:
+  - [[05_recommendations/2026-05-29-fom-monthly]] — first monthly FOM 3-pick + top-50 watchlist + bubble alerts
+  - [[07_ai_bubble_audit]] — comparison to 2000/2008/1970s; tier-1 to tier-3 early-warning indicators; "next-to-break" list (6 names at bubble_guard -95)
+  - [[05_recommendations/2026-11-buy-the-dip-candidates]] — Nov 2026 staging list (7 sector buckets) for activation trigger
+- **Key empirical findings**:
+  1. **Top 3 picks: META + LMT + MSFT** (after ORCL Principal-override substitution)
+  2. **ORCL discrepancy**: FOM ranks #3 (contrarian recovery) but principal flagged as bubble breakdown — Compiler defers to human
+  3. **6 names at maximum bubble stress (-95)**: AXTI, MU, STX, AEHR, SIMO, WDC — all in SOXX, mostly Memory + SiPh. These are next-to-break BEFORE the principal's named ORCL/OKLO/SMCI
+  4. **NVDA / TSM still healthy**: bubble_guard +15 / 0 respectively. Principal's "NVDA TSM still standing" empirically verified
+  5. **OKLO / SMCI weak as principal said**: both in low FOM rank with weak momentum
+- **IPO pipeline VERIFIED** (WebSearch 2026-05-29):
+  - SpaceX S-1 filed 2026-05-20, roadshow June 4, $1.75T / $75B
+  - OpenAI confidential S-1 filed ~May 22, targeting Sept 2026
+  - Anthropic targeting Oct 2026 listing, $900B valuation, first profit Q2 2026 (~$559M)
+  - **All three IPOs land in Y2-midterm weakest window** (May-Oct 2026) — canonical "IPO trap" risk; system applies 90-day post-IPO blackout
+- **5 concepts moved from `_proposals/` to `philosophy/concepts/` (user authorisation "全做")**:
+  - `multi-scale-cycles.md`, `btc-halving-cycle.md`, `election-cycle-year-2.md`, `seasonal-monthly.md`, `sector-seasonality.md`
+  - `philosophy/index.md` updated with "Cyclical" sub-section
+- **Serenity profile expanded** with 4 advanced techniques from `serenity.md` archive: pass-through structure (EWY/SK Hynix), volatility mispricing on long-dated options, government subsidy backing (Chips Act), low P/B + multi-optionality (XFAB 5-way thesis)
+- **November 2026 staging list** prepared 5 months ahead: DHI/CAT/EQIX as highest-conviction; activation trigger = SPX -10% drawdown OR VIX spike+retreat OR post-midterm-Nov resolution
+
+## [2026-05-28 22:00 ET] initialise | Phase 1 wiki scaffold
+
+- All wiki pages created as stubs with `status: stub` in frontmatter
+- Compiler will replace stubs with compiled content in Phase 2 as `raw/` sources arrive
+- This log entry serves as the t=0 timestamp for all subsequent point-in-time references
+
+## [2026-05-29 03:30 ET] ingest+verify | Multi-scale cycle framework (BTC halving + election Y2 + seasonality)
+
+- **Sources**:
+  - [[../raw/macro/principal-cycles-2026-05-29]] (Grade A, principal directive)
+  - [[../outputs/cycle-validation-2026-05-29.json]] (yfinance BTC 2014+, SPX 1980+, sector ETFs 2005+)
+  - WebSearch: Fidelity, US Bank, Capital Group, IBKR on BTC cycle + presidential cycle + seasonality
+- **Compiler-side analytics**:
+  - Built `src/sharks/backtest/cycle_validator.py` — pulls BTC + SPX + NDX + 17 sector ETFs monthly history
+  - Computed: BTC halving-relative returns (h2012-h2024), SPX presidential-cycle returns (Y1/Y2/Y3/Y4), SPX/NDX monthly seasonality, sector-ETF monthly seasonality
+- **Pages updated**:
+  - [[06_cycle_framework]] — **NEW** major synthesis page with full empirical numbers
+  - [[01_macro_state]] §4a + §4b — current cycle position + IPO pipeline catalysts
+- **Key calibration findings**:
+  1. **2026 triple-cycle alignment**: BTC h2024 +25m post-halving (bottoming window 2026-Q4 to 2027-Q1) + US Y2 midterm (historically weakest) + Sell-in-May window. **All three say "caution May-Oct 2026, buy late 2026, hold through 2027".**
+  2. **Post-midterm-Nov +12m has been positive 100% of the time since 1938** — highest-conviction macro setup the system has documented
+  3. Principal's BTC "2026 halving" claim is factually wrong (next halving is 2028), but underlying intuition correct via "halving + 32 month bottom" rule
+  4. Principal's "Sell in May" partially wrong: May itself is SPX's 2nd-strongest month (79% positive); September is the actual weak month (only negative month at -0.90%)
+  5. Principal's "solar Dec rally" WRONG: TAN best month is January (+3.85%)
+  6. Principal's "gaming summer rally" WEAK: HERO best month is November (+4.6%)
+  7. Principal's "11月+12月 消費季" ✅ CORRECT
+  8. Principal's "秋絕" ✅ CORRECT (Sep -0.90%, 46% positive)
+- **Proposals filed in `philosophy/_proposals/`** (5 new):
+  - `multi-scale-cycles-concept.md` — aggregator framework
+  - `election-cycle-year-2.md` — Y2 midterm sizing rules
+  - `btc-halving-cycle.md` — 4-year halving cycle phases
+  - `sell-in-may-and-september-weak.md` — monthly seasonality
+  - `sector-seasonality.md` — per-sector month-by-month
+- **Operational implications for next 6 months**:
+  - Reduce tier 1 + tier 2 sizing to 60-70% of standard caps May-Oct 2026
+  - No fresh 6m+ bucket entries until post-midterm trigger
+  - Enable defensive sectors (XLP, XLU) for May-Oct hedging
+  - No fresh BTC longs until late 2026 cycle bottom signal
+  - Stage Nov 2026 buy-the-dip universe scout starting October 2026
+
+## [2026-05-29 02:00 ET] ingest+verify | Serenity KOL profile + yfinance narrative backtest
+
+- **Sources**:
+  - [[../raw/kol_signals/serenity-aleabitoreddit-profile-2026-05-29]] (Grade C, KOL profile aggregated from WebSearch results)
+  - [[../outputs/narrative-validation-2026-05-29.json]] (yfinance monthly bars 2019-12 to 2026-05, 36 tickers)
+- **Compiler-side analytics**:
+  - Built `src/sharks/backtest/narrative_validator.py` — Phase 2 early data-pull + per-phase return analysis
+  - Validated 7-phase narrative arc against actual prices; principal's P1 (TSLA leader) and P3 (NVDA leader) **verified**; P6 (NVDA leader) **REFUTED** — NVDA ranked #26 in P6 (+57%), real leaders were AXTI/Memory/Optical
+- **Pages updated**:
+  - [[03_alpha_library]] §H (Serenity framework + empirical verification) + §I (Memory cycle 縮量也不下跌 exemplar)
+  - [[05_recommendations/2026-05-29-narrative-validation]] — new recommendation page with candidate shortlist + Phase 4 hypotheses
+- **Key calibration findings**:
+  1. **Leadership saturation invalidates standard tier-1 sizing**: NVDA $5T saturation → alpha rotates to supply chain → dynamic tier-1 cap needed (proposed `src/sharks/risk/saturation.py`)
+  2. **Cycle-resonance threshold misses policy-shock sub-cycles**: 2025 SPX max DD only -7.8% (below 10% floor) but P6 recovery was historic. Proposed `philosophy/concepts/policy-shock-sub-cycle.md`
+  3. **Memory catch-up rule**: 2024 flat MU + Mag 7 capex confirmation → 2025 +214%. Reproducible via sector-dispersion + upstream demand confirmation
+- **Proposed `philosophy/` updates** (human review required):
+  - New concept page: `policy-shock-sub-cycle.md`
+  - New entity pages: `intel.md`, `vrt-vertiv.md`, `eaton-etn.md`, `ge-vernova-gev.md`, `asmi.md`
+  - `philosophy/08-risk-and-position.md` saturation-adjusted tier-1 sizing rule
+- **Current standing for next daily output**:
+  - **No new positions today** — Phase 3 names at high, NVDA at top of range ($213 vs $180-220), Phase 4 candidates need Researcher entity pages first
+  - Watchlist build: ANET (-9.7% from high; consolidation watch), FN (Phase 2 laggard), INTC (Agent AI CPU)
+  - Inoculation: AXTI 78× chart is the canonical 分別心 trap — system inoculated by Phase 1 calibration findings
+
+## [2026-05-29 01:00 ET] ingest | Principal narrative: 2020-2026 macro arc + regime shift to Warsh-era
+
+- **Source**: [[../raw/macro/principal-narrative-2026-05-29]] (Grade A, principal-directive)
+- **Pages updated**:
+  - [[01_macro_state]] — promoted from stub to live; documents two-factor (AI + Trump) regime under Warsh-era Fed
+  - [[03_alpha_library]] — added §A (2020-2026 7-phase macro arc), §B (5 cycle-resonance instances), §F (supply-chain bottleneck plays)
+  - [[02_mag7_bottleneck]] — added §6 (supply-chain breadth: optical comms + CPU/Agent AI + Mag 7 cloud partnerships)
+- **Key regime claims** propagated:
+  1. Kevin Warsh succeeded Powell as Fed Chair (May 2026) with stated market non-intervention
+  2. NVDA at ~$5T market cap (world's largest), range-bound $180-$220
+  3. AI rally has broadened beyond pure GPU to optical comms, CPU+Agent AI, Mag 7 cloud partners
+  4. Trump-policy is now the dominant macro variance source
+- **Proposed `philosophy/` updates** (Compiler cannot edit; human review required per [[../CLAUDE]] §1):
+  - `philosophy/entities/federal-reserve.md` should note the Warsh regime change
+  - `philosophy/entities/nvidia.md` should note current $5T market cap and 180-220 range
+  - `philosophy/entities/trump-administration.md` should note December 2024 tariff cycle → April 2025 de-escalation arc
+  - Consider adding `philosophy/entities/intel.md` (Agent AI CPU thesis)
+  - Consider adding 5 optical communications entity pages
+- **Outstanding research items** (flagged in [[01_macro_state]] §7):
+  - BTC behaviour during Dec 2024 - April 2025 tariff drawdown (gap)
+  - Warsh hand-off precise date + transitional FOMC composition
+  - NVDA $5T milestone precise as_of date
+  - Optical communications candidate vetting against [[../philosophy/concepts/supply-chain-bottleneck]] validation checklist
+
+
+## 2026-05-30 11:00 ET — Streamlit Page 11 (Deep Research + AI)
+- Added 11th page **🧠 Deep Research + AI** to [[../src/sharks/ui/streamlit_app.py]]
+- Page consumes [[../outputs/deep-research-2026-05-29.json]] (14 tickers) and lazy-imports [[../src/sharks/ai/local_llm.py]]
+- Buttons: 📝 generate_thesis / 😈 generate_devils_advocate → call local Ollama (llama3.2:3b default)
+- Outputs stored in st.session_state so switching tickers preserves prior runs
+- Added bring-up helper [[../scripts/setup_local_llm.ps1]] — wraps check_ollama.ps1 + ollama pull + smoke test
+- New synthesis [[22_streamlit_page11_deep_research_ai]] documents UI flow, philosophy linkage, safety boundaries
+- Verified: streamlit_app.py SYNTAX OK (584 lines); http://localhost:8501 HTTP 200; lazy import resolves; Ollama currently DOWN (waiting on user pull)
+- Aligns with [[21_internalization_local_llm]] internalization > scraping principle
+
+## [2026-05-29 22:50 ET] ingest | Principal trade fills 2026-05-29 (P1 de-leverage + P2 peripheral basket)
+
+- **Source**: [[../raw/principal/2026-05-29-fills]] (Grade A, principal_trade_log) — new `raw/principal/` subdir for principal-personal trade artefacts (parallel to macro/earnings/market_data/kol_signals)
+- **Account A (複委託 8840-0767262, P2)**: 9 BUYS — LPL 30, HPQ 40, TBCH 30, RIVN 20, UEC 30, NTLA 20, AOSL 3, ORCL 2, BLDP 100. Thematic basket built around US laptop-peripheral universe + diversified small caps
+- **Account B (US direct broker, P1)**:
+  - SELLS: ORCX 10 @ $52.97, QBTX 10 @ $22.02, QUBX 10 @ $17.54, RGTX 10 @ $34.91, SMCL 3 @ $115.46, DELL 0.0291 (dust)
+  - BUYS: ALGM 10 @ $51.84, CRWG $500 @ $39.77, HPQ 20 @ $26.74
+  - Pattern: partial execution of audit SELL verdicts on ORCX/RGTX/SMCL per [[../outputs/portfolio-audit-2026-05-30]]; leverage rotation quantum/SMCI → CRWV (CoreWeave)
+- **State diff vs current PORTFOLIO_1 / PORTFOLIO_2 in [[../src/sharks/backtest/portfolio_audit]]**:
+  - New tickers introduced: LPL, TBCH, RIVN, NTLA, AOSL, BLDP, CRWG (not currently in audit)
+  - HPQ now dual-account (40 sh P2 + 20 sh P1)
+  - QUBX sold but not in PORTFOLIO_1 — verification flag
+- **Follow-up required** (does not happen automatically):
+  - Capture full P1 + P2 snapshots with % → refresh PORTFOLIO_1 / PORTFOLIO_2 hardcoded dicts in portfolio_audit.py
+  - Re-run `portfolio_audit.py` after refresh to produce next-day audit reflecting these adjustments
+  - 7 new tickers need entity coverage under `philosophy/entities/` before they can carry invalidation triggers in [[positions]]
+  - Verify QUBX origin (held outside the tracked set, or stale sell?)
+
+## [2026-05-29 23:15 ET] ingest | Full P1 snapshot + new Taiwan 台股 account 9A92 + NVDA RSU framing review
+
+- **Sources added**:
+  - [[../raw/principal/2026-05-29-snapshot-p1]] (Grade A) — full 32-position US broker P1 snapshot, sorted by mkt val; reconciles 1:1 against current [[../src/sharks/backtest/portfolio_audit]] PORTFOLIO_1 dict
+  - [[../raw/principal/2026-05-29-snapshot-tw-etf]] (Grade A) — newly observed third account 9A92-0316376 holding 5 台股 ETFs (~NT$41K ≈ $1.3K USD)
+- **Resolved verification flag from prior log entry**: QUBX **is** in PORTFOLIO_1 (1.70% / $193.80); the prior raw file note was incorrect and has been corrected in [[../raw/principal/2026-05-29-fills]].
+- **Reclassified today's 2x leveraged ETF sells**: not "partial trim" — five positions liquidated 85–100% (ORCX 100%, SMCL 100%, QUBX 90%, QBTX 87%, RGTX 85%). ~$1,620 sold, ~$1,553 bought (ALGM/HPQ/CRWG) — cash-neutral rotation; ~14% of P1 cycled in one day.
+- **P1 total NAV inferred**: ~$11,374 USD (from TARK 13.04% = $1,483.20).
+- **Concentration framing**: P1 ≈ $11.4K, Taiwan 台股 9A92 ≈ $1.3K, 複委託 8840 P2 not snapshotted but appears small from fill sizes, **NVDA RSU $130K** ≈ NT$4.08M dominates. P1 ≈ 8.7% of NVDA RSU. Today's rotation cycled ~1.2% of total exposure. Aligns with [[12_employee_concentration]] §1 thesis that RSU sale schedule is the real concentration lever, not active-book rebalancing.
+- **Audit code follow-ups** (queued for human review before edit):
+  - Refresh PORTFOLIO_1 pcts post-trade (zero ORCX/SMCL, reduce RGTX/QBTX/QUBX to residuals, add ALGM/HPQ/CRWG)
+  - Add `PORTFOLIO_TW` (or equivalent) for the 9A92 台股 account if it should be in audit scope
+  - Decide whether NVDA RSU should be added as a tracked exposure or remain "shown via [[12_employee_concentration]] only"
+
+## [2026-05-30 01:10 ET] proposal | FOM regime gating (Fix A) + universe +28 (Fix D)
+
+- **Proposal page**: [[../philosophy/_proposals/fom-regime-and-universe-2026-05-30]]
+- **Code paths touched** (in working tree, included in same commit):
+  - NEW: [[../src/sharks/regime/classifier]] — regime classifier reads breadth + liquidity outputs, emits weights + bubble_guard floor for 5 labels (`bull_trend` / `late_bull` / `neutral` / `risk_off` / `capitulation`)
+  - MOD: [[../src/sharks/scoring/fom]] — `FOMScore` threads regime weights + floor; `score_ticker` / `rank_universe` / `main()` accept optional `regime=` (backward compatible — `None` → canonical 25/25/15/15/20). `DEFAULT_UNIVERSE` 59 → 87 across HARDWARE_OEM / SPECULATIVE_NARRATIVE / QUANTUM / THEMATIC_2026_BUYS / WIKI_16_THEMES groups; matching `IP_DEFENSIBILITY` entries
+- **Validated outputs** (not git-tracked per `.gitignore`'s `outputs/*.json` rule — regeneratable from code):
+  - `outputs/regime-classification-2026-05-30.json` → label = `late_bull` (breadth OVERHEATED + liquidity YELLOW + SPX +10.82% above 200dma)
+  - `outputs/fom-monthly-2026-05-29.json` regenerated under schema_version 2; AMD #5, MU #7, INTC #10, DELL #3, NEM #4 in new top 10 (vs pre-Fix AMD #23, MU #34, INTC #31, DELL not in universe, NEM not in universe)
+- **Out of scope** (separate proposals to follow): Fix B (multi-horizon FOM_3m/12m/36m), Fix E (sector flow via XL* rotation), Fix F (regime sensitivity report), `leveraged_etf_scorer`, Taiwan ticker suffix handling
+
+## [2026-05-30 01:10 ET] proposal | AI-Quant-US roadmap merge — paper-trade-only + mandatory OSS small-model integration + LLM-pollution defence
+
+- **Proposal page**: [[../philosophy/_proposals/ai-quant-us-roadmap-merge-2026-05-30]]
+- **User direction captured**: no real-money trade; paper trading allowed; low frequency (daily / weekly default; 1h escalation only on entry timing); long-horizon swings + dividend + trend-reversal as strategic emphasis; 100-year macro-analog matching + funding-chain rupture detection as new strategic theme; BTC 4-year halving cycle thesis to be revised against institutional-ETF anchor counter-thesis; mandatory open-source small-model integration; [[../CLAUDE]] §2 may be amended (paper-trade allowance) but real-money execution remains forbidden until graduation criteria met.
+- **Documentation-only scope** (this proposal authors no code in this commit; code lands phase by phase after human review):
+  - [[../docs/ROADMAP]] patches across Phase 2-6 (mapping table in proposal §2)
+  - [[../CLAUDE]] §2 amendment text (proposal §7)
+  - 3 new concept pages (proposal §4): `funding-chain-rupture`, `macro-analog-matching`, `institutional-btc-anchor`
+  - 2 new open-source-inspirations (proposal §5): #10 AutoAWQ INT4 + Ollama runtime; #11 RAG / few-shot retrieval over recommendations (replaces QLoRA at this data scale)
+  - Strategy D long-horizon dividend cycle (proposal §6)
+  - `docs/LLM-BACKTEST-PROTOCOL.md` runbook scheduled
+- **Reviewer audit absorbed** (highest-priority foundational issue surfaced in plan review):
+  - **LLM-in-the-loop backtest pollution** — any LLM trained through 2024-2026 has read every post-mortem of 1929/1973/2000/2008/2020; macro-analog "this resembles 1973" cannot be trusted because the model already knows the outcome. Defenses in proposal §11: role restriction (LLM may not output probability / direction in backtest path), walk-forward gating (only valid post model cutoff), non-LLM pre-cutoff baselines (rule-based scorers only), RAG isolation (PIT-enforceable), `llm_involvement` output marker. No LLM-involved backtest publishable without `docs/LLM-BACKTEST-PROTOCOL.md`.
+  - **2026 time-relevance corrections**: FRA-OIS obsolete (USD LIBOR ceased mid-2023) → SOFR-OIS basis / term-SOFR-vs-OIS; raw SOFR-EFFR carries month-end collateral seasonality → SOFR-IORB or persistence-filtered; single-name bank CDS data inaccessible → CDX IG financials sub-index + KBW Banks + sub-debt spreads + bank put skew proxies; "FRED is lagging" too coarse → per-series classification (HY OAS / SOFR / NFCI are market-priced and timely).
+  - **VRAM math corrected**: Llama-3-8B and Qwen-7B both use GQA (8 KV heads) → 4096-ctx K-V ≈ 0.5 GB (not 1.5-2 GB). Inference alone has headroom; QLoRA blows the budget due to optimizer state. Mutex is ops-level (kill Ollama, run QLoRA, restart), not code-level.
+  - **Engine choice corrected**: Ollama / llama.cpp (GGUF) on Windows native; NOT vLLM (batched-serving overkill for single user + Windows requires WSL2). AWQ↔GGUF cannot be mixed; "GGML" is obsolete naming.
+  - **QLoRA → RAG demotion**: at N≈10-50 pairs/week, fine-tuning is the wrong tool — labelling completions with realised forward returns burns lookahead + recent-winner-chasing directly into LoRA weights, invisible and irreversible. RAG over a PIT-honest example library dominates QLoRA until ≥ 500 pairs accumulated AND §11 LLM-pollution protocol in place.
+  - **TimescaleDB rejected**: the real PIT lever is data vintage (FRED ALFRED), not storage engine. Storage architecture is content-hash manifests in Git + date-partitioned Parquet outside Git + DuckDB query layer.
+  - **Macro-analog dimension reduction**: 3-4 axis regime cube (Growth / Inflation / Liquidity / Credit), mechanism-set output not single-year nearest neighbour, decision-support framing not predictive quant. ML clustering forbidden until ≥ 50 labelled events × ≥ 5 per archetype.
+- **Constitutional impact** captured but NOT executed in this commit: ~~Do not place trades~~ → "Do not place real-money trades; paper trading allowed under Risk Officer audit; real-money graduation criteria documented". Human edits [[../CLAUDE]] after proposal approval per `_proposals/` workflow §3-4.
+- **Post-commit execution sequence** (per [[~/claude/plans/working-tree-playful-map]] §5): (1) Fix A pytest suite; (2) RAG example library prototype (replaces QLoRA in priority); (3) `docs/LLM-BACKTEST-PROTOCOL.md` runbook; (4) vintage / DuckDB storage layer; (5) QLoRA deferred indefinitely.

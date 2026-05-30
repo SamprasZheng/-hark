@@ -1,0 +1,6 @@
+# Placeholder for git tracking. Phase 3+ produces:
+#   outputs/picks-YYYY-MM-DD.json   (validated against the schema in
+#                                    philosophy/05-decision-rubric.md)
+#
+# This directory is .gitignore'd for *.json (see .gitignore) — outputs
+# are user-local artefacts. Only this .gitkeep is tracked.

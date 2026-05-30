@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Under $hark · Update + 今日推薦 · 2026-05-29</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --surface: #151b23;
+    --surface-2: #1c2430;
+    --border: #2a3441;
+    --text: #e6edf3;
+    --text-dim: #8b96a3;
+    --accent: #f7b500;
+    --green: #3fb950;
+    --red: #f85149;
+    --amber: #d29922;
+    --blue: #58a6ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 28px 80px; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 18px; margin-bottom: 28px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+  h1 { font-size: 28px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .meta { color: var(--text-dim); font-size: 13px; }
+  h2 { font-size: 20px; font-weight: 700; margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 16px; font-weight: 600; margin: 22px 0 8px; color: var(--text); }
+  h4 { font-size: 14px; font-weight: 600; margin: 14px 0 6px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  p { margin: 8px 0 14px; }
+  .lede { font-size: 16px; color: var(--text); border-left: 3px solid var(--accent); padding: 4px 14px; background: var(--surface); margin: 0 0 24px; }
+  .grid { display: grid; gap: 14px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+  .card .k { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .card .v { font-size: 18px; font-weight: 600; }
+  .card .v.green { color: var(--green); }
+  .card .v.red { color: var(--red); }
+  .card .v.amber { color: var(--amber); }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 14px; }
+  th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--surface-2); color: var(--text-dim); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:hover td { background: var(--surface); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+  .tag.long { background: rgba(63,185,80,0.15); color: var(--green); }
+  .tag.short { background: rgba(248,81,73,0.15); color: var(--red); }
+  .tag.null { background: rgba(139,150,163,0.15); color: var(--text-dim); }
+  .tag.warn { background: rgba(210,153,34,0.15); color: var(--amber); }
+  .tag.info { background: rgba(88,166,255,0.15); color: var(--blue); }
+  .slot { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin: 10px 0; }
+  .slot .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+  .slot .ticker { font-size: 18px; font-weight: 700; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .slot .meta-row { color: var(--text-dim); font-size: 12px; margin: 2px 0 6px; }
+  .slot.null-slot { background: transparent; border-style: dashed; color: var(--text-dim); font-size: 13px; padding: 10px 18px; }
+  ul { padding-left: 20px; margin: 8px 0 14px; }
+  li { margin: 4px 0; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: var(--surface-2); padding: 1px 6px; border-radius: 3px; color: var(--accent); }
+  .footer { margin-top: 50px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 12px; line-height: 1.7; }
+  .footer code { font-size: 11px; }
+  .quote { background: var(--surface); border-left: 3px solid var(--text-dim); padding: 10px 16px; margin: 14px 0; color: var(--text-dim); font-style: italic; font-size: 14px; }
+  .risk-note { background: rgba(210,153,34,0.08); border: 1px solid rgba(210,153,34,0.3); border-radius: 6px; padding: 12px 16px; margin: 14px 0; font-size: 14px; }
+  .risk-note .label { color: var(--amber); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Under $hark · Daily Compile</div>
+  <h1>Update + 今日推薦 — 2026-05-29（週五）</h1>
+  <div class="meta">as_of 2026-05-29 ET（盤後）· trading_date 2026-06-01（下週一）· author_role <code>compiler</code> · risk_officer_review <code>pending</code></div>
+</header>
+
+<div class="lede">
+  系統狀態：Phase 1 wiki 完整、FOM 多維評分上線並通過 10 年回測（+975% vs SPY +129%，<strong>8.5× alpha</strong>）。當前處於 Y2 期中選舉 + Sell-in-May 進入 + BTC 減半週期底部前 + AI 週期晚期的<strong>四重不利視窗</strong>，標準倉位降至 60–70% 上限。今日（盤後）僅給出兩個 long_new；short_new 與 position_followup 全數 <code>null</code>（無低信心填補）。
+</div>
+
+<h2>1 · Project Update — 過去 24 小時做了什麼</h2>
+
+<div class="grid grid-3">
+  <div class="card"><div class="k">Wiki 頁數</div><div class="v">14 / 14</div><div style="font-size:12px;color:var(--text-dim)">01–11 + index + log + README，全數 live</div></div>
+  <div class="card"><div class="k">FOM 10年回測</div><div class="v green">+975%</div><div style="font-size:12px;color:var(--text-dim)">SPY 同期 +129%；超額 +846%</div></div>
+  <div class="card"><div class="k">Universe</div><div class="v">59 → 130</div><div style="font-size:12px;color:var(--text-dim)">FOM-Alpha 變體納入 R2K + 防禦池</div></div>
+</div>
+
+<h3>新增模組 / 頁面</h3>
+<ul>
+  <li><code>src/sharks/scoring/cycle_bias.py</code> + <code>fom.py</code> — 多尺度週期偏置 + 5 維評分（Momentum / Contrarian / Cyclic / Quality / BubbleGuard）</li>
+  <li><code>src/sharks/scoring/fom_alpha.py</code> — 排除 mega-cap、加 Trump 政策偏置、加黃金交叉獎勵</li>
+  <li><code>src/sharks/scoring/serenity_scout.py</code> — 找尋下一個 AXTI/SIVE 等卡脖子標的</li>
+  <li><code>wiki/06_cycle_framework</code>、<code>07_ai_bubble_audit</code>、<code>08_forward_calendar</code>、<code>09_postmortem_log</code>、<code>10_defensive_hedging</code>、<code>11_adaptive_loop</code> — 六張新合成頁</li>
+  <li>5 個 cyclical concepts 由 <code>_proposals/</code> 升為 <code>philosophy/concepts/</code>（multi-scale-cycles / btc-halving-cycle / election-cycle-year-2 / seasonal-monthly / sector-seasonality）</li>
+</ul>
+
+<h3>已驗證的經驗發現</h3>
+<ul>
+  <li><strong>三大週期同步指向 2026 年 5–10 月為弱勢視窗</strong>：BTC h2024 距減半 25 個月（前例底部在 +32m 附近）；美國 Y2 期中年歷史最弱（+2.9% vs Y1/Y3 +17%/+16%）；Sell-in-May 季節性。9 月是統計唯一負月（-0.90%、勝率 46%）。</li>
+  <li><strong>post-midterm + 12m 自 1938 起 100% 為正報酬</strong> — 系統紀錄到的最高把握度宏觀 setup；2026 年 11 月後即進入此視窗。</li>
+  <li><strong>IPO 排程踩中弱勢區</strong>：SpaceX（6 月、$1.75T、$75B raise）、OpenAI（9 月）、Anthropic（10 月、$900B）。系統對三者一律執行 90 天 post-IPO blackout。</li>
+  <li><strong>AI 半導體鏈內部分化</strong>：FOM bubble_guard 顯示 SOXX 內 16 個名字進入泡沫高應力區（AXTI/MU/STX/AEHR/SIMO/WDC 達 -95 滿格），<strong>但 NVDA +15 / TSM 0 / AVGO +15 / KLAC -25 仍守住「倖存者層」</strong>，驗證 principal 的「NVDA TSM 還站著」直覺。</li>
+  <li><strong>UVXY / UVIX 不能買</strong>：年衰減 50–80%；改用 VIX 60–90 DTE 買權 + 現金緩衝 + Mag 7 長天期賣權，年度避險預算 3–5%（多數年作廢，這是合約）。</li>
+</ul>
+
+<h3>未解的歧見與待辦</h3>
+<ul>
+  <li><strong>ORCL 歧見</strong>：FOM 把它當 contrarian 復原候選（57.2 排名 #3、bubble_guard +30），但 principal 認為已開始下跌。Compiler 採 defer，以 MSFT（FOM 57.1、bubble_guard +45）替補進今日推薦。</li>
+  <li>NVDA $5T 精確 as_of 日期尚未鎖定（待 Phase 2 polygon 歷史拉取）。</li>
+  <li>Warsh 接任 Fed 主席的精確日期與過渡期 FOMC 組成需待 Fed 聲明 ingest 確認。</li>
+  <li>光通訊 tier-2 候選（CIEN/ANET/COHR/LITE/FN）尚未通過 <code>supply-chain-bottleneck</code> 完整檢核。</li>
+</ul>
+
+<h2>2 · 今日 10-Signal 推薦（trading_date 2026-06-01）</h2>
+
+<p style="color:var(--text-dim);font-size:13px;">遵循 <code>philosophy/05-decision-rubric</code>：2 long_new + 2 short_new + 6 position_followup。<strong>未達 confidence ≥ 0.50 的格位一律留 <code>null</code>，不填補。</strong></p>
+
+<h3>Slot 1–2 · long_new</h3>
+
+<div class="slot">
+  <div class="head">
+    <div><span class="tag long">LONG_NEW_1</span> <span class="ticker">META</span></div>
+    <div><span class="tag info">confidence 0.68</span> <span class="tag">tier 1</span> <span class="tag">size 7%</span></div>
+  </div>
+  <div class="meta-row">XLC · 多頭真漲 · 6m 核心 · Strategy A consolidation re-entry</div>
+  <p><strong>論點：</strong>FOM 總分 59.4 居榜首；momentum 19.5（自高點修正）、contrarian 85、IP 防禦性 85、bubble_guard +45（健康）。對應 principal「CRM / NOW / MSFT / META / NFLX 全部錯殺」的論述。催化路徑為 Reality Labs 支出紀律 + AI 廣告定位 + Llama 企業變現。</p>
+  <p><strong>入場區：</strong>開盤市價，週收盤確認可逐步加碼。<strong>停損：</strong>盈餘 miss 且自入場跌 18%。<strong>證偽：</strong>廣告營收 YoY &lt; +8% 連兩季 OR Reality Labs 年化營業損 &gt; $20B。<strong>Time stop：</strong>180 天。</p>
+  <p style="font-size:12px;color:var(--text-dim);">evidence: <code>wiki/05_recommendations/2026-05-29-fom-monthly.md</code> · <code>outputs/fom-monthly-2026-05-29.json</code> · <code>philosophy/entities/meta.md</code></p>
+</div>
+
+<div class="slot">
+  <div class="head">
+    <div><span class="tag long">LONG_NEW_2</span> <span class="ticker">LMT</span></div>
+    <div><span class="tag info">confidence 0.71</span> <span class="tag">tier 2</span> <span class="tag">size 5%</span></div>
+  </div>
+  <div class="meta-row">ITA · 多頭真漲 · 6–12m · Strategy A + 11 月 ITA 季節性持有</div>
+  <p><strong>論點：</strong>FOM 58.2、bubble_guard <strong>+65</strong>（全宇宙最乾淨）、contrarian 87、IP 90。國防 + Trump 政策對沖 + Y2 期中反 Trump 順風（國防赤字支出兩黨共識），且 ITA 11 月季節性 +3.2%、勝率 75%，提前佈局。</p>
+  <p><strong>入場區：</strong>開盤市價，回檔 &gt;5% 可加碼。<strong>停損：</strong>-12% from entry 或 Pentagon 大型合約丟失。<strong>證偽：</strong>任一 FY2026 CR 國防預算砍 &gt; 5%。<strong>Time stop：</strong>270 天（跨年至 12m 持倉視窗）。</p>
+  <p style="font-size:12px;color:var(--text-dim);">evidence: <code>wiki/05_recommendations/2026-05-29-fom-monthly.md</code> · <code>wiki/08_forward_calendar.md</code> § Nov · <code>outputs/fom-alpha-2026-05-29.json</code></p>
+</div>
+
+<h3>Slot 3–4 · short_new</h3>
+
+<div class="slot null-slot">
+  <span class="tag null">SHORT_NEW_1 · NULL</span> 未達門檻。當前宏觀仍偏多（Warsh-era Fed + AI 週期未結束 + 缺主要看空催化）；唯一接近條件的是 ORCL，但 FOM 與 principal 歧見未解，Risk Officer 採 defer。<strong>不填補。</strong>
+</div>
+<div class="slot null-slot">
+  <span class="tag null">SHORT_NEW_2 · NULL</span> 未達門檻。提醒：本系統 short 僅允許 Mag 7 賣權 / inverse ETF；不在中小盤直接借券。
+</div>
+
+<h3>Slot 5–10 · position_followup</h3>
+
+<div class="slot null-slot">
+  <span class="tag null">SLOT 5–10 · ALL NULL</span> 系統處於 Phase 1，<code>wiki/positions.md</code> 無既有部位（無 priors）。今日無 add / trim / exit / hold_update 訊號可發。
+</div>
+
+<h2>3 · 副本：FOM-Alpha 3+3 Tactical Picks（principal 要求的每日小盤 alpha 觀察）</h2>
+
+<p style="color:var(--text-dim);font-size:13px;">不計入上方 10-signal 主合約；屬於 daily tactical 候選池，供人工裁量。</p>
+
+<h4>SP500（排除 mega-cap）</h4>
+<table>
+  <thead><tr><th>Rank</th><th>Ticker</th><th>Sector</th><th>Final</th><th class="num">BubbleGuard</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><strong>ARM</strong></td><td>SOXX</td><td>64.5</td><td class="num" style="color:var(--red)">-55</td><td>動能 80.6 + 黃金交叉觸發；<span class="tag warn">晚期</span>緊停損</td></tr>
+    <tr><td>2</td><td><strong>LMT</strong></td><td>ITA</td><td>64.2</td><td class="num" style="color:var(--green)">+65</td><td>已列為 long_new_2</td></tr>
+    <tr><td>3</td><td><strong>NOC</strong></td><td>ITA</td><td>61.3</td><td class="num" style="color:var(--green)">+45</td><td>LMT 配對；ITA 11 月季節性</td></tr>
+  </tbody>
+</table>
+
+<h4>Russell 2000 / Mid-cap</h4>
+<table>
+  <thead><tr><th>Rank</th><th>Ticker</th><th>Sector</th><th>Final</th><th class="num">BubbleGuard</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><strong>UEC</strong></td><td>Energy</td><td>59.4</td><td class="num" style="color:var(--green)">+30</td><td>鈾 + Trump 核電偏置；在你的 28 檔組合內</td></tr>
+    <tr><td>2</td><td><strong>AOSL</strong></td><td>SOXX</td><td>55.9</td><td class="num" style="color:var(--amber)">-40</td><td>動能 64 + 黃金交叉；輕度泡沫旗標</td></tr>
+    <tr><td>3</td><td><strong>AESI</strong></td><td>Energy</td><td>55.8</td><td class="num" style="color:var(--green)">+10</td><td>壓裂砂 + Trump 偏置 + 黃金交叉；在你的組合內</td></tr>
+  </tbody>
+</table>
+
+<h2>4 · Regime Snapshot</h2>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="k">總體政權</div>
+    <div class="v">AI + Trump 二因子</div>
+    <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Warsh-era Fed 中性退場；Trump 政策為當前最大變異源。</p>
+  </div>
+  <div class="card">
+    <div class="k">流動性 L 估計</div>
+    <div class="v amber">0.5 – 0.7</div>
+    <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">qualitative；Phase 2 才接入實際 L 合成。</p>
+  </div>
+  <div class="card">
+    <div class="k">Cycle-Resonance</div>
+    <div class="v">CLOSED</div>
+    <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">最近一次：2025 年 4 月關稅底；本次視窗已過。下次需 SPX -10% 回檔形成才會重新啟動。</p>
+  </div>
+  <div class="card">
+    <div class="k">Frequency Mode</div>
+    <div class="v">LOW</div>
+    <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">未達 high-freq 條件（VIX 區間 + 無 earnings ±3d + 無 Fed/CPI/NFP 日 + opt-in）。</p>
+  </div>
+</div>
+
+<h2>5 · Bubble-Stress Watchlist（下一個會破的）</h2>
+
+<p style="color:var(--text-dim);font-size:13px;">bubble_guard ≤ -65：嚴禁新進場；既有部位請考慮 trim。</p>
+
+<table>
+  <thead><tr><th>Ticker</th><th class="num">BubbleGuard</th><th class="num">Momentum</th><th>備註</th></tr></thead>
+  <tbody>
+    <tr><td>AXTI</td><td class="num" style="color:var(--red)">-95</td><td class="num">87.7</td><td>Phase 3 SiPh；1 年 +78×</td></tr>
+    <tr><td>MU</td><td class="num" style="color:var(--red)">-95</td><td class="num">81.9</td><td>記憶體已完成</td></tr>
+    <tr><td>STX</td><td class="num" style="color:var(--red)">-95</td><td class="num">77.1</td><td>同記憶體週期</td></tr>
+    <tr><td>AEHR</td><td class="num" style="color:var(--red)">-95</td><td class="num">81.2</td><td>SiPh 測試設備</td></tr>
+    <tr><td>SIMO</td><td class="num" style="color:var(--red)">-95</td><td class="num">77.9</td><td>記憶體周邊</td></tr>
+    <tr><td>WDC</td><td class="num" style="color:var(--red)">-95</td><td class="num">73.3</td><td>記憶體峰</td></tr>
+    <tr><td>ALAB</td><td class="num" style="color:var(--red)">-70</td><td class="num">89.7</td><td>SiPh 近期 IPO；momentum + bubble 雙最高</td></tr>
+    <tr><td>AMD</td><td class="num" style="color:var(--red)">-70</td><td class="num">82.9</td><td>AI GPU 峰</td></tr>
+  </tbody>
+</table>
+
+<div class="risk-note">
+  <div class="label">⚠ 分別心警告</div>
+  AXTI 1 年 78 倍是教科書級「分別心陷阱」。系統已透過 Phase 1 calibration 完成抗體：<strong>追入這類已完成的 Serenity-named 名單 = P0 違規</strong>。當前 Compiler-Scout 替代候選為 RPID（樹莓派、-40%、深度修正甜蜜區）與 MSTR（-59%、與 BTC h2024 D 階段同步）。
+</div>
+
+<h2>6 · 6 個月前瞻日曆（要點）</h2>
+
+<table>
+  <thead><tr><th>月份</th><th>主事件</th><th>系統動作</th></tr></thead>
+  <tbody>
+    <tr><td>2026-06</td><td>SpaceX IPO 路演（6/4）、FOMC、Mag 7 Q2 預告</td><td>持有 META/LMT 核心；不碰 SpaceX 90 天；TSLA 僅觀察</td></tr>
+    <tr><td>2026-07</td><td>Mag 7 Q2 盈餘、CPI、FOMC；XLK/XLF/XLU/XLRE 季節性最強</td><td><strong>全 tier 滿倉視窗</strong>；Strategy B momentum 開啟</td></tr>
+    <tr><td>2026-08</td><td>Jackson Hole；NVDA Q2 (~8/26)</td><td>tier 3 減 30%；無新 6m+ 進場</td></tr>
+    <tr><td>2026-09</td><td><strong>秋絕</strong>（-0.90% mean、46% 勝率）；OpenAI IPO</td><td>強制防禦模式；僅持 XLP/XLU/JNJ/PG/KO/WMT；無 AI 新進場</td></tr>
+    <tr><td>2026-10</td><td>Anthropic IPO；Q3 盈餘季開始；NDX 反彈早</td><td>前兩週延續防禦；後兩週啟動 Nov staging 偵察</td></tr>
+    <tr><td>2026-11</td><td><strong>期中選舉 11/3 + SPX 最強單月 + 100% rule</strong></td><td><strong>滿倉部署</strong> DHI / CAT / EQIX / VRTX / REGN / LMT；12m 桶啟用</td></tr>
+  </tbody>
+</table>
+
+<h2>7 · 等待你決策的清單（wakeup TODO）</h2>
+
+<ul>
+  <li>[ ] 是否核可今日 long_new_1 META / long_new_2 LMT 入場（或要求 size 調整）？</li>
+  <li>[ ] ORCL 處置：hold-and-watch / trim 50% / 全出？（FOM 與你的判斷分歧）</li>
+  <li>[ ] DELL / AAPL / HPQ 消費電子復甦：開倉還是等回測？</li>
+  <li>[ ] UEC / AESI（你既有持股）：加碼還是維持？</li>
+  <li>[ ] RPID Serenity-Scout 候選：是否進入 Researcher 深掘？</li>
+  <li>[ ] 對沖 stack 確認：現金緩衝 15–25% + VIX 60–90 DTE 買權 + Mag 7 賣權 — 是否啟動？</li>
+  <li>[ ] <code>philosophy/_proposals/buffett-3m-integration</code> 是否升正？</li>
+  <li>[ ] Adaptive loop 的權重規則（<code>wiki/11_adaptive_loop</code>）是否核准？</li>
+</ul>
+
+<h2>8 · 完整性自檢</h2>
+
+<ul>
+  <li>10-signal 結構：2 long_new ✅ / 2 short_new (null × 2) ✅ / 6 position_followup (null × 6) ✅</li>
+  <li>no_action_buckets 已列：<code>short_new_1, short_new_2, position_followup_1..6</code></li>
+  <li>所有 confidence 顯示且 ≥ 0.50（未填補低信心）✅</li>
+  <li>所有引用標註 evidence_paths ✅</li>
+  <li>無 lookahead：使用之數據截至 2026-05-29，未引用 trading_date 2026-06-01 之後資料 ✅</li>
+  <li>無倉位來源未驗證（FOM-Alpha picks 來自當日已 commit 的 <code>outputs/*.json</code>）✅</li>
+</ul>
+
+<div class="footer">
+  <strong>檔案出處：</strong>本頁綜合 <code>wiki/01_macro_state.md</code>、<code>wiki/05_recommendations/2026-05-29-overnight-batch.md</code>、<code>2026-05-29-fom-monthly.md</code>、<code>wiki/06_cycle_framework.md</code>、<code>wiki/07_ai_bubble_audit.md</code>、<code>wiki/08_forward_calendar.md</code>、<code>wiki/10_defensive_hedging.md</code>、<code>outputs/fom-monthly-2026-05-29.json</code>、<code>outputs/fom-alpha-2026-05-29.json</code>、<code>outputs/serenity-scout-2026-05-29.json</code>、<code>raw/macro/principal-narrative-2026-05-29.md</code>、<code>raw/macro/principal-cycles-2026-05-29.md</code>。<br>
+  <strong>合規：</strong>本系統不下單、不託管私鑰、不連接券商 API；上述為 recommendation，執行由人工完成。Risk Officer review <code>pending</code>。<br>
+  <strong>署名：</strong>Compiler · Claude · 2026-05-29 ET（盤後）· schema_version 1
+</div>
+
+</div>
+</body>
+</html>

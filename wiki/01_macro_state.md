@@ -1,0 +1,145 @@
+---
+type: synthesis
+tags: [macro, regime, fed, trump, ai-cycle, current-state]
+title: Current Macro / Policy / Liquidity State
+as_of_timestamp: 2026-05-29T00:00:00-04:00
+author_role: compiler
+source_paths:
+  - raw/macro/principal-narrative-2026-05-29.md
+status: live
+schema_version: 1
+---
+
+# Current Macro State — 2026-05-29
+
+## Headline regime: AI cycle continues, Fed neutralised, Trump dominant policy driver
+
+The historical three-factor model (Fed + AI + Trump-policy) that defined 2020-2025 has **collapsed to two factors as of May 2026**. Kevin Warsh has succeeded Powell as Fed Chair with a stated policy of market non-intervention. The Compiler treats Fed as a low-variance background until further evidence; this is a structural regime change documented at [[../philosophy/entities/federal-reserve]] (proposal pending human review).
+
+The two active factors are now:
+
+1. **AI cycle (continuing)** — NVDA at ~$5T market cap, world's largest stock by market cap. Currently range-bound at $180-$220. Mag 7 co-investment in AI compute capex remains the dominant earnings narrative. Supply chain breadth has extended beyond pure-GPU (see §3 below).
+2. **Trump-policy cycle** — December 2024 tariff announcements drove a drawdown through April 2025; subsequent de-escalation and tariff-delay measures coincided with AI rally resumption. Policy posture is now the **highest-variance** macro input to portfolio decisions.
+
+## 1. Liquidity composite L score
+
+**Score: not yet computed** (Phase 3 macro-regime detector at `src/sharks/regime/liquidity.py` is not yet implemented; placeholder until then).
+
+Qualitative read based on principal narrative:
+- Fed: neutral / hands-off (new regime under Warsh)
+- Credit conditions: implied to be supportive (AI rally requires supportive credit; principal flagged no credit-stress signals)
+- Realised vol: implied moderate (NVDA range-bound 180-220 is consolidation, not stress)
+
+Conclusion: **L estimated in [0.5, 0.7]** — normal regime. All tiers may run at standard caps per [[../philosophy/08-risk-and-position]]. Phase 2 wires the actual L composite.
+
+## 2. Cycle-resonance state
+
+Per [[../philosophy/concepts/cycle-resonance]]:
+
+- **Most recent canonical cycle-resonance instance**: 2025 April (tariff-driven drawdown bottom). The principal narrative confirms this fits the pattern — drawdown from Dec 2024 to April 2025 ≈ 4 months (shorter than the canonical ~6 months but cycle-eligible).
+- **Window status**: **CLOSED** (the 2-week window after the April 2025 trigger has long expired).
+- **Next eligibility**: the detector will fire again when a fresh qualifying drawdown event occurs. No active staging.
+
+## 3. Supply chain breadth (per principal narrative)
+
+The AI rally has broadened. NVDA is no longer the single concentration; tiering update:
+
+- **Direct GPU beneficiaries (tier 1 + tier 2)**: NVDA, AMD, AVGO (custom ASIC)
+- **CPU + Agent AI beneficiaries**: AMD, Intel (newly relevant — Agent AI workloads drive CPU demand alongside GPU)
+- **Optical communications**: not yet seeded in `watchlist/universe.yaml`; **proposed addition** to tier 2: candidate tickers include CIEN, ANET, COHR, LITE, FN. Researcher to evaluate per [[../philosophy/concepts/supply-chain-bottleneck]] framework.
+- **Mag 7 AI-cloud partners (all-in)**: AMZN, MSFT, GOOGL, META — all in the rally, supporting the cloud-side AI capex narrative.
+
+## 4. Macro calendar (next 30 days)
+
+- **Fed (FOMC)**: next meeting per FRED calendar. **Note**: under Warsh's stated non-intervention policy, Fed-day repricing risk may be lower than historical. Phase 2 will track Fed-day realised vol going forward; until then, [[../philosophy/06-exclusions]] Fed-day exclusion rule remains in force as a conservative default.
+- **CPI / NFP**: standard monthly cadence; exclusion rules unchanged.
+- **Mag 7 earnings**: Phase 2 finnhub_client will populate exact dates; current narrative does not name imminent specific earnings dates.
+- **Trump policy cadence**: the principal flags Trump as the dominant variance source. The Compiler should treat any major policy announcement (tariff, antitrust, export-control) as a Grade A catalyst per [[../philosophy/entities/trump-administration]].
+
+## 4a. Multi-scale cycle position read (added 2026-05-29)
+
+Per [[06_cycle_framework]] (just compiled), **three independent cycles all align unfavourably for the next 5 months and very favourably for the subsequent 12**:
+
+| Cycle | Current state | Implication |
+|---|---|---|
+| **BTC h2024 halving** | +25m post-halving; peak printed 2025-07; cycle precedent says bottom around +32m | BTC bottoming window 2026-Q4 to 2027-Q1; not yet 起漲 |
+| **US Presidential cycle** | Y2 midterm (Trump 2 second year) — historically weakest, +2.9% mean vs Y1/Y3 +17%/+16% | Caution May-Oct 2026; reduced sizing |
+| **Annual seasonality (SPX)** | Entering May; Sep -0.90% the worst month statistically | Sell-in-May window through Oct |
+| **Post-midterm-Nov+12m** | November 3, 2026 election → **100% historical positive 12m forward since 1938** | Highest-conviction macro buy-the-dip |
+
+**Operational adjustment for next 6 months**: tier 1 + tier 2 sizing reduced to 60-70% of standard caps; defensive sectors (XLP, XLU) eligible to enable; no fresh 6m+ bucket positions until post-midterm cycle-resonance trigger.
+
+## 4b. IPO pipeline catalysts — VERIFIED 2026-05-29
+
+Per WebSearch (Yahoo Finance, IndMoney, TechJournal, Investing.com, The Hill):
+
+| Company | Status | Target listing | Notes |
+|---|---|---|---|
+| **SpaceX** | **S-1 FILED 2026-05-20** | June 2026 (roadshow June 4) | **$1.75T valuation, $75B raise** — Goldman Sachs leading 21-bank syndicate |
+| **OpenAI** | Confidential S-1 filed ~2026-05-22 | September 2026 | Recent restructuring complete |
+| **Anthropic** | Pre-filing (signalled 2026 IPO) | October 2026 | **$900B valuation target**; $44B annualised run-rate revenue; expected first ever operating profit Q2 2026 (~$559M) |
+| **Perplexity** | Pre-IPO Series D+; unconfirmed timing | 2026-2027 possible | Limited public reporting |
+| **TikTok / ByteDance** | Highly uncertain | TBD | US national security overhang |
+
+### Critical observation
+
+**All three confirmed 2026 IPOs (SpaceX June, OpenAI Sept, Anthropic Oct) land EXACTLY in the May-Oct 2026 seasonally weakest window per [[06_cycle_framework]] §3 + the Y2 midterm weakness window.** This is the worst possible timing — institutional buyers will be cautious, retail FOMO will drive day-1 premiums, and the combination is the canonical IPO trap.
+
+The Marketwise article title flags this directly: "SpaceX IPO 2026: The AI IPO Trap That Already Crushed Figma Is Back".
+
+### Compiler-Risk-Officer joint rules
+
+- **Post-IPO 90-day exclusion** ([[../philosophy/06-exclusions]]) applies to each at issuance — system will NOT touch any of these in the first 90 days regardless of price action
+- **Day-1 premium discipline**: typical IPO sees 50-150% day-1 pop; we do not chase
+- **Secondary opportunity tracking**: after the 90-day blackout, the typical IPO trades at 30-50% below the day-1 peak (the "IPO Trap" referenced in Marketwise). The system aims to harvest THIS window, not the day-1 pop.
+- **TSLA as proxy for SpaceX**: per principal, the SpaceX IPO may drag TSLA in either direction depending on Musk allocation / governance structure. The Compiler treats TSLA's June 2026 price action as a partial leading indicator for SpaceX IPO sentiment.
+
+## 5. Sector bucket recommendations (read by Phase 3 macro detector)
+
+Given the current regime (AI cycle ongoing, Fed neutral, Trump-policy variance), recommended bucket states for next regime-detector tick:
+
+- `technology` — **enabled** (default; AI cycle ongoing)
+- `semiconductors` — **enabled** (default; AI cycle ongoing)
+- `defensive_staples` — disabled (no L < 0.2 drought signal)
+- `rate_sensitive` — disabled (Fed neutral; no clear pivot trade)
+- `energy` — **monitor** (no active geopolitical disruption signal but Trump-policy variance could trigger)
+- `financial` — monitor (yield curve commentary not yet ingested)
+- `biotech_small` — disabled
+- `defense` — **monitor** (persistent geopolitical premium under Trump administration)
+
+The `monitor` state means: not enabled for new entries, but watch for trigger conditions per `watchlist/universe.yaml` `enabling_trigger` rules.
+
+## 6. Mode recommendation
+
+Per [[../philosophy/07-mode-switch]] decision function applied to current state:
+
+- **Low-freq mode**: enabled as default
+- **High-freq mode**: NOT eligible by default — requires `SHARKS_HIGH_FREQ_OK=1` opt-in. Under the new Warsh regime, the historical Fed-day refusal may eventually attenuate, but until track record confirms, the conservative refusal stays.
+- **Auto mode**: returns `low` until VIX 12-18 band confirmation + opt-in + earnings-window clear
+
+## 7. Outstanding contradictions / gaps
+
+The Compiler flags these for follow-up:
+
+- **BTC behaviour during tariff drawdown unknown**: principal said BTC ran 10K → 60K → 120K (Trump bump) but did not specify how it traded during Dec 2024 - April 2025 drawdown. Researcher: ingest BTC monthly OHLCV history.
+- **Warsh confirmation timing**: principal stated Warsh has taken over; the precise hand-off date and any transitional FOMC member shifts need Phase 2 Fed-statement ingest to confirm.
+- **NVDA $5T precise as_of**: principal said "reached $5T". The exact date this milestone was hit affects the cycle-resonance and Last Snow calibration windows. Phase 2 polygon historical pull will resolve.
+- **Optical communications tier-2 candidates not yet vetted**: the supply-chain breadth claim is principal narrative, not yet verified against revenue / earnings sources. Researcher quarterly review.
+
+## 8. Implications for next daily 10-signal output
+
+- **long_new slots**: candidates should favour AI supply-chain breadth beneficiaries (CPU + Agent AI: AMD, Intel; optical communications candidates above; Mag 7 AI-cloud partners holding range)
+- **short_new slots**: **likely empty** — the regime is supportive; no major bearish catalyst in narrative. Force `null` rather than padding (per [[../philosophy/05-decision-rubric]])
+- **position_followup slots**: NVDA range trading (180-220 consolidation) is a Strategy A candidate for an extended hold; any 180 retest with volume confirmation is a candidate add. Above 220 confirmation triggers a fresh Strategy B momentum slot.
+
+## See also
+
+- [[../philosophy/01-time-horizon]] — cycle horizon framework
+- [[../philosophy/03-long-short-taxonomy]] — quadrant assignment for current regime (long-biased per AI cycle confirmation)
+- [[../philosophy/concepts/cycle-resonance]] — 2025 April was the canonical instance per principal narrative
+- [[../philosophy/concepts/liquidity-fishbowl]] — fishbowl framework; Warsh non-intervention is a structural water-level change
+- [[02_mag7_bottleneck]] — supply-chain detail
+- [[03_alpha_library]] — 2020-2026 historical arc for calibration
+- [[../philosophy/entities/federal-reserve]] — Warsh regime change proposed for human approval
+- [[../philosophy/entities/trump-administration]] — now the dominant variance source
+- [[../philosophy/entities/nvidia]] — $5T status update propagated here from principal narrative
