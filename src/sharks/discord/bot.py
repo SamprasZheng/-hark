@@ -100,12 +100,13 @@ def council_to_embed(r: CouncilResult) -> discord.Embed:
         inline=False,
     )
     lines = [
-        f"{_VOTE_EMOJI.get(v.vote, '')} **{v.title}** 信心{v.conviction} · {v.action or '—'}"
+        f"{_VOTE_EMOJI.get(v.vote, '')} **{v.title}** `{v.model}` 信心{v.conviction} · {v.action or '—'}"
         for v in r.votes
     ]
     if lines:
-        e.add_field(name="各人投票", value="\n".join(lines)[:1024], inline=False)
-    e.set_footer(text=f"本地議會 · {r.model} · 僅研究非建議,永不下單")
+        e.add_field(name="各人投票(模型)", value="\n".join(lines)[:1024], inline=False)
+    models_used = ", ".join(sorted({v.model for v in r.votes if v.model}))
+    e.set_footer(text=f"本地多模型議會 · {models_used} · 僅研究非建議,永不下單"[:2048])
     return e
 
 
@@ -176,6 +177,35 @@ class SharksBot(discord.Client):
                     inline=False)
         e.add_field(name="人格", value=", ".join(sorted(self.personas)) or "—", inline=False)
         e.set_footer(text="recommend-only · 永不下單 · /ask 唯讀 · 議會跑本地")
+        return e
+
+    def _help_embed(self) -> discord.Embed:
+        e = discord.Embed(
+            title="🦈 PolkaSharks 指令表",
+            description="斜線指令打 `/` 會跳選單;也可在頻道直接打字。`!cmd` 隨時叫出這張表。",
+            color=_COLORS["status"],
+        )
+        e.add_field(name="💬 問答", value=(
+            "`/ask <問題>` — 問本地 Claude Code(唯讀讀 $hark)\n"
+            "例:`/ask 現在 regime 跟 posture 是什麼`\n"
+            "在 **#問claude** 直接打字 = /ask\n"
+            "`/llm <後端> <問題> [model]` — claude / local / wiki / codex\n"
+            "例:`/llm wiki BBU 是什麼` · `/llm local 大盤怎麼看 model:qwen2.5:7b`\n"
+            "`/models` — 列出本地 Ollama 模型"), inline=False)
+        e.add_field(name="🤖 人格", value=(
+            "`/persona <名> <訊息>` 例:`/persona huang CoWoS 還能追嗎`\n"
+            "在 **#分析師議會** 打 `huang: 你的問題`(預設 sharks)\n"
+            "`/personas` — 列出全部人格"), inline=False)
+        e.add_field(name="🗳️ 議會 / 會議", value=(
+            "`/council <主題>` — 6 人質疑→投票→結論(本地)\n"
+            "例:`/council 今晚美股該偏多還偏空`\n"
+            "`/meeting <morning|noon|evening|weekly>` — 手動開會\n"
+            "`/picks` — 最近一次選股 / 訊號"), inline=False)
+        e.add_field(name="📣 自媒體", value=(
+            "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
+            "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
+        e.add_field(name="⚙️ 其他", value="`/status` · `!cmd` / `!help` 這張表", inline=False)
+        e.set_footer(text="只建議不下單 · 議會/人格跑本地 · /ask 唯讀")
         return e
 
     async def _persona_say(self, channel: discord.abc.Messageable,
@@ -254,6 +284,7 @@ class SharksBot(discord.Client):
                 model=settings.effective_council_model(),
                 council_names=tuple(settings.council_personas),
                 chair_name=settings.council_chair,
+                council_models=tuple(settings.council_models),
                 personas=self.personas, settings=settings,
             )
             if not result.votes:
@@ -329,6 +360,11 @@ class SharksBot(discord.Client):
         ch_name = getattr(message.channel, "name", "")
         content = (message.content or "").strip()
         if not content:
+            return
+
+        # !cmd / !help — cheat-sheet, works in ANY channel.
+        if content.lower() in ("!cmd", "!cmds", "!help", "!commands", "!指令"):
+            await message.channel.send(embed=self._help_embed())
             return
 
         if ch_name == C.CH_COUNCIL:
@@ -417,6 +453,7 @@ class SharksBot(discord.Client):
                 model=s.effective_council_model(),
                 council_names=tuple(s.council_personas),
                 chair_name=s.council_chair,
+                council_models=tuple(s.council_models),
                 personas=self.personas, settings=s,
             )
             if council.votes:

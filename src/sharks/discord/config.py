@@ -133,6 +133,11 @@ class Settings:
     # contrarian, value, macro, risk-first bear, momentum trader.
     council_personas: tuple[str, ...] = ("huang", "sam", "buffet", "serenity", "bear", "momentum")
     council_chair: str = "sharks"
+    # Per-seat models (positional with council_personas; round-robin if shorter).
+    # Different families → genuinely different "brains" voting, not one model
+    # role-playing 6 voices. Empty → all seats use council/local model.
+    council_models: tuple[str, ...] = ("qwen2.5:7b", "llama3.1:8b", "mistral:7b",
+                                       "qwen2.5:7b", "qwen2.5-coder:7b", "gemma2:2b")
 
     # ── Meeting schedule (TPE, fixed UTC+8) ──────────────────────────────────
     morning_hhmm: str = "07:30"
@@ -180,6 +185,12 @@ class Settings:
                 if p.strip()
             ),
             council_chair=_env("SHARKS_DISCORD_COUNCIL_CHAIR", "sharks").lower(),
+            council_models=tuple(
+                m.strip() for m in
+                _env("SHARKS_DISCORD_COUNCIL_MODELS",
+                     "qwen2.5:7b,llama3.1:8b,mistral:7b,qwen2.5:7b,qwen2.5-coder:7b,gemma2:2b").split(",")
+                if m.strip()
+            ),
             morning_hhmm=_env("SHARKS_DISCORD_MORNING", "07:30"),
             noon_hhmm=_env("SHARKS_DISCORD_NOON", "13:00"),
             evening_hhmm=_env("SHARKS_DISCORD_EVENING", "22:30"),

@@ -116,12 +116,35 @@ def test_council_engine_with_stub_ask():
     council = [ChatPersona("huang", "huang·黃", "SYS", "huang.md"),
                ChatPersona("sam", "sam·長線", "SYS", "sam.md")]
     chair = ChatPersona("sharks", "sharks", "SYS", "sharks.md")
-    r = CO.run_council("今天偏多還偏空?", "regime late_bull", ask_fn=ask,
-                       council=council, chair=chair)
+    r = CO.run_council("今天偏多還偏空?", "regime late_bull",
+                       council=council, chair=chair,
+                       ask_maker=lambda model: (ask, "test"))
     assert r.ok and len(r.votes) == 2
     assert all(v.vote == "多" and v.conviction == 4 for v in r.votes)
     assert r.tally["多"] == 2 and r.lean() == "多"
     assert "結論" in r.conclusion
+
+
+def test_council_multimodel_assignment():
+    """Per-seat models are assigned positionally and recorded on each Vote."""
+    from sharks.discord import council as CO
+    from sharks.discord.personas import ChatPersona
+
+    seen_models = []
+
+    def ask_maker(model):
+        def ask(system, user, mx):
+            seen_models.append(model)
+            return "看多。\n投票: 多 | 信心: 3 | 動作: 持有", True
+        return ask, "test"
+
+    council = [ChatPersona("huang", "huang", "S", "f"),
+               ChatPersona("bear", "bear", "S", "f")]
+    r = CO.run_council("t", "b", council=council,
+                       models={"huang": "qwen2.5:7b", "bear": "mistral:7b"},
+                       default_model="qwen2.5:7b", ask_maker=ask_maker)
+    assert {v.model for v in r.votes} == {"qwen2.5:7b", "mistral:7b"}
+    assert "mistral:7b" in seen_models and "qwen2.5:7b" in seen_models
 
 
 def test_council_vote_parser():
