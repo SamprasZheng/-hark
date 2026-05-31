@@ -120,6 +120,7 @@ class SharksBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
         self.personas: dict[str, ChatPersona] = load_personas(settings)
         self._last_fired: dict[str, str] = {}
+        self._chatter_count = 0          # hourly 雜談 ticks (council runs every Nth)
         self.run_once = run_once or []   # one-shot meeting kinds, then exit
 
     # ── lifecycle ─────────────────────────────────────────────────────────────
@@ -175,8 +176,11 @@ class SharksBot(discord.Client):
                     value=(f"{'on' if s.council_enabled else 'off'} · "
                            f"{s.effective_council_model()} · {'/'.join(s.council_personas)}"),
                     inline=False)
+        e.add_field(name="雜談",
+                    value=(f"{'on' if s.chatter_enabled else 'off'} · 每小時速解讀 → #{C.CH_GENERAL} · "
+                           f"council 每 {s.chatter_council_every} 次"), inline=False)
         e.add_field(name="人格", value=", ".join(sorted(self.personas)) or "—", inline=False)
-        e.set_footer(text="recommend-only · 永不下單 · /ask 唯讀 · 議會跑本地")
+        e.set_footer(text="recommend-only · 永不下單 · /ask 唯讀 · 議會/雜談跑本地")
         return e
 
     def _help_embed(self) -> discord.Embed:
@@ -200,6 +204,7 @@ class SharksBot(discord.Client):
             "`/council <主題>` — 6 人質疑→投票→結論(本地)\n"
             "例:`/council 今晚美股該偏多還偏空`\n"
             "`/meeting <morning|noon|evening|weekly>` — 手動開會\n"
+            "`/chatter [council:1]` — 立刻產一則 #雜談 速解讀(免費新聞→本地;每小時自動)\n"
             "`/picks` — 最近一次選股 / 訊號"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
@@ -347,6 +352,16 @@ class SharksBot(discord.Client):
             await interaction.response.send_message(embed=self._status_embed("狀態"),
                                                     ephemeral=True)
 
+        @tree.command(name="chatter",
+                      description="立刻產一則 #雜談 速解讀(免費新聞→本地 LLM 因果鏈);council:1 同時開議會")
+        @app_commands.describe(council="是否同時召開議會辯論(預設否)")
+        async def chatter_cmd(interaction: discord.Interaction, council: bool = False):
+            await interaction.response.defer(thinking=True, ephemeral=True)
+            await self.post_chatter(run_council=council)
+            tgt = "#雜談" if self._channel(C.CH_GENERAL) else "#bot-狀態"
+            await interaction.followup.send(f"✅ 已貼到 {tgt}" + ("(含議會)" if council else ""),
+                                            ephemeral=True)
+
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
         await interaction.followup.send(parts[0])
@@ -403,10 +418,25 @@ class SharksBot(discord.Client):
 
     async def _tick(self) -> None:
         s = self.settings
-        if not s.meetings_enabled:
-            return
         now = datetime.now(TPE)
         hhmm, today = now.strftime("%H:%M"), now.date().isoformat()
+
+        # Hourly #雜談 chatter (news → 速解讀) + a council every Nth hour.
+        # Independent of meetings_enabled; fires once at the top of each hour.
+        if s.chatter_enabled and now.minute == 0:
+            slot = now.strftime("%Y-%m-%d-%H")
+            if self._last_fired.get("chatter") != slot:
+                self._last_fired["chatter"] = slot
+                self._chatter_count += 1
+                do_council = (s.chatter_council_every > 0
+                              and self._chatter_count % s.chatter_council_every == 0)
+                try:
+                    await self.post_chatter(run_council=do_council)
+                except Exception as exc:  # pragma: no cover - network/LLM
+                    log.warning("chatter tick failed: %s", exc)
+
+        if not s.meetings_enabled:
+            return
         if hhmm == s.morning_hhmm and self._last_fired.get("morning") != today:
             self._last_fired["morning"] = today
             await self.post_meeting("morning")
@@ -481,6 +511,43 @@ class SharksBot(discord.Client):
             )
         except Exception as exc:  # never let a refresh failure block the meeting
             log.warning("health-check refresh failed: %s", exc)
+
+    # ── hourly #雜談 chatter ──────────────────────────────────────────────────
+    async def post_chatter(self, run_council: bool = False) -> None:
+        """#雜談: free-RSS news → 速解讀 因果鏈 (local LLM); every Nth also a council."""
+        s = self.settings
+        ch = self._channel(C.CH_GENERAL) or self._channel(C.CH_STATUS)
+        if not ch:
+            log.warning("chatter: #%s not found", C.CH_GENERAL)
+            return
+        from sharks.discord import chatter
+        data = await asyncio.to_thread(
+            chatter.compose_chatter, s.effective_council_model(), s.chatter_news_n)
+        e = discord.Embed(
+            title="📰 每小時速解讀(本地)",
+            description=(data["take"] or "(本地模型無回應 — 確認 Ollama 已啟動)")[:4096],
+            color=_COLORS["noon"],
+        )
+        if data["headlines"]:
+            e.add_field(name="頭條來源", value="、".join(data["sources_ok"][:6]) or "—", inline=False)
+            e.add_field(name="頭條",
+                        value="\n".join(f"• {h}" for h in data["headlines"][:6])[:1024], inline=False)
+        e.set_footer(text=f"本地 {data.get('backend', '?')} · 免費 RSS · 僅研究非建議,永不下單")
+        await ch.send(embed=e)
+
+        if run_council and s.council_enabled and data["headlines"]:
+            from sharks.discord.chatter import council_topic_from_news
+            topic, brief = council_topic_from_news(data["headlines"])
+            result = await asyncio.to_thread(
+                run_council_local, topic, brief,
+                model=s.effective_council_model(),
+                council_names=tuple(s.council_personas),
+                chair_name=s.council_chair,
+                council_models=tuple(s.council_models),
+                personas=self.personas, settings=s,
+            )
+            if result.votes:
+                await ch.send(embed=council_to_embed(result))
 
 
 def main(argv: Optional[list[str]] = None) -> int:

@@ -140,6 +140,11 @@ class Settings:
     # 12 GB together so they stay resident (no load churn = fast), per principal.
     council_models: tuple[str, ...] = ("qwen2.5:7b", "llama3.1:8b")
 
+    # ── 雜談 chatter (#雜談): hourly news → 速解讀 (local LLM); periodic council ──
+    chatter_enabled: bool = True
+    chatter_council_every: int = 4     # run a full council every Nth hourly chatter (0 = never)
+    chatter_news_n: int = 8            # headlines fed to each 速解讀
+
     # ── Meeting schedule (TPE, fixed UTC+8) ──────────────────────────────────
     morning_hhmm: str = "07:30"
     noon_hhmm: str = "13:00"           # 午會 — midday check-in
@@ -191,6 +196,9 @@ class Settings:
                 _env("SHARKS_DISCORD_COUNCIL_MODELS", "qwen2.5:7b,llama3.1:8b").split(",")
                 if m.strip()
             ),
+            chatter_enabled=_env("SHARKS_DISCORD_CHATTER", "1") != "0",
+            chatter_council_every=_env_int("SHARKS_DISCORD_CHATTER_COUNCIL_EVERY", 4),
+            chatter_news_n=_env_int("SHARKS_DISCORD_CHATTER_NEWS_N", 8),
             morning_hhmm=_env("SHARKS_DISCORD_MORNING", "07:30"),
             noon_hhmm=_env("SHARKS_DISCORD_NOON", "13:00"),
             evening_hhmm=_env("SHARKS_DISCORD_EVENING", "22:30"),
