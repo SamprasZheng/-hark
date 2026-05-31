@@ -9,13 +9,16 @@
 $ErrorActionPreference = "Stop"
 $projectRoot = "D:\DOT\`$hark"
 Set-Location $projectRoot
-& '.\.venv\Scripts\Activate.ps1'
+# Use the venv python directly + PYTHONPATH=src (robust whether or not the package
+# is editable-installed; matches the proven foreground invocation).
+$env:PYTHONPATH = "src"
+$py = ".\.venv\Scripts\python.exe"
 
 # Ensure Discord deps are present (core repo stays dep-free by design).
-python -c "import discord, dotenv" 2>$null
+& $py -c "import discord, dotenv" 2>$null
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Installing discord.py + python-dotenv into .venv ..."
-    uv pip install "discord.py>=2.3" "python-dotenv>=1.0"
+    & $py -m pip install "discord.py>=2.3" "python-dotenv>=1.0"
 }
 
 if (-not (Test-Path ".env")) {
@@ -26,4 +29,4 @@ if (-not (Test-Path ".env")) {
 & (Join-Path $projectRoot "scripts\check_ollama.ps1")
 
 Write-Host "Starting Sharks Discord bot (Ctrl+C to stop)..."
-python -m sharks.discord.bot
+& $py -m sharks.discord.bot
