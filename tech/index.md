@@ -18,6 +18,7 @@ The technology due-diligence layer of `$hark`. Each page screens one hot narrati
 - [[99_cross_synthesis]] — cross-trend 綜效 lattice, culture→supply-chain map, consolidated chokepoints, master read
 - [[cross-validation-quant]] — verdicts × `bubble_guard` × evidence-gate reconciliation (DD ↔ quant agreement)
 - [[_weekly-watch]] — **weekly milestone tracker** (記錄→每周更新→里程碑是否完成) · [[_sourcing-protocol]] — 考證 discipline · [[fom-integration]] — verdict → FOM sleeve routing
+- [[alpha-transmission-framework]] — **流動性傳導與未發現 alpha 框架** (lead-lag + early-attention + seasonality, NOT momentum-chasing). Inputs: [[software-stack-taxonomy]] · [[rotation-spillover-algos]] · [[social-attention-alpha]] · [[liquidity-concentration-flows]]. Code: `regime/lead_lag.py`
 
 ## Trend pages (Phase A — 2026-05-31)
 
