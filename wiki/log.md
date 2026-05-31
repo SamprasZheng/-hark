@@ -470,3 +470,17 @@ Principal: 更重基本面、抓關注標的財報關鍵數字以免錯過扭轉
 - `bayesian_update.prior_from_fundamentals`: 讓貝葉斯能 scan 任何標的 (不需 DD verdict) — rev 成長 + GM 拐點(最重權重) + 營業獲利 + FCF → prior. +test_fundamentals (10).
 - P1 portfolio scan (24/26 有資料): 改善中 ALGM(0.75)/TSLA/AMZN/CRM/APA (毛利Δ 正); 惡化 WOLF(營業利潤 −72%, edge −0.27)/ENPH/UAA/LULU(GM −6%); **NKE 毛利Δ −1% → 毛利未轉正、扭轉條件未達成 (與 Q3 −130bps 一致)**. edge 多數 n/a (不在 FOM universe). 警示: AMPX/MRNA 高成長是基期假象 (營業利潤仍負).
 - observe-first / watchlist-only. 全套件綠燈.
+
+## 2026-05-31 — Regime-conditioned valuation system + ABC + SP500 scan
+Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價/預估收益/回測/準確度) + 基於 variables/20260531.md 判斷環境.
+- `scoring/valuation.py`: 5 環境 (積極樂觀/寬鬆/中性/保守/悲觀恐慌) 從 `regime/classifier` 映射; 動態目標價 = 分析師 [low,mean,high] band 以環境 tilt (中性=共識均值); est_return **校正自 SPX 2008-2026 regime 回測 base rate** (非臆測). +12 tests.
+- **關鍵校正發現 (反直覺)**: SPX 前瞻報酬在 保守/悲觀恐慌 (跌破200dma) 最高 (63d +6.4%/+3.9%), 在 積極樂觀 最低 (63d +2.4%) → 系統是**逆勢工具**, 在 積極樂觀 加碼=歷史上報酬最差時點.
+- 分析師目標價是 grade-C: NKE/CRM/NVDA gap +80% 是樂觀/落後 (NKE 連 analyst-low 都 >現價), 非 base case.
+- (A) `fundamentals.detect_flips` 週對週翻正告警 (翻正才通知) + dated snapshots; baseline 已建 (AMZN/HPQ/TSLA turn=5). (B) bayesian scan 104 DD nodes (41 有 market-implied): top edge = **防禦三雄 LMT+0.73/NOC+0.65/RTX+0.60** (結構但未被當泡沫定價=未擁擠) + META/MSFT/ETN/CCJ/NVDA; bottom = ALAB/AEHR/AXTI/IONQ/RGTI (市場已信過頭). 30-name SP500 sampler 動態目標表已產出. (C) main 已同步 (cherry-pick 4 tech commits, 乾淨; crypto commit 留在分支).
+- 全套件綠燈. observe-first / watchlist-only.
+
+## 2026-05-31 — NVDA bull/bear tracker + AI-monetization reckoning + exposure gauge
+- `tech/nvda-bull-bear-tracker.md`: 可證偽週更追蹤器 (capex 指引/ASIC 市佔/HBM-CoWoS/**人才流動**/毛利-氣穴 + 留-跳決策框). 現讀: capex BULL (~$725B 2026 +77%), ASIC BEAR-WATCH (~27.8% 已近 25% 門檻; GS 估 2027 平價), HBM BULL (售罄到2027), 人才 BULL (NVDA 投資離職創業者), 毛利 BULL (74.9%) 但 10-K 採購義務語言=2022 庫存前兆. 修正 agent 誤植市值 → ~$5T. 多數 capex/ASIC/人才數字 grade B/C single-source, 待 primary 驗證.
+- `tech/ai-monetization-reckoning.md`: 主軸轉換 DD (結構, conf 0.68) — capex 建設期 → ROI 清算; 計分板 4 BULL / 1 BEAR (pilot 轉化率僅 ~5-12%) / 1 SPLIT (推論成本 vs 變現). 觸發 = 任一雲廠砍 2027 capex >10%. Cisco-2000 類比.
+- `scoring/exposure.py` (前一 commit): 真實總曝險儀表 (RSU+本業+債相關打擊). 校準 finance/01: NVDA 89% 資產 + ~半收入 + 月現金流負(靠 vest 補)= 四重相關. −35% → 淨值 −$95K + 收入 −$70K. 留-紀律(賣到50%) vs 跳谷歌(脫鉤收入)拆解.
+- observe-first. 全套件綠燈.

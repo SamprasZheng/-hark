@@ -21,6 +21,9 @@ The technology due-diligence layer of `$hark`. Each page screens one hot narrati
 - [[_weekly-watch]] — **weekly milestone tracker** (記錄→每周更新→里程碑是否完成) · [[_sourcing-protocol]] — 考證 discipline · [[fom-integration]] — verdict → FOM sleeve routing
 - [[alpha-transmission-framework]] — **流動性傳導與未發現 alpha 框架** (lead-lag + early-attention + seasonality, NOT momentum-chasing). Inputs: [[software-stack-taxonomy]] · [[rotation-spillover-algos]] · [[social-attention-alpha]] · [[liquidity-concentration-flows]]. Code: `regime/lead_lag.py` · `regime/sector_flow.py` (broadening/spillover) · `scoring/attention_radar.py`
 - [[bayesian-bottleneck-engine]] — **貝葉斯瓶頸引擎**: Serenity 的貝氏邏輯形式化 (prior=DD rubric · posterior=milestone LR 更新 · edge=posterior−market-implied · 序貫輪動=全概率). Code: `scoring/bayesian_update.py`
+- [[nvda-bull-bear-tracker]] — **NVDA 暴漲 vs 倒下可證偽週更追蹤器** (capex 指引 + ASIC 市佔 + HBM/CoWoS + **人才流動** + 毛利/氣穴 + 留/跳決策框); 上游觸發 = [[ai-monetization-reckoning]]
+- [[ai-monetization-reckoning]] — **AI 變現清算**: 主軸從「capex 建設期」→「ROI 清算」的可證偽計分板 (pilot 轉化率僅 ~5-12% = 頭號空方訊號); NVDA 命運的上游. Sequel to [[ai-eats-software]]
+- **估值/曝險 tooling** (observe-first, src/sharks/): `scoring/valuation.py` (5 環境動態目標價 + 產業P/E 真實下檔) · `scoring/exposure.py` (RSU+本業+債的真實集中度儀表) · `scoring/fundamentals.py` (財報關鍵數字 + 翻正告警)
 
 ## Trend pages (Phase A — 2026-05-31)
 
