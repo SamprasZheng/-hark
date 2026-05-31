@@ -153,7 +153,8 @@ def load_orderbook(path: Optional[Path] = None) -> dict:
             ext = json.loads(p.read_text(encoding="utf-8"))
             if isinstance(ext, dict):
                 for k, v in ext.items():
-                    ob[k] = {**ob.get(k, {}), **v}   # external wins field-by-field
+                    if isinstance(v, dict):          # skip stray scalar keys (e.g. "_note")
+                        ob[k] = {**ob.get(k, {}), **v}   # external wins field-by-field
         except Exception as e:  # pragma: no cover
             print(f"  warn: bad orderbook {p}: {e}", file=sys.stderr)
     return ob
@@ -251,12 +252,16 @@ def order_validated_growth(ob: dict, m: dict) -> Optional[float]:
     rev = m.get("revenue_growth_yoy")
     btb = ob.get("book_to_bill")
     backlog = ob.get("backlog_growth_yoy")
-    # decel first: orders rolling over → do not credit growth
-    if (btb is not None and btb < 1.0) or (backlog is not None and backlog < 0) or (rev is not None and rev < 0):
-        g = min(rev, 0.0) if rev is not None else 0.0
-        return round(max(-0.30, g), 4)
     strong = (btb is not None and btb >= 1.1) or (backlog is not None and backlog >= 0.2) \
         or (ob.get("contracted_rev_usd") is not None) or (seg is not None and seg >= 0.30)
+    # decel: HARD order signals always count; trailing-rev<0 only counts when there is
+    # NO strong forward order book (orders lead revenue — don't let stale rev veto a
+    # confirmed backlog, e.g. MediaTek's ASIC ramp with B:B>1 but a soft trailing qtr).
+    hard_decel = (btb is not None and btb < 1.0) or (backlog is not None and backlog < 0)
+    soft_decel = (rev is not None and rev < 0) and not strong
+    if hard_decel or soft_decel:
+        g = min(rev, 0.0) if rev is not None else 0.0
+        return round(max(-0.30, g), 4)
     if strong and seg is not None and rev is not None:
         # blend the (capped) segment surge with TOTAL revenue — conservative
         g = _SEG_BLEND * min(seg, 0.50) + (1.0 - _SEG_BLEND) * max(rev, 0.0)
@@ -280,14 +285,17 @@ def order_trajectory(ob: dict, m: dict) -> dict:
     contracted = ob.get("contracted_rev_usd")
     reasons = []
     accel = stable = decel = False
-    if (btb is not None and btb >= 1.1) or (backlog is not None and backlog >= 0.2) or \
-       (contracted is not None) or (seg is not None and seg >= 0.30):
+    strong = (btb is not None and btb >= 1.1) or (backlog is not None and backlog >= 0.2) or \
+        (contracted is not None) or (seg is not None and seg >= 0.30)
+    if strong:
         accel = True
         if btb is not None: reasons.append(f"B:B {btb}")
         if backlog is not None: reasons.append(f"backlog +{backlog:.0%}")
         if contracted is not None: reasons.append(f"contracted ${contracted/1e9:.1f}B")
         if seg is not None and seg >= 0.30: reasons.append(f"{ob.get('key_segment','seg')} +{seg:.0%}")
-    if (btb is not None and btb < 1.0) or (backlog is not None and backlog < 0) or (rev is not None and rev < 0):
+    # trailing-rev<0 only flags decel when there's no strong forward order book
+    if (btb is not None and btb < 1.0) or (backlog is not None and backlog < 0) or \
+       (rev is not None and rev < 0 and not strong):
         decel = True
         if btb is not None and btb < 1.0: reasons.append(f"B:B<1 ({btb})")
         if rev is not None and rev < 0: reasons.append(f"rev {rev:.0%}")
@@ -334,7 +342,9 @@ def adjusted_fair_pe(growth: Optional[float], qscore: float, traj: dict,
 
 
 def demand_valuation_row(ticker: str, m: dict, ob: dict) -> dict:
-    industry_pe = INDUSTRY_PE.get(m.get("sector"), 25.0)
+    # anchor_pe override lets structurally low-multiple names (ODM/EMS/hardware)
+    # escape the coarse flat-sector P/E (the 30x "Technology" over-anchor problem).
+    industry_pe = ob.get("anchor_pe") or INDUSTRY_PE.get(m.get("sector"), 25.0)
     qs = quality_score(m)
     g = order_validated_growth(ob, m)
     traj = order_trajectory(ob, m)
