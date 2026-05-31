@@ -34,7 +34,7 @@ from sharks.discord.personas import ChatPersona, load_personas
 # ask_fn(system, user, max_tokens) -> (text, ok)
 AskFn = Callable[[str, str, int], tuple[str, bool]]
 
-DEFAULT_COUNCIL = ("huang", "sam", "buffet", "serenity", "bear", "momentum")
+DEFAULT_COUNCIL = ("fomquant", "bayes", "valuation", "regimequant", "huang", "bear", "momentum")
 DEFAULT_CHAIR = "sharks"
 _VOTE_WORDS = {"多": "多", "空": "空", "中性": "中性", "中立": "中性"}
 _VOTE_RE = re.compile(r"投票[:：]?\s*(多|空|中性|中立).*?信心[:：]?\s*([1-5])", re.DOTALL)

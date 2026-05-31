@@ -131,13 +131,14 @@ class Settings:
     council_model: str = ""            # "" → use local_model
     # A diverse bench so the vote actually splits: supply-chain bull, patient
     # contrarian, value, macro, risk-first bear, momentum trader.
-    council_personas: tuple[str, ...] = ("huang", "sam", "buffet", "serenity", "bear", "momentum")
+    # Balanced bench: 4 objective quant voices (FOM / Bayesian / valuation /
+    # regime) + 3 subjective (supply-chain bull, risk-first bear, momentum).
+    council_personas: tuple[str, ...] = (
+        "fomquant", "bayes", "valuation", "regimequant", "huang", "bear", "momentum")
     council_chair: str = "sharks"
-    # Per-seat models (positional with council_personas; round-robin if shorter).
-    # Different families → genuinely different "brains" voting, not one model
-    # role-playing 6 voices. Empty → all seats use council/local model.
-    council_models: tuple[str, ...] = ("qwen2.5:7b", "llama3.1:8b", "mistral:7b",
-                                       "qwen2.5:7b", "qwen2.5-coder:7b", "gemma2:2b")
+    # Per-seat models, round-robin. Only qwen2.5:7b + llama3.1:8b — both fit in
+    # 12 GB together so they stay resident (no load churn = fast), per principal.
+    council_models: tuple[str, ...] = ("qwen2.5:7b", "llama3.1:8b")
 
     # ── Meeting schedule (TPE, fixed UTC+8) ──────────────────────────────────
     morning_hhmm: str = "07:30"
@@ -181,14 +182,13 @@ class Settings:
             council_personas=tuple(
                 p.strip().lower() for p in
                 _env("SHARKS_DISCORD_COUNCIL_PERSONAS",
-                     "huang,sam,buffet,serenity,bear,momentum").split(",")
+                     "fomquant,bayes,valuation,regimequant,huang,bear,momentum").split(",")
                 if p.strip()
             ),
             council_chair=_env("SHARKS_DISCORD_COUNCIL_CHAIR", "sharks").lower(),
             council_models=tuple(
                 m.strip() for m in
-                _env("SHARKS_DISCORD_COUNCIL_MODELS",
-                     "qwen2.5:7b,llama3.1:8b,mistral:7b,qwen2.5:7b,qwen2.5-coder:7b,gemma2:2b").split(",")
+                _env("SHARKS_DISCORD_COUNCIL_MODELS", "qwen2.5:7b,llama3.1:8b").split(",")
                 if m.strip()
             ),
             morning_hhmm=_env("SHARKS_DISCORD_MORNING", "07:30"),
