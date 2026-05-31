@@ -12,6 +12,20 @@ Where `<action>` ∈ `{ingest, query, lint, recommendation, halt, universe, raw_
 
 ---
 
+## [2026-05-31 03:35 TW] build | crypto Part B content — cycle reconciliation (B4) + DOT postmortem (B3)
+
+- **B4 [[../crypto/cycle-and-institutional]]** (live-data reconciliation): the [[../philosophy/concepts/btc-halving-cycle]] page's peak is **stale** — live ATH is **$126,080 @ 2025-10-06** (higher + 3 months later than the cited "2025-07 $115,758 monthly close"); BTC now **−41.3%** from ATH (not −37%), peak multiple ~+97%/~1.9× (not 1.7×). The falsification trigger *technically* fired but on a wording artifact (that high WAS the cycle peak, not a post-bear reclaim) → proposed a trigger rewrite. To-date the shallow −41% (vs prior −77%/−84%) **leans weakly toward the [[../philosophy/concepts/institutional-btc-anchor]] thesis**, but the 2026Q4-2027Q1 bottoming window is still ahead → unresolved. **Contradiction flag added to the older btc-halving-cycle page** per wiki rules.
+- **B3 [[../crypto/dot-postmortem]]**: DOT **−97.83%** from $54.98 ATH (2021-11-04) → $1.20, rank #44, mcap $2.02B; `max_supply 2.1B` (hard cap live, 80.3% issued). Postmortem of the 2025 loss (narrative/dev-mindshare decay, dilution, weak value capture, structural underperformance) + the honest hard-cap read ("less dilution ≠ more demand"). Forward stance is a **trigger-conditional template**; position cost-basis left BLANK (`position_status: COST_BASIS_UNKNOWN`) — ask-at-execution, never fabricated. Default lean: hold-or-exit, NOT accumulate.
+- **wiki/index** updated with a crypto-tracker pointer. No position opened; RECOMMEND-ONLY.
+
+## [2026-05-31 03:10 TW] ingest | crypto/web3 KOL 底層邏輯性格 profiles (22 KOLs) + watchlist RWA refinement
+
+- **KOL profiles**: 4 parallel web-research agents profiled **22 crypto/web3 KOLs** (verified handles + 2025-26 positioning + conflicts of interest) → `raw/kol_signals/crypto-kol-profiles-2026-05-31.md` + `raw/kol_signals/crypto-kol-index.tsv`. All grade **D or below** (KOL price calls never A/B per [[../CLAUDE]]); **C** for data-driven Cowen/Woo; **E** for falsified PlanB S2F + grift 寶二爺; **趙東 rejected** (7yr prison conviction, no verified live handle). Filed to `raw/kol_signals/` (sentiment layer), deliberately NOT `analysts/` (the FOM-ensemble persona layer) so KOL noise never tilts the stock scorer.
+- **DOT corroboration** (feeds the future [[../crypto/dot-postmortem]]): the Gavin Wood profile surfaced The Defiant (May 2026) data — Polkadot DeFi **TVL ~$81M** vs ETH $48B / SOL $6.8B; **MAU 230K→43K**; **JAM slipped to late-2026/2027**; DOT **~−98%** from ATH. "Vision shipped as whitepapers faster than usage or price"; the 2026-03 hard cap is tokenomics, not demand.
+- **Saylor watch** (feeds [[../philosophy/concepts/institutional-btc-anchor]]): May-2026 reversal of "never sell" → "may sell BTC to fund dividends" after a $12.5B Q1 loss — the largest corporate BTC buyer may turn into a supply source.
+- **yxz sync**: same 22 KOLs + 11 crypto keywords added to yxz `kol-tracker` (`D:\DOT\yxz\.claude\skills\kol-tracker\kol-list.yaml`) — PUBLIC, neutral whys only; the candid analysis stays $hark-private.
+- **Watchlist refinement**: `crypto/watchlist.yaml` snapshotted to `crypto/watchlist_history/`; added `rwa` + `perp_dex` tags + 7 stablecoins (the first live snapshot's `uncategorized=41` was saturated with RWA / tokenized-treasuries). `scoring/crypto_top100.py` `compute_movers` gained a top-50 `max_rank` liquidity filter to cut microcap noise (+1 test). Full suite **454 green**.
+
 ## [2026-05-31 02:47 TW] build | crypto Marketcap Top-100 tracker (Phase A infra) + first live snapshot
 
 - **Scope**: zero-dep crypto Top-100 tracker, compile-first. Code in `src/sharks/` (importable + tested); state/content in `crypto/`. RECOMMEND-ONLY; no trading, no leverage.

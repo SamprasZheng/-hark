@@ -1,0 +1,54 @@
+---
+schema_version: 1
+as_of: "2026-05-31"
+vs_currency: usd
+
+tier1_flagship: [BTC, ETH]
+tier2_narrative_l1_l2: [SOL, BNB, XRP, ADA, AVAX, DOT, LINK, TRX, TON, NEAR, APT, SUI, MATIC, ARB, OP]
+tier3_discovery_pool: []
+
+stablecoins: [USDT, USDC, DAI, USDE, FDUSD, TUSD, USDS, PYUSD, USDD, USD1, USDG, RLUSD, USDF, BFUSD, USDTB, USD0, GHO]
+
+category_tags:
+  l1: [BTC, ETH, SOL, BNB, ADA, AVAX, TRX, TON, NEAR, APT, SUI, DOT, ATOM, ETC, HBAR, ICP, ALGO, XTZ, KAS, SEI, TIA, INJ, STX, HYPE, FLR, XDC, PI]
+  l2_scaling: [MATIC, POL, ARB, OP, IMX, MNT, STRK, METIS, MANTA, ZK, SCR, TAIKO]
+  defi: [UNI, AAVE, MKR, SKY, LDO, CRV, SNX, COMP, SUSHI, RUNE, CAKE, PENDLE, ENA, JUP, DYDX, GMX, MORPHO, ETHFI, AERO, WLFI, JST]
+  perp_dex: [HYPE, ASTER, DYDX, GMX]
+  rwa: [BUIDL, USYC, USTB, BCAP, JTRSY, EUTBL, USDY, ONDO, PAXG, XAUT]
+  exchange_token: [BNB, OKB, CRO, KCS, GT, BGB, LEO, HT, WBT, HTX, NEXO]
+  meme: [DOGE, SHIB, PEPE, WIF, BONK, FLOKI, BRETT, MOG, POPCAT, MEW, TRUMP, FARTCOIN, SPX, PUMP]
+  ai: [TAO, RENDER, FET, AGIX, OCEAN, WLD, AKT, GRT, ARKM, AIXBT, VIRTUAL, AI16Z, IO, NOS, VVV]
+  payments: [XRP, XLM, LTC, BCH, XNO, ZBCN]
+  depin: [RENDER, HNT, IOTX, AR, FIL, THETA, GRASS, MOBILE, IOT]
+  gaming_nft: [MYTH, IMX, GALA, AXS, SAND, MANA, APE, ENJ, BEAM, PRIME, PIXEL, RON, GMT]
+  privacy: [XMR, ZEC, DASH, ROSE, BDX]
+  infra_oracle_bridge: [LINK, PYTH, WBTC, QNT, AXL, W, ZRO, BTT, RSR]
+
+human_overrides:
+  DOT: "過去重虧的源頭，永遠示警。結構性跑輸上一輪；任何再進場需額外證據（非敘事），且嚴守 4% 名目上限、不可只憑敘事逢低加碼。2026-03 硬上限把年發行砍 53.6%（[[wiki/concepts/dot-hard-cap]]）是『減少被稀釋』非『需求回來』——降低賣壓不等於有人想買。預設立場偏 hold-or-exit。"
+  BTC: "cycle thesis 有爭議：純減半 vs 機構錨定（[[philosophy/concepts/btc-halving-cycle]] / [[philosophy/concepts/institutional-btc-anchor]]）。dominance 列為每日追蹤的裁決指標。對本人定位為核心宏觀資產、在 ≤5% Alpha 倉之外、≤4% 名目硬頂、機械式 DCA——不是隨信心轉的旋鈕。"
+---
+
+<!-- Everything below the fence is human-readable provenance; the loader
+     (scoring/crypto_top100.py::load_watchlist) only reads the frontmatter above,
+     parsed without pyyaml via analysts/persona.py::_parse_frontmatter. -->
+
+# crypto/watchlist.yaml
+
+Mirrors `watchlist/universe.yaml` for the crypto Top-100 tracker. Edit discipline:
+before changing this file, snapshot it to
+`crypto/watchlist_history/crypto-watchlist-YYYY-MM-DD.yaml` (tracked — point-in-time
+integrity for any future backtest), exactly as `watchlist/history/` does for equities.
+
+- `tier1_flagship` / `tier2_narrative_l1_l2` — the always-watch core; `tier3_discovery_pool`
+  is grown from each day's movers/churn, never seeded speculatively.
+- `category_tags` — the narrative map used to bucket the daily snapshot. A symbol may
+  appear in several tags (BNB = l1 + exchange_token; RENDER = ai + depin). Anything in the
+  snapshot that matches NO tag lands in `uncategorized` and is named in the analysis — that
+  is how a genuinely new narrative gets noticed instead of silently dropped.
+- `stablecoins` — excluded from "narrative" but tracked for stablecoin-share (a liquidity /
+  risk-appetite gauge; also the depeg / counterparty watch surface).
+- `human_overrides` — DOT and BTC are mandatory and always surfaced in every analysis.
+
+These tag lists are a best-effort seed (2026-05); the `uncategorized` callout is the
+self-correcting mechanism, so do not over-invest in making them exhaustive.

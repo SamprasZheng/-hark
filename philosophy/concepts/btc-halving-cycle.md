@@ -67,6 +67,15 @@ This is consistent with the broader analyst consensus ("4-year cycle weakening, 
 - **Phase D (bear market)** — bottoming window 2026-Q4 to 2027-Q1
 - **NOT yet Phase E** — no accumulation signal until late 2027
 
+> **⚠ Live-data update (2026-05-31)** — contradicted by `crypto/data/top100-2026-05-30.json`:
+> the real cycle ATH is **$126,080 on 2025-10-06** (HIGHER and ~3 months LATER than the
+> "2025-07 monthly close $115,758" above); BTC is **−41.3%** from it (not −37%), and the peak
+> multiple is ~+97% / **~1.9×** (not 1.7×). The falsification trigger as worded *technically*
+> fired (new high > $115,758 with no prior >50% DD) — but that high WAS the cycle peak, not a
+> post-bear reclaim, so it's a wording artifact; the meaningful "does h2024 print a >50% Phase-D
+> bear?" question is still OPEN (bottoming window 2026Q4-2027Q1 ahead, currently only −41%).
+> Full reconciliation + a proposed trigger rewrite: [[../../crypto/cycle-and-institutional]].
+
 ## Operational use
 
 ### For crypto positions (Strategy C):

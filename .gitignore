@@ -49,6 +49,11 @@ outputs/*.json
 outputs/*.csv
 !outputs/.gitkeep
 
+# Crypto tracker daily snapshots — immutable raw, regenerated each run (like outputs/).
+# watchlist.yaml, watchlist_history/, and analysis/*.md stay tracked (point-in-time integrity).
+crypto/data/*.json
+!crypto/data/.gitkeep
+
 # Cached / downloaded data — never commit raw market data
 raw/market_data/*.csv
 raw/market_data/*.parquet

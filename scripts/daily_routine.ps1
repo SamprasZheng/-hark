@@ -60,6 +60,13 @@ if ($earningsSeason) {
     Log "NOTE: earnings season (財報季) — higher-volatility exception window; closer watch + larger evidence-backed turnover acceptable."
 }
 
+# ── WEEKEND (optional): crypto Top-100 tracker ───────────────────────────────
+# Weekend is the crypto window (philosophy/07-mode-switch.md); posture is
+# de-risk/observation-first. Uncomment to fold the daily crypto breadth snapshot
+# into the routine (RECOMMEND-ONLY; writes crypto/data + crypto/analysis):
+# Log "Crypto Top-100 tracker (breadth snapshot + structure)..."
+# python -m sharks.scoring.crypto_top100 2>&1 | Tee-Object -FilePath $log -Append
+
 # ── Digest ───────────────────────────────────────────────────────────────────
 $digest = Join-Path $projectRoot "outputs\routine_digest_$today.md"
 @"

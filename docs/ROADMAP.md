@@ -38,6 +38,7 @@ Phase-by-phase plan for the Sharks system. Phase 1 (this scaffold) is complete o
 6. **`.env` loading** via `python-dotenv`; documented in `.env.example`
 7. **Smoke tests**: each client has a `pytest -m smoke` test that hits the real API and verifies basic response structure
 8. **Compile-first loop (skeleton)**: `sharks ingest` CLI subcommand reads new files in `raw/`, computes summary, and APPENDS to `wiki/log.md` (does not yet update `wiki/01_macro_state.md` — that's Phase 3)
+9. **CoinGecko cross-sectional client** ✅ *(landed 2026-05-31, ahead of schedule)*: `src/sharks/data/coingecko_client.py` (stdlib `urllib`, zero-dep) + `src/sharks/scoring/crypto_top100.py` daily Top-100 breadth snapshot → `crypto/`. Complements the ccxt client (item 5: single-symbol OHLCV) with the market-cap ranking + metadata cross-section. **Deferred upgrades**: `sharks crypto top100` CLI subcommand; ccxt weekend OHLCV; on-chain metrics (Glassnode/Santiment); `/coins/categories` auto-tagging (currently manual `crypto/watchlist.yaml`); full `outputs/crypto-picks-*.json` + crypto-audit contract; promoting `pyyaml`/`requests` to real deps (kept zero-dep for now)
 
 **Acceptance criteria**:
 - `uv run sharks ingest --source raw/macro/fed-fomc-2026-XX-XX.md` produces a log entry

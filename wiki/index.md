@@ -18,6 +18,7 @@ Phase 1 placeholder. This index becomes the live MOC for the compiled state laye
 - **Positions**: [[positions]]
 - **Recommendations**: [[05_recommendations/README]]
 - **個人財務諮詢**: [[personal/index]] — 債務 / 現金流 / 買房 / 稅務 / 變現 / 壓測 / 保險
+- **Crypto tracker**: [[../crypto/README]] — Top-100 daily tracker + [[../crypto/cycle-and-institutional]] (週期對帳) + [[../crypto/dot-postmortem]] (DOT 檢討) + KOL profiles in `raw/kol_signals/`
 
 ## See also
 
