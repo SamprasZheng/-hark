@@ -40,6 +40,7 @@ def main():
     today = datetime.now().strftime("%Y-%m-%d")
 
     liquidity = load_latest(out_dir, "liquidity-signals")
+    rfpm = load_latest(out_dir, "rfpm-cycle")
     fom = load_latest(out_dir, "fom-alpha")
     serenity = load_latest(out_dir, "serenity-scout")
     meme = load_latest(out_dir, "meme-squeeze-hunter")
@@ -60,6 +61,22 @@ def main():
             f"- **M2**: YoY {m2.get('yoy_growth_pct', '?')}% → {m2.get('interpretation', '?')}",
             f"- **BTC**: ${btc.get('last_price', '?')} (距高 -{btc.get('dist_from_high_pct', '?')}%) → {btc.get('interpretation', '?')}",
             f"- **GLD**: ${gld.get('last_price', '?')} (6m +{gld.get('r6_pct', '?')}%, 12m +{gld.get('r12_pct', '?')}%) → {gld.get('interpretation', '?')}",
+            "",
+        ]
+
+    # RF/PM/analog rush-order cycle (variable #15) — two-door read
+    # (leading = industrial/AI/distribution; lagging = pure handset QRVO/SWKS).
+    if rfpm:
+        ld = rfpm.get("leading_door", {})
+        lg = rfpm.get("lagging_door", {})
+        lines += [
+            "## 🛰️ RF/電源/類比 急單週期 (變數#15)", "",
+            f"- **Leading door (工業/AI/分銷)**: {ld.get('state', '?')}  "
+            f"(price={ld.get('price_score')}, evidence={rfpm.get('evidence_score_leading')})",
+            f"- **Lagging door (手機 QRVO/SWKS)**: {lg.get('state', '?')}  "
+            f"(price={lg.get('price_score')}, evidence={rfpm.get('evidence_score_lagging')})",
+            f"- 讀法: {rfpm.get('headline', '')}",
+            "- 紀律: evidence 說復甦真實但 price 已 OVERHEAT = 擁瓶頸(KEYS/GFS)不追(see tech/rf-connectivity.md)",
             "",
         ]
 

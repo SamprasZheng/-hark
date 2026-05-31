@@ -13,6 +13,7 @@ The technology due-diligence layer of `$hark`. Each page screens one hot narrati
 
 ## Navigation
 
+- [[semiconductor-industry-map]] — **半導體/電子產業全圖** (垂直價值鏈 12 關卡 × 水平分段;edge↔cloud 連結縫;把所有頁掛上母圖) — the backbone MOC
 - [[00_framework]] — the 質變-vs-同溫層 rubric (5 axes), anti-echo-chamber doctrine, verdict taxonomy
 - [[scoreboard]] — scored matrix of all trends + verdicts + echo-chamber-gap/falsifier table
 - [[99_cross_synthesis]] — cross-trend 綜效 lattice, culture→supply-chain map, consolidated chokepoints, master read
@@ -59,10 +60,18 @@ The technology due-diligence layer of `$hark`. Each page screens one hot narrati
 | [[space-economy]] | 結構 | 結構→質變→太早 | 發射成本崩跌是真質變(SpaceX 壟斷)；在軌經濟太早；RKLB ~90x P/S |
 | [[humanoid-robotics]] | 結構 | 太早→質變 | 像 2019 的自駕；買鏟子(NVDA+減速機)，OEM 進 Moonshot；中國贏單位戰 |
 
+## Phase D trend pages (multi-horizon T0→T3)
+
+| Trend | headline | T0 → T3 | One-line |
+|---|---|---|---|
+| [[rf-connectivity]] | 結構 | 結構→質變(2029+) | RF=方向相反的 anti-bubble(基本面被忽略非敘事超前);手機前端便宜但結構受挑戰,成長已遷徙到 AI 電力縫/週期類比/國防 GaN/6G FR3;變數#15 急單訊號已確認(走工業門非手機門);擁瓶頸 KEYS/GFS |
+| [[offshore-energy]] | 結構 | 結構→質變→太早 | 能源實體層 gap-fill;真瓶頸(無新造船+整併)但 phase-one 末段、2026 消化氣穴;日租金近端 <$40 萬滾降、稼動率滑向 82%;抄底 RIG/NE,鏟子 BKR(LNG) |
+
 ## Deep dives (二階供應鏈 / second-derivative)
 
 - [[optical-supply-chain-deep]] — CPO picks-and-shovels: InP 基板 · CW 雷射/EML · **hybrid-bond 量測 (Auros/Onto/FormFactor) = 最未擁擠節點**；froth: AXTI/AEHR (−95)
 - [[glp1-supply-chain]] — GLP-1 製造瓶頸: 胜肽 API (Bachem/PolyPeptide) · fill-finish (TMO) · 注射筆 (Ypsomed)；**去中介風險**: LLY/NVO 自建產能 + 口服 orforglipron 砍掉胜肽/針劑需求
+- [[rf-deep-dives]] — RF 二階深掘:**QRVO+SWKS 合併套利**(監管賠率賭注,SAMR 是搖擺,R/R ~3:1–10:1 對你不利)+ **GFS vs TSEM**(TSEM 純但已定價、GFS 風險調整後更乾淨)
 
 ## Master conclusion (see [[99_cross_synthesis]] §5)
 

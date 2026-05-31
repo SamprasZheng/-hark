@@ -42,6 +42,9 @@ python -m sharks.backtest.portfolio_audit 2>&1 | Tee-Object -FilePath $log -Appe
 Log "Daily health-check (regime + funding + posture + hotspots)..."
 python -m sharks.cli health-check 2>&1 | Tee-Object -FilePath $log -Append
 
+Log "RF/PM/analog rush-order cycle (variable #15, two-door: leading vs handset)..."
+python -m sharks.cli rf-cycle --as-of $today 2>&1 | Tee-Object -FilePath $log -Append
+
 # ── WEEKLY: 選股建議 + FOM recalibration heartbeat ───────────────────────────
 if ($isWeekly) {
     Log "WEEKLY: FOM universe scan (選股建議)..."
@@ -76,6 +79,7 @@ $digest = Join-Path $projectRoot "outputs\routine_digest_$today.md"
 - earnings_season: $earningsSeason
 - posture / recommendations: outputs/daily-health-check-$today.json
 - portfolio audit: outputs/portfolio-audit-$today.json
+- RF/PM cycle (變數#15, leading vs handset door): outputs/rfpm-cycle-$today.json
 $(if ($isWeekly) { "- FOM scan: outputs/fom-monthly-*.json`n- IC re-check: outputs/fom-validation-2016-to-2026.json (verdict + best horizon)" })
 
 ## Discipline reminder

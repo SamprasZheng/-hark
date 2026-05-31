@@ -203,6 +203,42 @@ _ENTRIES = [
     ("RDW",  "結構", "space-economy", ("front_run",), 0.28, "~10x P/S Strong Sell"),
     ("PL",   "結構", "space-economy", ("front_run",), 0.33, "EO data; ~51x P/S"),
     # humanoid-robotics (most beneficiaries non-US; NVDA/TSLA already mapped)
+    # ── Phase D (2026-05-31) — rf-connectivity (QCOM/AVGO/MRVL/ARM already mapped above) ──
+    # handset RFFE — the anti-bubble core (cheap, hated, structurally challenged)
+    ("QRVO", "結構", "rf-connectivity", ("bottom_fish",), 0.33, "RFFE; SWKS merger arb (~3.6% gross spread, China SAMR swing); ~half Apple"),
+    ("SWKS", "結構", "rf-connectivity", ("bottom_fish",), 0.33, "RFFE; QRVO merger acquirer; ~60% Apple; Broad Mkts +10% diversifying"),
+    # power / broad analog — the leading-door cyclical recovery (variable #15)
+    ("MPWR", "結構", "rf-connectivity", ("front_run",), 0.38, "AI server power +97.7%; Nvidia socket contested (Infineon/Renesas/ADI); ~50-67x"),
+    ("TXN",  "結構", "rf-connectivity", (), 0.38, "broad analog bellwether; recovery + capex/FCF debate; EV/S ~2x 10y median"),
+    ("ADI",  "結構", "rf-connectivity", ("cashflow",), 0.40, "broad analog; +30% broad-based recovery; Empower $1.5B vertical-power M&A"),
+    ("ON",   "結構", "rf-connectivity", ("bottom_fish",), 0.33, "power/SiC; auto +5% first growth in 8 qtrs; SiC still soft"),
+    ("MCHP", "結構", "rf-connectivity", ("bottom_fish",), 0.36, "MCU+analog; cycle bottom confirmed, dist inventory 26 days"),
+    ("POWI", "結構", "rf-connectivity", (), 0.33, "high-voltage power conversion + PowiGaN +40%; industrial +23%"),
+    ("VICR", "結構", "rf-connectivity", ("front_run",), 0.33, "48V->PoL vertical power for AI; backlog +70%; ~60x + ITC litigation"),
+    ("NVTS", "太早", "rf-connectivity", ("froth",), 0.12, "GaN/SiC pure-play; AI 800V demos not revenue; $8.6M rev, ~6-qtr cash runway"),
+    ("DIOD", "結構", "rf-connectivity", ("bottom_fish",), 0.35, "discrete/analog consumer-cycle proxy; 6th straight double-digit qtr"),
+    ("AOSL", "結構", "rf-connectivity", (), 0.25, "power discretes/PMIC; China exposure, thin 21% GM — value-trap risk"),
+    # connectivity (WiFi/BT/Thread/UWB) + audio
+    ("SLAB", "結構", "rf-connectivity", (), 0.30, "IoT connectivity bellwether; TI acquisition $231/sh — deal-arb, guidance suspended"),
+    ("SYNA", "結構", "rf-connectivity", (), 0.36, "IoT/Veros wireless + edge AI; Core IoT +31%, FY26 +40%"),
+    ("NXPI", "結構", "rf-connectivity", (), 0.38, "UWB leader + auto/industrial IoT; Ind&IoT +24%"),
+    ("CRUS", "結構", "rf-connectivity", (), 0.30, "audio; ~91% Apple — content growth offsets flat units; latent in-housing risk"),
+    ("CEVA", "結構", "rf-connectivity", ("second_derivative",), 0.35, "BT/WiFi/UWB IP royalty; 87% GM; benefits from SoC integration"),
+    # picks-and-shovels — own the chokepoint (foundry/test) regardless of who wins
+    ("KEYS", "結構", "rf-connectivity", (), 0.40, "6G/NTN/AI test chokepoint — the tollbooth; orders +56%"),
+    ("GFS",  "結構", "rf-connectivity", ("second_derivative",), 0.38, "RF-SOI/FDX foundry chokepoint; pivoting to AI silicon photonics"),
+    ("TSEM", "結構", "rf-connectivity", ("second_derivative",), 0.38, "RF-SOI/SiGe/SiPho foundry; AI SiPho pivot ($1.3B 2027 commitments)"),
+    ("MTSI", "結構", "rf-connectivity", ("front_run",), 0.35, "GaN-on-SiC/mmWave/defense + DC optical; owns Wolfspeed RF; ~73x priced for perfection"),
+    ("WOLF", "受損", "rf-connectivity", ("loser",), 0.05, "post-Ch.11; RF business sold to MACOM; SiC balance-sheet scar — not an RF name now"),
+    # ── Phase D — offshore-energy (gap-fill; energy physical-resource layer, same rubric) ──
+    ("RIG",  "結構", "offshore-energy", ("bottom_fish",), 0.35, "UDW pure-play; P/B ~0.93, deleveraging; acquiring Valaris (73 rigs)"),
+    ("VAL",  "結構", "offshore-energy", ("bottom_fish",), 0.33, "cleanest BS (<1x net debt); merging into Transocean"),
+    ("NE",   "結構", "offshore-energy", ("bottom_fish",), 0.35, "backlog $7.2B; dividend+buyback; floater dayrate $422k moderating"),
+    ("SDRL", "結構", "offshore-energy", (), 0.20, "asset-light; FCF -$35M, slipped to net debt — weakest of the four"),
+    ("SLB",  "結構", "offshore-energy", (), 0.35, "OFS #1 intl/offshore; EBITDA -12% YoY cyclical decompression"),
+    ("HAL",  "結構", "offshore-energy", (), 0.30, "OFS #2 NAM-frac heavy; near-term headwind"),
+    ("BKR",  "結構", "offshore-energy", ("cashflow",), 0.38, "OFSE + LNG/IET growth engine — best diversified"),
+    ("FTI",  "結構", "offshore-energy", ("front_run",), 0.33, "subsea chokepoint; backlog $15.8B but re-rated hard"),
 ]
 
 TECH_DD: dict[str, TechDD] = {e[0]: _dd(*e) for e in _ENTRIES}
@@ -348,6 +384,9 @@ TREND_HORIZON: dict[str, dict[str, str]] = {
     "cybersecurity-ai":          {"T0": "結構", "T1": "質變", "T2": "質變", "T3": "結構"},
     "china-ai-stack":            {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "質變"},
     "space-economy":             {"T0": "結構", "T1": "質變", "T2": "太早", "T3": "太早"},
+    # Phase D
+    "rf-connectivity":           {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "質變"},
+    "offshore-energy":           {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "太早"},
 }
 _HORIZON_TO_FOM = {"T0": "fom_3m", "T1": "fom_12m", "T2": "fom_36m", "T3": "fom_36m"}
 
@@ -377,6 +416,8 @@ TREND_RUBRIC: dict[str, dict[str, int]] = {
     "stablecoins-tokenization":  {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
     "cybersecurity-ai":          {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
     "china-ai-stack":            {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 2},
+    "rf-connectivity":           {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
+    "offshore-energy":           {"A1": 2, "A2": 1, "A3": 1, "A4": 2, "A5": 1},
 }
 
 

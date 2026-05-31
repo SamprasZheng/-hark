@@ -54,6 +54,15 @@ Scored matrix of the 9 Phase-A trend pages on the [[00_framework]] rubric. Each 
 
 **Phase C 讀法**: 仍全 **結構** headline，但時間軸顯示 **T2-T3 質變候選** = ai-datacenter-power / cybersecurity / china-ai-stack / humanoid；**T0 已實現質變僅 none**（ai-datacenter-power 最接近，電氣/核能有真實 P&L）。新增的最強 desk 觀察：AI 瓶頸鏈延伸為 **compute → interconnect → 電力**——`ai-datacenter-power` 是繼 HBM/CPO 之後的下一個綁定約束（9/10、有交付 P&L），但同樣「受益者≠該價位」(GEV ~37-69x、CRWD ~20x rev、RKLB ~90x P/S、pre-rev SMR 當生產商定價)。全 21 條的鐵律不變。詳見 [[99_cross_synthesis]] §C。
 
+## Phase D 矩陣（含多時程, 2026-05-31）
+
+| 趨勢 | headline | T0 | T1 | T2 | T3 | A1·A2·A3·A4·A5 | Σ | conf |
+|---|---|---|---|---|---|---|:--:|:--:|
+| [[rf-connectivity]] | 結構 | 結構 | 結構 | 結構→質變 | 質變(條件) | 2·2·2·2·1 | **9** | 0.75 |
+| [[offshore-energy]] | 結構 | 結構(消化) | 結構 | 質變(條件) | 太早(轉型壓) | 2·1·1·2·1 | **7** | 0.70 |
+
+**Phase D 讀法**: 這是全 22 條裡**同溫層落差方向相反**的一條——其他每一條空方都是「股價跑在基本面前」,**RF/類比是基本面(週期復甦+內容複雜度+AI 電力)被忽略,因為板塊不時髦**(anti-bubble)。A4 供應鏈=2 是全部最高分群(BAW 雙雄、RF-SOI、測試 tollbooth、UWB、IP 授權,listed pure-play 最多)。但鐵律仍在、且**倒過來咬**:便宜≠低估——手機 RFFE 便宜是結構性的(內容攤平、TAM 不長 $15.4B→$17B、Apple 自研沿整條無線 BoM、中國替代、2026 單位 −12.9%);QRVO+SWKS $22B 合併是「有機成長已盡」的告白。**成長已從手機前端遷徙**到 AI 電力/互連縫(MPWR/VICR/ADI-Empower)、週期類比(已部分定價)、國防 GaN(MTSI/QRVO HPA,現賺)、2029+ 6G FR3(太早)。**alpha = 騎已確認的變數#15 週期急單(走工業/分銷門)+ 擁有不管誰贏都收過路費的瓶頸(KEYS 測試、GFS RF-SOI)+ 6G FR3 當不付溢價的 2029 選擇權**。詳見 [[rf-connectivity]]。
+
 ## 一句話讀法 / The one-line read
 
 > **沒有一條在頁面層級評到「質變」。** 你列的熱門題目幾乎全是 **結構**（真實但大致已被定價），外加兩個明確的陷阱：**端側 AI 過熱、量子破 BTC 太早**。唯一最接近「有現金流的質變」是 **GLP-1**。

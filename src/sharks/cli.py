@@ -89,6 +89,28 @@ def _cmd_tech_dd(args: argparse.Namespace) -> int:
     return _tech_dd_main(Path(args.out_dir))
 
 
+def _cmd_rf_cycle(args: argparse.Namespace) -> int:
+    """RF / power-management / analog rush-order cycle tracker (variable #15).
+
+    Reads the two doors separately (leading = industrial/AI/distribution,
+    lagging = handset) from a price tape + a curated hard-evidence layer
+    (book-to-bill / price hikes / channel-inventory days). RECOMMEND-ONLY —
+    emits a cycle reading, never a trade. See tech/rf-connectivity.md.
+    """
+    from pathlib import Path
+
+    from sharks.scoring.rfpm_cycle import run, write_output
+
+    reading = run(as_of=args.as_of, network=not args.no_network)
+    print(reading.headline)
+    print(f"  leading evidence={reading.evidence_score_leading:+.2f} "
+          f"lagging evidence={reading.evidence_score_lagging:+.2f}")
+    if not args.dry_run:
+        path = write_output(Path(args.out_dir), reading)
+        print(f"wrote {path}")
+    return 0
+
+
 def _cmd_wiki_lint(args: argparse.Namespace) -> int:
     print(
         f"[stub] sharks wiki lint called. "
@@ -168,6 +190,29 @@ def build_parser() -> argparse.ArgumentParser:
         help="print the sleeve-bucket summary but do not write outputs/tech-dd-overlay.json",
     )
     p_techdd.set_defaults(func=_cmd_tech_dd)
+
+    # `sharks rf-cycle` — RF/power-mgmt/analog rush-order cycle tracker (REAL)
+    p_rf = subparsers.add_parser(
+        "rf-cycle",
+        help="RF / power-mgmt / analog rush-order cycle tracker (variable #15, recommend-only)",
+    )
+    p_rf.add_argument(
+        "--as-of", default=None,
+        help="point-in-time date YYYY-MM-DD (default: today); slices price + evidence to <= as_of",
+    )
+    p_rf.add_argument(
+        "--no-network", action="store_true",
+        help="evidence-only read; skip the yfinance price tape",
+    )
+    p_rf.add_argument(
+        "--out-dir", default="outputs",
+        help="dir where rfpm-cycle-*.json is written",
+    )
+    p_rf.add_argument(
+        "--dry-run", action="store_true",
+        help="print the cycle reading but do not write outputs/rfpm-cycle-*.json",
+    )
+    p_rf.set_defaults(func=_cmd_rf_cycle)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")
