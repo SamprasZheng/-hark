@@ -1,0 +1,90 @@
+# risk_config.yaml -- single source of truth for the numeric risk rules.
+#
+# Mirrors philosophy/06-exclusions.md + philosophy/08-risk-and-position.md (and the
+# per-horizon size caps in 01-time-horizon.md). Drift between this file and those
+# md pages is a P0 bug; tests/test_policy_lint.py::TestDrift asserts the key numbers
+# match. The md pages remain the human-authored source; this file is the machine
+# mirror the Risk-Officer pre-screen (src/sharks/decision/policy_lint.py) reads.
+#
+# RECOMMEND-ONLY: these are SCREENING limits, never trade instructions. Changing a
+# number here without also editing the matching philosophy/ page (and a wiki/log.md
+# entry) is forbidden -- the friction is the point (sharks principle 4).
+schema_version: 1
+
+# --- philosophy/06-exclusions.md -------------------------------------------------
+exclusions:
+  price_floor_usd: 5
+  liquidity_60d_avg_dollar_vol_usd: 5000000
+  liquidity_30d_avg_share_vol: 200000
+  market_cap_floor_tier2_usd: 50000000000
+  market_cap_floor_tier3_usd: 1000000000
+  post_ipo_blackout_days: 90
+  halt_count_30d_max: 1
+  short_interest_pct_max: 0.20
+  borrow_fee_apr_max: 0.10
+  days_to_cover_max: 5
+  vix_defensive_threshold: 35
+  earnings_blackout_own_days: 1
+  earnings_blackout_tier1_days: 3
+  put_earnings_blackout_days: 5
+
+# --- philosophy/08-risk-and-position.md : per-holding caps -----------------------
+position_caps_pct:
+  tier1: 8
+  tier2: 5
+  tier3: 3
+  short_notional: 4
+
+# --- philosophy/08 : per-group concentration caps --------------------------------
+concentration_caps_pct:
+  sector: 25
+  catalyst: 15
+  total_short_notional: 30
+  single_broker: 50
+
+# --- philosophy/08 : correlation downweighting -----------------------------------
+correlation:
+  threshold: 0.7
+  downweight_factor: 0.6
+  consecutive_days_to_trim: 3
+  consecutive_days_to_restore: 10
+
+# --- philosophy/08 : the one circuit breaker -------------------------------------
+max_drawdown_halt:
+  trigger_pct: -12
+  force_trim_longs_pct: 50
+  pause_new_entry_days: 5
+  half_cap_days: 10
+
+# --- philosophy/01-time-horizon.md : per-horizon size caps -----------------------
+horizon_size_caps_pct:
+  1m:
+    tier1: 4
+    tier2: 3
+    tier3: 2
+  3m:
+    tier1: 6
+    tier2: 4
+    tier3: 3
+  6m:
+    tier1: 8
+    tier2: 5
+  12m:
+    tier1: 8
+    tier2: 5
+
+# --- philosophy/08 : risk-of-ruin guardrails -------------------------------------
+risk_of_ruin:
+  time_stop_multiplier: 1.5
+  max_longs_notional_pct: 100
+  max_shorts_notional_pct: 30
+  max_per_day_new_money_pct: 15
+  max_per_week_new_money_pct: 35
+  max_position_age_months: 14
+  max_bucket_exposure_pct: 40
+
+# --- philosophy/05-decision-rubric.md : confidence ladder ------------------------
+confidence:
+  slot_threshold: 0.50
+  typical_good: 0.65
+  confluence: 0.80

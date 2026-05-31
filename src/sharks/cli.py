@@ -182,6 +182,34 @@ def _cmd_news_fetch(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_checklist(args: argparse.Namespace) -> int:
+    """Standardized decision checklist — one gated scorecard per ticker.
+
+    Composes exclusion (06) + regime + FOM + valuation + order/demand trajectory
+    + RF cycle (#15) + 4-dimension arbitration (02) + 4-quadrant route (03) +
+    horizon/size (01+08) + invalidation + calibrated confidence (05) into a single
+    recommend-only readout. See philosophy/_proposals/standard-decision-checklist.md.
+    RECOMMEND-ONLY — emits a scorecard + evidence, never a trade.
+    """
+    from pathlib import Path
+
+    # The scorecard carries CJK (quadrant labels) + glyphs; force UTF-8 so it never
+    # crashes on a cp950 / non-UTF-8 console (the JSON artifact is UTF-8 regardless).
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+    from sharks.decision.checklist import run_checklist, write_output, format_scorecard
+
+    result = run_checklist(args.ticker, as_of=args.as_of, network=not args.no_network)
+    print(format_scorecard(result))
+    if not args.dry_run:
+        path = write_output(Path(args.out_dir), result)
+        print(f"wrote {path}")
+    return 0
+
+
 def _today() -> str:
     from datetime import datetime
     return datetime.now().strftime("%Y-%m-%d")
@@ -328,6 +356,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_news.add_argument("--out-dir", default="outputs", help="dir where news-headlines-<date>.json is written")
     p_news.set_defaults(func=_cmd_news_fetch)
+
+    # `sharks checklist` — the standardized decision checklist (REAL, recommend-only)
+    p_chk = subparsers.add_parser(
+        "checklist",
+        help="standardized decision checklist for one ticker (gated scorecard, recommend-only)",
+    )
+    p_chk.add_argument("ticker", help="ticker symbol, e.g. NVDA")
+    p_chk.add_argument("--as-of", default=None,
+                       help="point-in-time date YYYY-MM-DD (default: today); no lookahead")
+    p_chk.add_argument("--no-network", action="store_true",
+                       help="offline: FOM + valuation + cycle degrade to 'na' instead of fetching")
+    p_chk.add_argument("--out-dir", default="outputs",
+                       help="dir where checklist-<ticker>-<date>.json is written")
+    p_chk.add_argument("--dry-run", action="store_true",
+                       help="print the scorecard but do not write outputs/")
+    p_chk.set_defaults(func=_cmd_checklist)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")
