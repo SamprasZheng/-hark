@@ -130,11 +130,17 @@ DEMAND_ORDERBOOK: dict[str, dict] = {
 
 CURATED_ORDERBOOK_PATH = Path("watchlist/demand-orderbook.json")
 
-# Intangible → multiplier maps
-_MOAT_MULT = {0: 0.88, 1: 1.00, 2: 1.18}
-_OPTIONALITY_ADDON = {0: 0.0, 1: 0.05, 2: 0.12}   # absolute fraction of industry P/E added
+# Intangible → multiplier maps (v2: tighter than v1 to avoid the over-generous stack)
+_MOAT_MULT = {0: 0.93, 1: 1.00, 2: 1.08}          # was 0.88/1.18 — DCF-credible bounds
+_OPTIONALITY_ADDON = {0: 0.0, 1: 0.03, 2: 0.07}   # absolute fraction of industry P/E added
 _CONC_PENALTY = {0: 0.0, 1: 0.06, 2: 0.14}
-_PE_LO_MULT, _PE_HI_MULT = 0.7, 2.0               # fair-PE clamp around industry P/E
+_PE_LO_MULT, _PE_HI_MULT = 0.6, 1.5               # PEG clamp around industry P/E (was 0.7/2.0)
+# v2 KEY FIX: order trajectory sets a CEILING on fair P/E (it UNLOCKS a premium,
+# it does NOT multiply layer-on-layer). And the PEG base is BLENDED 50/50 with the
+# static industry anchor so the absolute fair value stays a credible base case.
+_TRAJ_CEILING = {"accelerating": 1.60, "stable": 1.20, "decelerating": 0.90, "unknown": 1.10}
+_STATIC_BLEND = 0.5                                # weight on the industry-P/E anchor vs PEG
+_SEG_BLEND = 0.45                                  # weight on the (surging) segment vs total rev
 
 
 # ─── data load ────────────────────────────────────────────────────────────────
@@ -158,7 +164,8 @@ def fetch_quality_metrics(ticker: str) -> dict:
     import yfinance as yf
     out = {"ticker": ticker}
     try:
-        info = yf.Ticker(ticker).info or {}
+        tk = yf.Ticker(ticker)
+        info = tk.info or {}
     except Exception as e:  # pragma: no cover
         return {"ticker": ticker, "error": str(e)[:80]}
     rev = info.get("totalRevenue")
@@ -178,26 +185,55 @@ def fetch_quality_metrics(ticker: str) -> dict:
         "net_cash": (round((cash or 0) - (debt or 0), 0) if (cash is not None or debt is not None) else None),
         "net_cash_to_mktcap": (round(((cash or 0) - (debt or 0)) / mc, 4) if mc else None),
     })
+    # capex intensity (best-effort from the cashflow statement; degrade silently)
+    try:  # pragma: no cover - network/shape-dependent
+        cf = tk.cashflow
+        capex = None
+        for key in ("Capital Expenditure", "Capital Expenditures"):
+            if key in cf.index:
+                capex = abs(float(cf.loc[key].iloc[0]))
+                break
+        if capex and rev:
+            out["capex_intensity"] = round(capex / rev, 4)
+    except Exception:
+        pass
     return out
 
 
 # ─── PURE scoring ───────────────────────────────────────────────────────────────
+def rule_of_40(m: dict) -> Optional[float]:
+    """Rev-growth% + FCF-margin% (the growth-at-scale health check). >=40 = healthy."""
+    rg, fm = m.get("revenue_growth_yoy"), m.get("fcf_margin")
+    if rg is None and fm is None:
+        return None
+    return round((rg or 0.0) * 100.0 + (fm or 0.0) * 100.0, 1)
+
+
 def quality_score(m: dict) -> float:
-    """0-1 earnings-quality/durability score from gross margin, operating margin,
-    FCF margin + conversion, ROE, net-cash. Each sub-signal contributes; missing
-    fields just don't add (no penalty for absent data)."""
+    """0-1 earnings-quality/durability score. v2 adds Rule-of-40 + ROIC-proxy (ROE)
+    + capex-intensity (lower is more capital-light) to the gross/operating margin,
+    FCF margin + conversion, net-cash signals. Missing fields just don't add."""
     pts, maxp = 0.0, 0.0
-    def add(val, good, weight):
+    def add(val, good, weight, *, invert=False):
         nonlocal pts, maxp
         if val is None:
             return
         maxp += weight
-        pts += weight * max(0.0, min(1.0, val / good)) if good > 0 else 0.0
+        score = max(0.0, min(1.0, (good / val) if invert and val else (val / good)))
+        pts += weight * score
     add(m.get("gross_margin"), 0.60, 1.0)        # 60%+ GM = top score
-    add(m.get("operating_margin"), 0.30, 1.0)    # 30%+ OM
+    add(m.get("operating_margin"), 0.30, 1.0)    # 30%+ OM (operating leverage proxy)
     add(m.get("fcf_margin"), 0.25, 1.0)          # 25%+ FCF margin
-    add(m.get("fcf_conversion"), 1.0, 0.8)       # FCF≈NI
-    add(m.get("roe"), 0.25, 0.8)                 # 25%+ ROE
+    add(m.get("fcf_conversion"), 1.0, 0.8)       # FCF≈NI (earnings quality)
+    add(m.get("roe"), 0.25, 0.8)                 # ROIC-proxy (true ROIC needs IC; ROE stands in)
+    r40 = rule_of_40(m)
+    if r40 is not None:
+        maxp += 0.8
+        pts += 0.8 * max(0.0, min(1.0, r40 / 40.0))        # Rule of 40
+    cx = m.get("capex_intensity")
+    if cx is not None:
+        maxp += 0.5
+        pts += 0.5 * max(0.0, min(1.0, 1.0 - cx / 0.20))   # capital-light (capex<20% rev) scores high
     ncm = m.get("net_cash_to_mktcap")
     if ncm is not None:
         maxp += 0.6
@@ -206,30 +242,33 @@ def quality_score(m: dict) -> float:
 
 
 def order_validated_growth(ob: dict, m: dict) -> Optional[float]:
-    """The growth rate to feed PEG — VALIDATED by the order book, not yfinance's
-    noisy earningsGrowth. Prefers curated key-segment YoY when the order book is
-    strong; else revenue growth; haircut if orders are decelerating. Clamped."""
+    """v2: a CONSERVATIVE growth input for PEG. The order book's job is to VALIDATE
+    that growth is real/sustained and to UNLOCK the ceiling (in adjusted_fair_pe) —
+    NOT to inflate the growth number with the peak segment surge. So even when the
+    segment is exploding (+200% SiPho), growth is blended toward TOTAL revenue, and
+    decelerating orders floor it at/below zero. Clamped [-0.30, 0.50]."""
     seg = ob.get("key_segment_yoy")
     rev = m.get("revenue_growth_yoy")
     btb = ob.get("book_to_bill")
     backlog = ob.get("backlog_growth_yoy")
+    # decel first: orders rolling over → do not credit growth
+    if (btb is not None and btb < 1.0) or (backlog is not None and backlog < 0) or (rev is not None and rev < 0):
+        g = min(rev, 0.0) if rev is not None else 0.0
+        return round(max(-0.30, g), 4)
     strong = (btb is not None and btb >= 1.1) or (backlog is not None and backlog >= 0.2) \
         or (ob.get("contracted_rev_usd") is not None) or (seg is not None and seg >= 0.30)
-    g = None
-    if seg is not None and strong:
-        g = seg                                   # trust the segment surge the order book backs
+    if strong and seg is not None and rev is not None:
+        # blend the (capped) segment surge with TOTAL revenue — conservative
+        g = _SEG_BLEND * min(seg, 0.50) + (1.0 - _SEG_BLEND) * max(rev, 0.0)
     elif seg is not None and rev is not None:
-        g = min(seg, max(rev, 0.0))               # un-backed → haircut toward revenue
+        g = min(seg, max(rev, 0.0))               # un-backed → haircut toward total
     elif rev is not None:
         g = rev
     elif seg is not None:
-        g = seg
-    if g is None:
+        g = min(seg, 0.30)                        # segment-only, capped
+    else:
         return None
-    # decel haircut
-    if (btb is not None and btb < 1.0) or (backlog is not None and backlog < 0) or (rev is not None and rev < 0):
-        g = min(g, 0.0) if g is not None else g
-    return round(max(-0.30, min(0.60, float(g))), 4)
+    return round(max(-0.30, min(0.50, float(g))), 4)
 
 
 def order_trajectory(ob: dict, m: dict) -> dict:
@@ -266,28 +305,32 @@ def order_trajectory(ob: dict, m: dict) -> dict:
 def intangible_multiplier(ob: dict) -> dict:
     """Layer-3: the 不可估量 scorecard → fair-PE premium/discount components."""
     moat = _MOAT_MULT.get(int(ob.get("moat", 1)), 1.0)
-    switching = 1.0 + 0.05 * (int(ob.get("switching", 1)) - 1)     # ±5% per step
-    cap = 1.0 + 0.04 * (int(ob.get("capital_allocation", 1)) - 1)  # ±4% per step
+    switching = 1.0 + 0.03 * (int(ob.get("switching", 1)) - 1)     # ±3% per step (v2)
+    cap = 1.0 + 0.03 * (int(ob.get("capital_allocation", 1)) - 1)  # ±3% per step
     conc_pen = _CONC_PENALTY.get(int(ob.get("concentration_risk", 0)), 0.0)
     opt_addon = _OPTIONALITY_ADDON.get(int(ob.get("optionality", 0)), 0.0)
-    return {"moat_mult": round(moat * switching * cap, 4),
+    combined = max(0.85, min(1.18, moat * switching * cap))        # v2: clamp the stack
+    return {"moat_mult": round(combined, 4),
             "concentration_penalty": conc_pen, "optionality_addon": opt_addon}
 
 
 def adjusted_fair_pe(growth: Optional[float], qscore: float, traj: dict,
                      intang: dict, industry_pe: float) -> Optional[float]:
-    """PEG(order-validated growth) × moat/quality/order-trajectory × (1−conc) + optionality."""
-    if growth is None:
-        base = industry_pe
+    """v2: PEG base BLENDED 50/50 with the industry static anchor (credible base
+    case), adjusted by moat/quality/concentration/optionality, then the order
+    trajectory sets a CEILING (it UNLOCKS a premium — it does NOT multiply, which
+    was the v1 over-generosity bug). Floored at 0.5× industry."""
+    if growth is None or growth <= 0:
+        peg = industry_pe * _PE_LO_MULT
     else:
-        base = max(industry_pe * _PE_LO_MULT, min(industry_pe * _PE_HI_MULT, max(growth, 0.0) * 100.0))
-        if growth <= 0:
-            base = industry_pe * _PE_LO_MULT
-    qmult = 0.90 + 0.25 * qscore                          # 0.90–1.15
-    tmult = {"accelerating": 1.10, "stable": 1.0, "decelerating": 0.82, "unknown": 0.95}[traj["state"]]
-    pe = base * intang["moat_mult"] * qmult * tmult * (1.0 - intang["concentration_penalty"])
+        peg = max(industry_pe * _PE_LO_MULT, min(industry_pe * _PE_HI_MULT, growth * 100.0))
+    base = _STATIC_BLEND * industry_pe + (1.0 - _STATIC_BLEND) * peg   # blend with static anchor
+    qmult = 0.90 + 0.20 * qscore                                      # 0.90–1.10
+    pe = base * intang["moat_mult"] * qmult * (1.0 - intang["concentration_penalty"])
     pe += intang["optionality_addon"] * industry_pe
-    return round(pe, 1)
+    ceiling = industry_pe * _TRAJ_CEILING[traj["state"]]              # order book UNLOCKS the cap
+    floor = industry_pe * 0.5
+    return round(max(floor, min(pe, ceiling)), 1)
 
 
 def demand_valuation_row(ticker: str, m: dict, ob: dict) -> dict:
@@ -304,14 +347,16 @@ def demand_valuation_row(ticker: str, m: dict, ob: dict) -> dict:
         verdict = "無估值錨(虧損/缺料)— 只能當選擇權看" if (feps is None or (feps or 0) <= 0) else "資料不足"
     elif premium is None:
         verdict = "資料不足"
+    elif traj["state"] == "decelerating":
+        verdict = "⚠️ 訂單轉弱 kill-switch(便宜也可能是陷阱)"   # decel overrides — cheap+decel = trap
     elif premium <= -0.15:
-        verdict = "訂單撐得起、且仍便宜"
-    elif premium <= 0.10:
-        verdict = "訂單撐得起估值(合理)"
+        verdict = "便宜 + 訂單撐得起(兩鏡頭都過)"
+    elif premium <= 0.15:
+        verdict = "估值合理、訂單撐得起"
     elif traj["state"] == "accelerating":
-        verdict = "貴但訂單在加速(記憶體 pattern — 看訂單軌跡不是 P/E)"
+        verdict = "貴但訂單在加速(動能單;看訂單軌跡不是 P/E,且高 beta 下檔深)"
     else:
-        verdict = "估值超前訂單(這個才是真該謹慎)"
+        verdict = "估值超前訂單(真該謹慎)"
     return {
         "ticker": ticker, "price": price, "fwd_pe_current": m.get("fwd_pe"),
         "order_validated_growth": g, "quality_score": qs,

@@ -28,10 +28,12 @@ class TestQualityScore:
 
 
 class TestOrderValidatedGrowth:
-    def test_contracted_orderbook_trusts_segment_surge(self):
+    def test_contracted_orderbook_tempers_segment_surge(self):
+        # v2: the order book VALIDATES + unlocks the ceiling, it does NOT inflate the
+        # growth input with the +200% segment surge → blended conservatively to total.
         ob = {"key_segment_yoy": 2.0, "contracted_rev_usd": 1.3e9}
         g = dv.order_validated_growth(ob, {"revenue_growth_yoy": 0.15})
-        assert g == 0.60   # clamped to the +60% cap (the order book backs the surge)
+        assert 0.20 <= g <= 0.40   # tempered toward total revenue, not the raw +200%
 
     def test_unbacked_segment_haircut_toward_revenue(self):
         ob = {"key_segment_yoy": 0.40}   # no B:B/backlog/contracted, seg < 0.30 trigger? 0.40>=0.30 → strong
@@ -68,7 +70,7 @@ class TestIntangibleMultiplier:
         assert narrow["concentration_penalty"] == 0.14 and wide["concentration_penalty"] == 0.0
 
     def test_optionality_addon(self):
-        assert dv.intangible_multiplier({"optionality": 2})["optionality_addon"] == 0.12
+        assert dv.intangible_multiplier({"optionality": 2})["optionality_addon"] == 0.07
 
 
 class TestAdjustedFairPE:
