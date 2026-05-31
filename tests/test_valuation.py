@@ -1,0 +1,87 @@
+"""Tests for the regime-conditioned valuation system (pure logic)."""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+from sharks.scoring.valuation import (
+    ENV_ORDER,
+    all_regime_targets,
+    price_environment,
+    regime_forward_return_backtest,
+    target_for_regime,
+    valuation,
+)
+
+BAND = {"ticker": "X", "price": 100.0, "target_low": 80.0, "target_mean": 110.0, "target_high": 140.0}
+PE = {"ticker": "Y", "price": 50.0, "forward_eps": 4.0, "trailing_pe": 12.5}  # no analyst band
+
+
+class TestTargetForRegime:
+    def test_optimistic_above_panic(self):
+        assert target_for_regime(BAND, "積極樂觀") > target_for_regime(BAND, "悲觀恐慌")
+
+    def test_within_band(self):
+        for env in ENV_ORDER:
+            t = target_for_regime(BAND, env)
+            assert 80.0 <= t <= 140.0
+
+    def test_neutral_is_mid_band(self):
+        # band_position 0.5 → low + 0.5*(high-low) = 110
+        assert abs(target_for_regime(BAND, "中性") - 110.0) < 1e-6
+
+    def test_pe_fallback(self):
+        # 4.0 * 12.5 * 1.0 (中性) = 50
+        assert abs(target_for_regime(PE, "中性") - 50.0) < 1e-6
+        assert target_for_regime(PE, "積極樂觀") > target_for_regime(PE, "保守")
+
+    def test_no_data_none(self):
+        assert target_for_regime({"ticker": "Z", "price": 10}, "中性") is None
+
+
+class TestAllRegimeTargets:
+    def test_monotonic_descending(self):
+        t = all_regime_targets(BAND)
+        seq = [t[e] for e in ENV_ORDER]
+        assert seq == sorted(seq, reverse=True)   # 積極 highest → 恐慌 lowest
+
+
+class TestValuation:
+    def test_upside_and_horizons(self):
+        v = valuation(BAND, "積極樂觀")
+        assert v["upside_to_target"] > 0
+        assert v["est_return"]["quarter"] > v["est_return"]["week"]   # more gap closes over a quarter
+        assert v["method"] == "analyst-band"
+
+    def test_no_data(self):
+        v = valuation({"ticker": "Z", "price": None}, "中性")
+        assert v["upside_to_target"] is None
+
+
+class TestPriceEnvironment:
+    def _series(self, slope, n=400, start=100.0):
+        idx = pd.date_range("2023-01-01", periods=n, freq="B")
+        return pd.Series([start * (1 + slope) ** i for i in range(n)], index=idx)
+
+    def test_strong_uptrend_optimistic(self):
+        s = self._series(0.004)   # steady strong uptrend
+        assert price_environment(s, s.index[-1]) in ("積極樂觀", "寬鬆")
+
+    def test_crash_panic(self):
+        s = self._series(-0.004)  # steady decline
+        assert price_environment(s, s.index[-1]) in ("悲觀恐慌", "保守")
+
+    def test_insufficient_none(self):
+        s = self._series(0.001, n=50)
+        assert price_environment(s, s.index[-1]) is None
+
+
+class TestBacktest:
+    def test_runs_and_buckets(self):
+        idx = pd.date_range("2018-01-01", periods=900, freq="B")
+        rng = np.random.default_rng(0)
+        s = pd.Series(100 * np.cumprod(1 + rng.normal(0.0004, 0.01, 900)), index=idx)
+        bt = regime_forward_return_backtest(s)
+        assert set(bt.keys()) == set(ENV_ORDER)
+        assert all("n" in bt[e] for e in ENV_ORDER)

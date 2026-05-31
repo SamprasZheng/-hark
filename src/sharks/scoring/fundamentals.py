@@ -70,7 +70,10 @@ def fetch_fundamentals(ticker: str) -> dict:
         "ps_ttm": info.get("priceToSalesTrailing12Months"),
         "fcf": info.get("freeCashflow"),
         "roe": info.get("returnOnEquity"),
+        "forward_eps": info.get("forwardEps"),
+        "target_low": info.get("targetLowPrice"),
         "target_mean": info.get("targetMeanPrice"),
+        "target_high": info.get("targetHighPrice"),
         "price": info.get("currentPrice"),
         "recommendation": info.get("recommendationKey"),
     })
