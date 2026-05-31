@@ -33,6 +33,12 @@ backtest = [
 dev = [
     "pytest>=7.0",
 ]
+# Discord layer (src/sharks/discord/). Kept optional so the core stays dep-free.
+#   uv pip install -e ".[discord]"   (or: uv pip install discord.py python-dotenv)
+discord = [
+    "discord.py>=2.3",
+    "python-dotenv>=1.0",
+]
 
 [project.scripts]
 sharks = "sharks.cli:main"
