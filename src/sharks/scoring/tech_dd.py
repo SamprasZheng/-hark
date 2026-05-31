@@ -122,6 +122,7 @@ _ENTRIES = [
     ("RGTI", "太早", "quantum-vs-bitcoin", (), 0.08, "rev collapse; narrative-only"),
     # software (ai-eats-software, ai-coding-agents)
     ("MSFT", "結構", "ai-eats-software", ("cashflow",), 0.45, "captor + Copilot/Coding distribution moat"),
+    ("AMZN", "結構", "ai-eats-software", ("cashflow",), 0.42, "AWS AI-cloud captor + retail/ads"),
     ("CRM",  "結構", "ai-eats-software", (), 0.35, "captor; data+workflow"),
     ("NOW",  "結構", "ai-eats-software", (), 0.38, "captor; workflow lock-in"),
     ("ADBE", "結構", "ai-eats-software", (), 0.30, "contested; Firefly monetization slow"),
@@ -349,6 +350,34 @@ TREND_HORIZON: dict[str, dict[str, str]] = {
     "space-economy":             {"T0": "結構", "T1": "質變", "T2": "太早", "T3": "太早"},
 }
 _HORIZON_TO_FOM = {"T0": "fom_3m", "T1": "fom_12m", "T2": "fom_36m", "T3": "fom_36m"}
+
+# Per-trend 5-axis rubric (from tech/scoreboard.md). Used by bayesian_update to
+# build a quality-differentiated prior (verdict alone is too coarse — all 結構
+# names would otherwise share a prior). A ticker inherits its trend's rubric.
+TREND_RUBRIC: dict[str, dict[str, int]] = {
+    "memory-supercycle":         {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
+    "optical-interconnect-cpo":  {"A1": 2, "A2": 1, "A3": 2, "A4": 2, "A5": 1},
+    "optical-supply-chain-deep": {"A1": 2, "A2": 1, "A3": 2, "A4": 2, "A5": 1},
+    "ai-edge-devices":           {"A1": 1, "A2": 1, "A3": 2, "A4": 2, "A5": 1},
+    "autonomous-driving":        {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
+    "ai-pharma-glp1":            {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
+    "glp1-supply-chain":         {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
+    "quantum-vs-bitcoin":        {"A1": 2, "A2": 1, "A3": 2, "A4": 1, "A5": 1},
+    "ai-eats-software":          {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
+    "model-leadership-and-data": {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 2},
+    "youth-culture-shifts":      {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
+    "luxury-and-apparel":        {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
+    "ip-economy-collectibles":   {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
+    "ai-coding-agents":          {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 2},
+    "ar-vr-smart-glasses":       {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
+    "satcom-future":             {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
+    "defense-tech":              {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
+    "humanoid-robotics":         {"A1": 1, "A2": 1, "A3": 2, "A4": 2, "A5": 1},
+    "ai-datacenter-power":       {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
+    "stablecoins-tokenization":  {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
+    "cybersecurity-ai":          {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 1},
+    "china-ai-stack":            {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 2},
+}
 
 
 def dd_horizon_routing(ticker: str, bubble_guard: Optional[float] = None) -> dict:

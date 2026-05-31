@@ -104,11 +104,13 @@ def posterior_for_ticker(ticker: str, bubble_guard: Optional[float] = None,
     """Full observe-first read for a DD-covered ticker: prior (from verdict) →
     posterior (milestones or milestone_score) → edge (vs bubble_guard).
     Returns None if the ticker is not in the DD registry."""
-    from sharks.scoring.tech_dd import TECH_DD
+    from sharks.scoring.tech_dd import TECH_DD, TREND_RUBRIC
     dd = TECH_DD.get(ticker.upper())
     if dd is None:
         return None
-    prior = prior_from_verdict(dd.verdict)
+    rubric = TREND_RUBRIC.get(dd.trend)
+    # quality-differentiated prior from the trend's 5-axis rubric; verdict-only fallback
+    prior = prior_from_rubric(rubric, dd.verdict) if rubric else prior_from_verdict(dd.verdict)
     ms = milestones if milestones is not None else _synthesize_milestones(dd.milestone_score)
     upd = milestone_logodds_update(prior, ms)
     edge = edge_vs_market(upd["posterior"], bubble_guard)
@@ -116,3 +118,48 @@ def posterior_for_ticker(ticker: str, bubble_guard: Optional[float] = None,
             "prior": upd["prior"], "posterior": upd["posterior"],
             "n_evidence": upd["n_evidence"], **{k: edge[k] for k in ("market_implied", "edge", "actionable")},
             "observe_first": True}
+
+
+def main() -> int:
+    """Run the posterior + edge over the whole DD registry (reads bubble_guard from
+    the latest outputs/fom-monthly-*.json). Observe-first; watchlist-only."""
+    import json
+    import sys
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    from sharks.scoring.tech_dd import TECH_DD, load_fom_bubble_guard
+
+    bg = load_fom_bubble_guard(Path("outputs"))
+    rows = []
+    for t in TECH_DD:
+        b = (bg.get(t) or {}).get("bubble_guard")
+        r = posterior_for_ticker(t, bubble_guard=b)
+        if r:
+            rows.append(r)
+    scored = [r for r in rows if r["edge"] is not None]
+    scored.sort(key=lambda r: r["edge"], reverse=True)
+    report = {
+        "as_of": datetime.now(timezone.utc).isoformat(),
+        "report_type": "bayesian_posteriors",
+        "observe_first": True,
+        "note": ("prior(verdict) → posterior(milestones) → edge vs market-implied (bubble_guard). "
+                 "WATCHLIST only; not in final_fom until calibrated. See tech/bayesian-bottleneck-engine.md."),
+        "coverage": {"dd_nodes": len(TECH_DD), "with_bubble_guard": len(scored)},
+        "rows": rows,
+    }
+    out = Path("outputs") / "bayesian-posteriors.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+    print(f"wrote {out}  (coverage {len(scored)}/{len(TECH_DD)} have bubble_guard)", file=sys.stderr)
+    print("  TOP edge (high conviction + market hasn't priced):", file=sys.stderr)
+    for r in scored[:8]:
+        print(f"    {r['ticker']:6} post={r['posterior']:.2f} mkt={r['market_implied']:.2f} edge={r['edge']:+.2f} actionable={r['actionable']}", file=sys.stderr)
+    print("  BOTTOM edge (market already believes ≥ you — don't chase):", file=sys.stderr)
+    for r in scored[-5:]:
+        print(f"    {r['ticker']:6} post={r['posterior']:.2f} mkt={r['market_implied']:.2f} edge={r['edge']:+.2f}", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
