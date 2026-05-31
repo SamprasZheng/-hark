@@ -66,6 +66,7 @@ The technology due-diligence layer of `$hark`. Each page screens one hot narrati
 |---|---|---|---|
 | [[rf-connectivity]] | 結構 | 結構→質變(2029+) | RF=方向相反的 anti-bubble(基本面被忽略非敘事超前);手機前端便宜但結構受挑戰,成長已遷徙到 AI 電力縫/週期類比/國防 GaN/6G FR3;變數#15 急單訊號已確認(走工業門非手機門);擁瓶頸 KEYS/GFS |
 | [[offshore-energy]] | 結構 | 結構→質變→太早 | 能源實體層 gap-fill;真瓶頸(無新造船+整併)但 phase-one 末段、2026 消化氣穴;日租金近端 <$40 萬滾降、稼動率滑向 82%;抄底 RIG/NE,鏟子 BKR(LNG) |
+| [[copper-electrification]] | 結構 | 過熱→質變 | 物理資源層 gap-fill;需求(AI/電網/EV)+ 精礦瓶頸(TC=$0、Grasberg −35%)真實,**但變數#5 的 LME 庫存訊號已倒轉**(回補+contango=關稅搬倉假訊號);價格 ~20% 高於 Goldman fair value;對的資源、錯的價格 |
 
 ## Deep dives (二階供應鏈 / second-derivative)
 

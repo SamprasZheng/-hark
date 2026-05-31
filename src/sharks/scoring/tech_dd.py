@@ -239,6 +239,15 @@ _ENTRIES = [
     ("HAL",  "結構", "offshore-energy", (), 0.30, "OFS #2 NAM-frac heavy; near-term headwind"),
     ("BKR",  "結構", "offshore-energy", ("cashflow",), 0.38, "OFSE + LNG/IET growth engine — best diversified"),
     ("FTI",  "結構", "offshore-energy", ("front_run",), 0.33, "subsea chokepoint; backlog $15.8B but re-rated hard"),
+    # ── Phase D — copper-electrification (gap-fill #2; physical-resource layer) ──
+    ("FCX",  "結構", "copper-electrification", ("front_run",), 0.33, "largest US Cu+gold; Grasberg -35% 2026; ~23x P/E rich"),
+    ("SCCO", "結構", "copper-electrification", ("front_run",), 0.30, "lowest-cost pure Cu; record NI but Scotia Underperform/stretched"),
+    ("TECK", "結構", "copper-electrification", (), 0.38, "Cu-focused; EBITDA +125%; Anglo merger catalyst"),
+    ("ERO",  "結構", "copper-electrification", (), 0.30, "small-cap Brazil pure-Cu torque"),
+    ("HBM",  "結構", "copper-electrification", (), 0.33, "mid-cap Cu; record rev $757M"),
+    ("BHP",  "結構", "copper-electrification", ("cashflow",), 0.40, "Cu now 51% of EBITDA; best quality Cu leverage, lower multiple"),
+    ("RIO",  "結構", "copper-electrification", ("cashflow",), 0.38, "Cu growth engine (Oyu Tolgoi); diversified, cheaper"),
+    ("VALE", "結構", "copper-electrification", (), 0.30, "diversified Fe/Ni + growing Cu; cheap but not a clean Cu play"),
 ]
 
 TECH_DD: dict[str, TechDD] = {e[0]: _dd(*e) for e in _ENTRIES}
@@ -387,6 +396,7 @@ TREND_HORIZON: dict[str, dict[str, str]] = {
     # Phase D
     "rf-connectivity":           {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "質變"},
     "offshore-energy":           {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "太早"},
+    "copper-electrification":    {"T0": "過熱", "T1": "結構", "T2": "質變", "T3": "質變"},
 }
 _HORIZON_TO_FOM = {"T0": "fom_3m", "T1": "fom_12m", "T2": "fom_36m", "T3": "fom_36m"}
 
@@ -418,6 +428,7 @@ TREND_RUBRIC: dict[str, dict[str, int]] = {
     "china-ai-stack":            {"A1": 2, "A2": 2, "A3": 2, "A4": 1, "A5": 2},
     "rf-connectivity":           {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
     "offshore-energy":           {"A1": 2, "A2": 1, "A3": 1, "A4": 2, "A5": 1},
+    "copper-electrification":    {"A1": 2, "A2": 2, "A3": 1, "A4": 1, "A5": 1},
 }
 
 

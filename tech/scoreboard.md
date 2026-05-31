@@ -60,6 +60,7 @@ Scored matrix of the 9 Phase-A trend pages on the [[00_framework]] rubric. Each 
 |---|---|---|---|---|---|---|:--:|:--:|
 | [[rf-connectivity]] | 結構 | 結構 | 結構 | 結構→質變 | 質變(條件) | 2·2·2·2·1 | **9** | 0.75 |
 | [[offshore-energy]] | 結構 | 結構(消化) | 結構 | 質變(條件) | 太早(轉型壓) | 2·1·1·2·1 | **7** | 0.70 |
+| [[copper-electrification]] | 結構 | 過熱(訊號倒轉) | 結構 | 質變 | 質變 | 2·2·1·1·1 | **7** | 0.72 |
 
 **Phase D 讀法**: 這是全 22 條裡**同溫層落差方向相反**的一條——其他每一條空方都是「股價跑在基本面前」,**RF/類比是基本面(週期復甦+內容複雜度+AI 電力)被忽略,因為板塊不時髦**(anti-bubble)。A4 供應鏈=2 是全部最高分群(BAW 雙雄、RF-SOI、測試 tollbooth、UWB、IP 授權,listed pure-play 最多)。但鐵律仍在、且**倒過來咬**:便宜≠低估——手機 RFFE 便宜是結構性的(內容攤平、TAM 不長 $15.4B→$17B、Apple 自研沿整條無線 BoM、中國替代、2026 單位 −12.9%);QRVO+SWKS $22B 合併是「有機成長已盡」的告白。**成長已從手機前端遷徙**到 AI 電力/互連縫(MPWR/VICR/ADI-Empower)、週期類比(已部分定價)、國防 GaN(MTSI/QRVO HPA,現賺)、2029+ 6G FR3(太早)。**alpha = 騎已確認的變數#15 週期急單(走工業/分銷門)+ 擁有不管誰贏都收過路費的瓶頸(KEYS 測試、GFS RF-SOI)+ 6G FR3 當不付溢價的 2029 選擇權**。詳見 [[rf-connectivity]]。
 
