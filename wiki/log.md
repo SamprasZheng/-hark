@@ -446,3 +446,12 @@ Principal: 趨勢追蹤探究未發現 alpha + 供應鏈深化 + 資金買盤數
 - **NEW regime/lead_lag.py** (zero-dep numpy, PIT, observe-first): lead_lag_score(net>0=leader leads)、net_transmitter_rank(Diebold-Yilmaz-style)、transmission_candidates(leader→未動的下游=未擁擠標的). +12 tests. Live demo 寫 outputs/lead-lag-transmission.json.
 - **核心紀律**: 未發現 alpha 在 lead-lag + 早期 attention + 季節性, NOT 追逐已熱 sector(自測 IC_IR 0.52≈擲銅板). observe-first, watchlist only, 過證據閘.
 - 全套件綠燈. Boundaries: recommend-only, 無交易.
+
+## [2026-05-31 07:45 +08:00] research+build | 貝葉斯瓶頸引擎形式化 + lead_lag daily + sector_flow spillover + attention_radar (全部做)
+
+Principal: 全部做 + 消化 Serenity 貝氏邏輯 + 「我的系統能整合貝葉斯推理嗎/能數學理論化嗎」.
+
+- **貝葉斯形式化** (答「能整合+能理論化」= YES, 系統本來就隱性貝氏): tech/bayesian-bottleneck-engine.md 把 Serenity 四步對映既有模組 (prior=DD rubric/confidence; P(H|E)=_weekly-watch milestone 的 log-odds LR 更新; 序貫輪動=全概率; edge=posterior−market-implied). + scoring/bayesian_update.py (純函式、observe-first: prior_from_rubric/verdict、milestone_logodds_update 含相關性 shrinkage、edge_vs_market 用 bubble_guard 當市場隱含機率、posterior_for_ticker). +15 tests. Serenity 報酬數字標 grade D/E (匿名未審計)；採方法不錨數字.
+- **lead_lag 接 daily** (lead-lag 日線訊號遠強於月線); **sector_flow 擴充** broadening_score (% sectors RS>0) + semis_spillover_flag (SOXX leader AND 下游 XLI/XLU/XLB rotating_in). +tests.
+- **attention_radar.py** (社群早期主題雷達): abnormal_attention(trailing z、無 lookahead) + acceleration + attention_score(crowded flag) + 免費 ApeWisdom fetch(stdlib urllib、離線優雅降級) → _weekly-watch 🆕 人工 DD 候選. observe-first、極端反向. +tests.
+- 全套件綠燈. 紀律: 全部 observe-first/watchlist-only/過證據閘; 貝氏 posterior 是 annotation, 校準(reliability/Brier)前不進 final_fom.

@@ -173,7 +173,9 @@ def main() -> int:
     from sharks.regime.sector_flow import SECTOR_ETFS
 
     pull = sorted(set(SECTOR_ETFS) | {"SPY"})
-    raw = yf.download(pull, start="2021-01-01", end="2026-05-29", interval="1mo",
+    # DAILY data — lead-lag transmission has far more signal at the daily horizon
+    # than monthly (Hong-Stein gradual diffusion plays out over days/weeks).
+    raw = yf.download(pull, start="2022-01-01", end="2026-05-29", interval="1d",
                       auto_adjust=True, progress=False, group_by="ticker", threads=True)
     closes = pd.DataFrame()
     for t in pull:
@@ -185,9 +187,9 @@ def main() -> int:
         closes.index = closes.index.tz_localize(None)
     returns = to_returns(closes.sort_index())
 
-    transmitters = net_transmitter_rank(returns, [t for t in SECTOR_ETFS if t in returns])
+    transmitters = net_transmitter_rank(returns, [t for t in SECTOR_ETFS if t in returns], max_lag=5)
     followers = [t for t in SECTOR_ETFS if t in returns and t != "SOXX"]
-    candidates = transmission_candidates(returns, "SOXX", followers)
+    candidates = transmission_candidates(returns, "SOXX", followers, max_lag=5)
 
     report = {
         "as_of": datetime.now(timezone.utc).isoformat(),

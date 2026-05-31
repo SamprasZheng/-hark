@@ -172,3 +172,48 @@ def ticker_sector_flow_score(
     if etf is None:
         return 50.0
     return sector_flow_score(closes, etf, as_of, benchmark)
+
+
+# ─── Concentration / spillover extensions (alpha-transmission-framework) ───────
+# The capex-chain downstream of semis (SOXX): industrials / utilities / materials.
+SPILLOVER_DOWNSTREAM = ("XLI", "XLU", "XLB")
+
+
+def broadening_score(
+    closes: pd.DataFrame,
+    as_of: pd.Timestamp,
+    sector_etfs: Optional[list[str]] = None,
+    benchmark: str = DEFAULT_BENCHMARK,
+    months: int = 3,
+) -> dict:
+    """% of sector ETFs with POSITIVE relative strength vs the benchmark — a
+    breadth/broadening gauge. High = money spreading across sectors (the spillover
+    the principal is watching); low = narrow leadership (concentration)."""
+    ranked = rank_sectors(closes, as_of, sector_etfs, benchmark, months)
+    if not ranked:
+        return {"broadening_score": None, "n_positive": 0, "n": 0}
+    pos = sum(1 for r in ranked if r["rs"] > 0)
+    return {"broadening_score": round(pos / len(ranked) * 100, 1),
+            "n_positive": pos, "n": len(ranked)}
+
+
+def semis_spillover_flag(
+    closes: pd.DataFrame,
+    as_of: pd.Timestamp,
+    sector_etfs: Optional[list[str]] = None,
+    benchmark: str = DEFAULT_BENCHMARK,
+) -> dict:
+    """Operationalises 「半導體流動性是否外溢、從哪傳導」: fires when SOXX is a
+    leader AND the capex-chain downstream (industrials/utilities/materials) is
+    rotating IN. WATCHLIST signal — not a trade; route the named sectors through
+    the SEASONALITY component of hotspot-sector-rotation, not momentum."""
+    rot = detect_rotation(closes, as_of, sector_etfs, benchmark)
+    soxx_leader = "SOXX" in rot["leaders"]
+    spilling = [e for e in rot["rotating_in"] if e in SPILLOVER_DOWNSTREAM]
+    return {
+        "as_of": rot["as_of"],
+        "soxx_leader": soxx_leader,
+        "downstream_rotating_in": spilling,
+        "semis_spillover": bool(soxx_leader and spilling),
+        "broadening_score": broadening_score(closes, as_of, sector_etfs, benchmark)["broadening_score"],
+    }
