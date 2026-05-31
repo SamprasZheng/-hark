@@ -32,8 +32,10 @@ from sharks.discord.brains import (
     ask_backend,
     ask_claude_research,
     ask_persona,
+    ask_wiki,
     list_ollama_models,
 )
+from sharks.discord import wiki_ingest, wiki_rag
 from sharks.discord.config import TPE, Settings
 from sharks.discord.content import run_content_local
 from sharks.discord.council import CouncilResult, run_council_local
@@ -209,6 +211,10 @@ class SharksBot(discord.Client):
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
+        e.add_field(name="📓 筆記本 / 知識庫(本地 NotebookLM)", value=(
+            "`/notebook <問題>` — 用本地 qwen 讀整個 $hark 回答(附出處);或在 **#筆記本** 直接打字\n"
+            "`/ingest <文字或網址> [標題]` — 把知識灌進 $hark;或在 **#知識注入** 直接貼(手機也行)\n"
+            "`/wikisearch <關鍵字>` 直接找片段 · `/recent` 看最近灌入"), inline=False)
         e.add_field(name="⚙️ 其他", value="`/status` · `!cmd` / `!help` 這張表", inline=False)
         e.set_footer(text="只建議不下單 · 議會/人格跑本地 · /ask 唯讀")
         return e
@@ -362,6 +368,48 @@ class SharksBot(discord.Client):
             await interaction.followup.send(f"✅ 已貼到 {tgt}" + ("(含議會)" if council else ""),
                                             ephemeral=True)
 
+        # ── 本地 NotebookLM:讀 $hark 回答 + 灌入知識 ──────────────────────────
+        @tree.command(name="notebook",
+                      description="像 NotebookLM:用本地 qwen 讀整個 $hark 回答你的問題(附出處)")
+        @app_commands.describe(question="你的問題")
+        async def notebook_cmd(interaction: discord.Interaction, question: str):
+            await interaction.response.defer(thinking=True)
+            rep = await asyncio.to_thread(ask_wiki, question, settings)
+            await self._send_followup(interaction, f"📓 **{question}**\n{rep.display(1700)}")
+
+        @tree.command(name="ingest",
+                      description="把知識灌進 $hark wiki(貼文字或網址)→ 立刻可被 /notebook 搜到")
+        @app_commands.describe(content="要灌入的文字或網址", title="標題(可省略)")
+        async def ingest_cmd(interaction: discord.Interaction, content: str, title: str = ""):
+            await interaction.response.defer(thinking=True, ephemeral=True)
+            res = await asyncio.to_thread(
+                wiki_ingest.ingest, content, title=(title or None),
+                source="discord-slash", settings=settings)
+            if not res.get("ok"):
+                await interaction.followup.send(f"灌入失敗:{res.get('error')}", ephemeral=True)
+                return
+            u = f"\n網址:{res['url']}" if res.get("url") else ""
+            await interaction.followup.send(
+                f"✅ 已寫入 `{res['path']}`(標題:{res['title']},{res['chars']} 字){u}\n"
+                f"現在就能用 `/notebook` 或 #筆記本 問它。", ephemeral=True)
+
+        @tree.command(name="wikisearch", description="不經 LLM,直接在 $hark 找相關片段(快)")
+        @app_commands.describe(query="關鍵字 / ticker / 概念")
+        async def wikisearch_cmd(interaction: discord.Interaction, query: str):
+            await interaction.response.defer(thinking=True)
+            hits = await asyncio.to_thread(wiki_rag.search, query, settings.project_root, 6)
+            if not hits:
+                await interaction.followup.send("找不到相關片段。")
+                return
+            lines = [f"**{h.path}** (score {h.score})\n{h.text[:240]}…" for h in hits]
+            await self._send_followup(interaction, f"🔎 **{query}**\n\n" + "\n\n".join(lines))
+
+        @tree.command(name="recent", description="列出最近灌入 $hark 的知識筆記")
+        async def recent_cmd(interaction: discord.Interaction):
+            paths = await asyncio.to_thread(wiki_ingest.recent, settings, 12)
+            body = "\n".join(f"- `{p}`" for p in paths) if paths else "(還沒有灌入任何筆記)"
+            await interaction.response.send_message("最近的知識注入:\n" + body, ephemeral=True)
+
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
         await interaction.followup.send(parts[0])
@@ -397,6 +445,26 @@ class SharksBot(discord.Client):
             tail = f"\n\n_— Claude Code · ${rep.cost_usd or 0:.3f}_" if rep.ok else ""
             for c in _chunks(rep.display(1800) + tail):
                 await message.channel.send(c)
+
+        elif ch_name == C.CH_NOTEBOOK:
+            # local NotebookLM: qwen reads $hark and answers with citations.
+            async with message.channel.typing():
+                rep = await asyncio.to_thread(ask_wiki, content, self.settings)
+            for c in _chunks(f"📓 {rep.display(1800)}"):
+                await message.channel.send(c)
+
+        elif ch_name == C.CH_INGEST:
+            # paste text / URL → write a note into $hark wiki/inbox.
+            async with message.channel.typing():
+                res = await asyncio.to_thread(
+                    wiki_ingest.ingest, content, source="discord-channel", settings=self.settings)
+            if res.get("ok"):
+                u = f" · {res['url']}" if res.get("url") else ""
+                await message.channel.send(
+                    f"✅ 已灌入 `{res['path']}`(標題:{res['title']},{res['chars']} 字){u}\n"
+                    f"→ 可用 **#筆記本** 或 `/notebook` 問它。")
+            else:
+                await message.channel.send(f"灌入失敗:{res.get('error')}")
 
     # ── privacy: alert (do NOT auto-kick) on unexpected member ────────────────
     async def on_member_join(self, member: discord.Member) -> None:

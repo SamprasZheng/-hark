@@ -151,3 +151,28 @@ def test_council_vote_parser():
     from sharks.discord.council import _parse_vote
     assert _parse_vote("投票: 空 | 信心: 5 | 動作: 減碼 LABU")[:2] == ("空", 5)
     assert _parse_vote("沒有結構化投票")[0] == "中性"   # tolerant default
+
+
+# ── wiki ingest + RAG (local NotebookLM write/read sides) ─────────────────────-
+def test_wiki_ingest_writes_note_and_is_searchable(tmp_path):
+    from sharks.discord import wiki_ingest, wiki_rag
+    s = Settings(token="x")
+    s.project_root = tmp_path
+    res = wiki_ingest.ingest("CoWoS 是台積電的先進封裝,2026 產能吃緊;HBM 同步吃緊。",
+                             title="CoWoS note", settings=s)
+    assert res["ok"]
+    note = tmp_path / res["path"]
+    assert note.exists()
+    body = note.read_text(encoding="utf-8")
+    assert "type: note" in body and "as_of_timestamp:" in body and "CoWoS" in body
+    hits = wiki_rag.search("CoWoS 封裝", tmp_path, 5)   # ingest cleared the cache
+    assert any("CoWoS" in h.text for h in hits)
+
+
+def test_wiki_ingest_recent_lists_newest(tmp_path):
+    from sharks.discord import wiki_ingest
+    s = Settings(token="x")
+    s.project_root = tmp_path
+    wiki_ingest.ingest("note one", settings=s)
+    wiki_ingest.ingest("note two", settings=s)
+    assert len(wiki_ingest.recent(s, 5)) == 2

@@ -19,8 +19,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-# Knowledge roots, in rough priority order.
-ROOTS = ("philosophy", "wiki", "analysts", "tech", "crypto", "docs")
+# Knowledge roots, in rough priority order. (NOT .venv/.git/node_modules — we
+# only rglob under these named dirs + the top-level *.md, so junk never enters.)
+ROOTS = ("philosophy", "wiki", "analysts", "tech", "crypto", "docs",
+         "raw", "backtest", "trading", "news")
 
 _ASCII = re.compile(r"[a-zA-Z0-9]{2,}")
 _CJK = re.compile(r"[一-鿿]+")
@@ -53,21 +55,23 @@ def _chunk(text: str, size: int = 800) -> list[str]:
 
 
 def build_index(project_root: Path) -> list[tuple[str, str]]:
-    """Return [(relative_path, chunk_text)] over all markdown under ROOTS."""
+    """Return [(relative_path, chunk_text)] over markdown in ROOTS + top-level *.md
+    (so root constitution files like sharks.md/buffet.md are searchable too)."""
     idx: list[tuple[str, str]] = []
+    paths: list[Path] = list(project_root.glob("*.md"))            # top-level files
     for root in ROOTS:
         d = project_root / root
-        if not d.is_dir():
+        if d.is_dir():
+            paths.extend(sorted(d.rglob("*.md")))
+    for p in paths:
+        try:
+            text = p.read_text(encoding="utf-8")
+        except OSError:
             continue
-        for p in sorted(d.rglob("*.md")):
-            try:
-                text = p.read_text(encoding="utf-8")
-            except OSError:
-                continue
-            rel = str(p.relative_to(project_root)).replace("\\", "/")
-            for ch in _chunk(text):
-                if len(ch) >= 40:
-                    idx.append((rel, ch))
+        rel = str(p.relative_to(project_root)).replace("\\", "/")
+        for ch in _chunk(text):
+            if len(ch) >= 40:
+                idx.append((rel, ch))
     return idx
 
 

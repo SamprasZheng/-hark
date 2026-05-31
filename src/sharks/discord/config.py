@@ -35,13 +35,15 @@ CH_PICKS = "每日選股"
 CH_ASK = "問claude"
 CH_COUNCIL = "分析師議會"
 CH_CONTENT = "自媒體"
+CH_NOTEBOOK = "筆記本"     # ask-the-folder: local qwen RAG over $hark (NotebookLM)
+CH_INGEST = "知識注入"     # paste text/URL → ingested into $hark wiki
 CH_GENERAL = "雜談"
 
 # Full minimal channel layout under one category, in display order.
 MINIMAL_CATEGORY = "PolkaSharks"
 MINIMAL_CHANNELS: tuple[str, ...] = (
     CH_STATUS, CH_MORNING, CH_NOON, CH_EVENING, CH_MARKET,
-    CH_PICKS, CH_ASK, CH_COUNCIL, CH_CONTENT, CH_GENERAL,
+    CH_PICKS, CH_ASK, CH_COUNCIL, CH_CONTENT, CH_NOTEBOOK, CH_INGEST, CH_GENERAL,
 )
 # Optional voice channels (created by setup_guild only if SHARKS_DISCORD_VOICE=1).
 VOICE_CHANNELS: tuple[str, ...] = ("盤中-trading-floor", "深夜")
