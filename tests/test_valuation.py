@@ -8,6 +8,8 @@ import pandas as pd
 from sharks.scoring.valuation import (
     ENV_ORDER,
     all_regime_targets,
+    industry_pe_valuation,
+    peg_fair_pe,
     price_environment,
     regime_forward_return_backtest,
     target_for_regime,
@@ -75,6 +77,33 @@ class TestPriceEnvironment:
     def test_insufficient_none(self):
         s = self._series(0.001, n=50)
         assert price_environment(s, s.index[-1]) is None
+
+
+class TestIndustryPEValuation:
+    def test_high_beta_high_multiple_deep_downside(self):
+        # the NVDA-style flaw fix: high beta + high multiple → deep, REAL downside
+        f = {"forward_eps": 6.0, "price": 300.0, "beta": 2.2, "sector": "Technology",
+             "earnings_growth_yoy": 0.40, "fwd_pe": 50.0}
+        v = industry_pe_valuation(f)
+        assert v["realistic_downside"] < -0.40          # NOT −4%
+        assert v["premium_to_industry_fair"] > 0         # 50× vs 30× sector → stretched
+
+    def test_low_beta_defensive_shallower(self):
+        defensive = {"forward_eps": 30.0, "price": 500.0, "beta": 0.15, "sector": "Industrials",
+                     "earnings_growth_yoy": 0.05, "fwd_pe": 16.0}
+        aggressive = {"forward_eps": 6.0, "price": 300.0, "beta": 2.2, "sector": "Technology",
+                      "earnings_growth_yoy": 0.40, "fwd_pe": 50.0}
+        # a low-beta name has a shallower beta-implied floor than a high-beta one
+        assert (industry_pe_valuation(defensive)["bear_beta_implied"] / 500.0
+                > industry_pe_valuation(aggressive)["bear_beta_implied"] / 300.0)
+
+    def test_peg_clamp(self):
+        assert peg_fair_pe(0.40, 30.0) == 40.0          # 40% grower → ~40×
+        assert peg_fair_pe(None, 30.0) == 30.0          # no growth → industry P/E
+        assert peg_fair_pe(5.0, 30.0) == 75.0           # clamped to 2.5×
+
+    def test_no_data_none(self):
+        assert industry_pe_valuation({"price": 100}) is None
 
 
 class TestBacktest:

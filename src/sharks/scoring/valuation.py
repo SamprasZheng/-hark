@@ -173,6 +173,67 @@ def regime_forward_return_backtest(closes: pd.Series, horizons=(21, 63)) -> dict
     return out
 
 
+# ─── v2: P/E-anchored valuation with REALISTIC downside ────────────────────────
+# Fixes the v1 flaw where "panic" = analyst-low (a constructive 12-mo target, NOT a
+# crash). v2 anchors fair value on the INDUSTRY P/E and models downside as genuine
+# multiple compression + a beta-implied drawdown — so a high-multiple high-beta name
+# (NVDA) shows a deep, honest downside, not −4%.
+MARKET_CRASH_REF = 0.35          # a "real" market drawdown, for the beta-implied floor (grade-C)
+SECTOR_TROUGH_FACTOR = 0.60      # bears compress sector multiples ~40%
+SECTOR_PEAK_FACTOR = 1.35
+# Forward-P/E anchors by sector, as_of 2026-05-31 — grade-C CONTEXT, not gospel.
+INDUSTRY_PE = {
+    "Technology": 30.0, "Communication Services": 22.0, "Consumer Cyclical": 24.0,
+    "Healthcare": 18.0, "Financial Services": 15.0, "Industrials": 21.0,
+    "Energy": 12.0, "Consumer Defensive": 21.0, "Utilities": 18.0,
+    "Basic Materials": 16.0, "Real Estate": 18.0,
+}
+
+
+def peg_fair_pe(growth: Optional[float], industry_pe: float) -> float:
+    """PEG≈1 growth-justified P/E, clamped to [0.7×, 2.5×] the industry P/E. A
+    40%-grower earns ~40×; a no-grower falls back to the industry P/E."""
+    if growth is None or growth <= 0:
+        return industry_pe
+    return float(min(max(growth * 100.0, industry_pe * 0.7), industry_pe * 2.5))
+
+
+def industry_pe_valuation(f: dict, industry_pe: Optional[float] = None) -> Optional[dict]:
+    """P/E-anchored valuation. Two fair-value anchors (do not conflate):
+      - fair_value_industry: forward EPS × INDUSTRY P/E (conservative mean-reversion).
+      - fair_value_growth:   forward EPS × PEG≈1 P/E (rewards real growth).
+    Downside is REAL: panic_floor = min(multiple compression to a sector trough,
+    beta-implied drawdown in a −35% market). premium_to_*_fair shows how stretched
+    the current price is. yfinance grade-C; watchlist only."""
+    feps, price, beta = f.get("forward_eps"), f.get("price"), f.get("beta")
+    ipe = industry_pe if industry_pe is not None else INDUSTRY_PE.get(f.get("sector"))
+    if not (feps and feps > 0 and price and ipe):
+        return None
+    growth = f.get("earnings_growth_yoy") or f.get("revenue_growth_yoy")
+    gpe = peg_fair_pe(growth, ipe)
+    fair_ind = round(feps * ipe, 2)
+    fair_growth = round(feps * gpe, 2)
+    bear_pe = round(feps * ipe * SECTOR_TROUGH_FACTOR, 2)
+    bear_beta = round(price * (1.0 - (beta or 1.0) * MARKET_CRASH_REF), 2)
+    panic = min(bear_pe, bear_beta)
+    cur = f.get("fwd_pe")
+    return {
+        "current_fwd_pe": round(float(cur), 1) if cur else None,
+        "industry_pe": ipe,
+        "growth_justified_pe": round(gpe, 1),
+        "fair_value_industry": fair_ind,
+        "fair_value_growth": fair_growth,
+        "panic_floor": panic,
+        "bear_multiple_compression": bear_pe,
+        "bear_beta_implied": bear_beta,
+        "realistic_downside": round(panic / price - 1, 3),
+        "premium_to_industry_fair": round(price / fair_ind - 1, 3),
+        "premium_to_growth_fair": round(price / fair_growth - 1, 3),
+        "beta": beta,
+        "growth": round(float(growth), 3) if growth else None,
+    }
+
+
 def main() -> int:
     import json
     import sys
