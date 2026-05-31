@@ -57,6 +57,27 @@ def prior_from_verdict(verdict: str, confidence: Optional[float] = None) -> floa
     return prior_from_rubric({k: 1.2 for k in ("A1", "A2", "A3", "A4", "A5")}, verdict, confidence)
 
 
+def prior_from_fundamentals(f: dict) -> float:
+    """Fundamentals-based prior P(quality / improving business) for ANY ticker —
+    no DD verdict needed (lets the Bayesian scan cover a whole portfolio). Rewards
+    positive revenue growth, the gross-margin YoY inflection (heaviest weight — the
+    turnaround tell), operating profitability, and positive FCF. Clamped [0.05,0.95]."""
+    rg = f.get("revenue_growth_yoy")
+    gmd = f.get("gross_margin_yoy_delta")
+    om = f.get("operating_margin")
+    fcf = f.get("fcf")
+    lo = -0.3
+    if rg is not None:
+        lo += 2.0 * max(-0.30, min(0.50, float(rg)))          # revenue growth
+    if gmd is not None:
+        lo += 8.0 * max(-0.05, min(0.05, float(gmd)))         # gross-margin inflection (turnaround)
+    if om is not None:
+        lo += 1.5 * max(-0.30, min(0.40, float(om)))          # operating profitability
+    if fcf is not None and float(fcf) > 0:
+        lo += 0.3
+    return _clamp(_safe_sigmoid(lo))
+
+
 def milestone_logodds_update(prior: float, milestones: list[dict]) -> dict:
     """Sequential Naive-Bayes log-odds update with correlation shrinkage.
 
