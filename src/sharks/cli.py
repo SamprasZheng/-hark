@@ -169,6 +169,19 @@ def _cmd_daily_brief(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_news_fetch(args: argparse.Namespace) -> int:
+    """Free multi-source market-news RSS → outputs/news-headlines-<date>.json.
+
+    Fills the daily-brief news slot (event-driven 隔夜頭條). Public RSS only, graceful
+    per-source fallback, zero new deps. Grade C/D — headlines, not verified.
+    """
+    from sharks.news_fetch import fetch_and_write
+
+    p = fetch_and_write(args.out_dir)
+    print(f"news: {len(p['headlines'])} headlines | ok={p['sources_ok']} | failed={p['sources_failed']}")
+    return 0
+
+
 def _today() -> str:
     from datetime import datetime
     return datetime.now().strftime("%Y-%m-%d")
@@ -307,6 +320,14 @@ def build_parser() -> argparse.ArgumentParser:
                       help="morning 早報(盤前總經) / midday 午報(盤中) / evening 晚報(收盤+進出場+潛力股)")
     p_db.add_argument("--out-dir", default="outputs", help="dir where daily-brief-<date>-<edition>.{md,html,txt} is written")
     p_db.set_defaults(func=_cmd_daily_brief)
+
+    # `sharks news-fetch` — free multi-source market-news RSS → news slot (REAL)
+    p_news = subparsers.add_parser(
+        "news-fetch",
+        help="free multi-source market-news RSS → outputs/news-headlines-<date>.json (fills the brief news slot)",
+    )
+    p_news.add_argument("--out-dir", default="outputs", help="dir where news-headlines-<date>.json is written")
+    p_news.set_defaults(func=_cmd_news_fetch)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")
