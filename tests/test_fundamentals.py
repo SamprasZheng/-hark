@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from sharks.scoring.fundamentals import gross_margin_yoy_delta, inflection_flags
+from sharks.scoring.fundamentals import detect_flips, gross_margin_yoy_delta, inflection_flags
 from sharks.scoring.bayesian_update import prior_from_fundamentals
 
 
@@ -70,3 +70,30 @@ class TestPriorFromFundamentals:
     def test_empty_is_neutral_ish(self):
         p = prior_from_fundamentals({})
         assert 0.3 <= p <= 0.6
+
+
+class TestDetectFlips:
+    def test_turnaround_and_margin_flip(self):
+        prev = [{"ticker": "NKE", "flags": {"turnaround_score": 1, "margin_inflecting_up": False,
+                                            "earnings_growing": False, "revenue_growing": True}}]
+        curr = [{"ticker": "NKE", "flags": {"turnaround_score": 3, "margin_inflecting_up": True,
+                                            "earnings_growing": True, "revenue_growing": True},
+                 "gross_margin_yoy_delta": 0.01}]
+        flips = detect_flips(prev, curr)
+        assert len(flips) == 1 and flips[0]["ticker"] == "NKE"
+        assert any("gross-margin" in r for r in flips[0]["flips"])
+        assert any("turnaround_score 1→3" in r for r in flips[0]["flips"])
+
+    def test_no_flip_when_unchanged(self):
+        rows = [{"ticker": "X", "flags": {"turnaround_score": 3, "margin_inflecting_up": True,
+                                          "earnings_growing": True, "revenue_growing": True}}]
+        assert detect_flips(rows, rows) == []
+
+    def test_new_ticker_not_a_flip(self):
+        # a ticker absent from the prior snapshot is not a flip (no baseline to compare)
+        assert detect_flips([], [{"ticker": "Y", "flags": {"turnaround_score": 4}}]) == []
+
+    def test_deterioration_not_a_flip(self):
+        prev = [{"ticker": "Z", "flags": {"turnaround_score": 4, "margin_inflecting_up": True}}]
+        curr = [{"ticker": "Z", "flags": {"turnaround_score": 2, "margin_inflecting_up": False}}]
+        assert detect_flips(prev, curr) == []
