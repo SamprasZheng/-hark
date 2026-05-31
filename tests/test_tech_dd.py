@@ -27,8 +27,8 @@ from sharks.analysts.persona import DIMENSIONS
 
 class TestRegistryIntegrity:
     def test_broad_coverage(self):
-        # principal asked for a broad universe — assert real breadth.
-        assert len(TECH_DD) >= 60
+        # principal asked for ~100 US names — assert real breadth.
+        assert len(TECH_DD) >= 100
         assert len(TECH_DD_NONUS) >= 15
 
     def test_every_entry_is_well_formed(self):
@@ -41,7 +41,8 @@ class TestRegistryIntegrity:
             assert dd.trend, f"{t} missing trend"
 
     def test_anchor_names_present(self):
-        for t in ("LLY", "MU", "IONQ", "PLTR", "NKE", "DIS", "ASTS", "LMT", "NVDA", "CHGG"):
+        for t in ("LLY", "MU", "IONQ", "PLTR", "NKE", "DIS", "ASTS", "LMT", "NVDA", "CHGG",
+                  "CRWD", "CEG", "CRCL", "BABA", "ETN"):
             assert t in TECH_DD
 
 
@@ -168,3 +169,44 @@ class TestCLIWiring:
     def test_tech_dd_dry_run_exits_zero(self):
         from sharks.cli import main
         assert main(["tech-dd", "--dry-run"]) == 0
+
+
+class TestHorizonRouting:
+    def test_arc_mapped_to_fom_lenses(self):
+        from sharks.scoring.tech_dd import dd_horizon_routing
+        r = dd_horizon_routing("HSAI")  # autonomous-driving: T0 結構 → T2 質變
+        assert set(r.keys()) == {"T0", "T1", "T2", "T3"}
+        assert r["T0"]["fom_lens"] == "fom_3m"
+        assert r["T2"]["fom_lens"] == "fom_36m"
+        assert r["T0"]["verdict"] == "結構" and r["T2"]["verdict"] == "質變"
+
+    def test_horizon_can_differ(self):
+        # ai-edge-devices arc: T0 過熱 (don't chase the 3m) vs T2 結構
+        from sharks.scoring.tech_dd import dd_horizon_routing
+        r = dd_horizon_routing("AAPL")
+        assert r["T0"]["verdict"] == "過熱" and r["T0"]["sleeve"] == "MOONSHOT"
+        assert r["T2"]["verdict"] == "結構"
+
+    def test_uncovered_empty(self):
+        from sharks.scoring.tech_dd import dd_horizon_routing
+        assert dd_horizon_routing("ZZZZ") == {}
+
+    def test_annotate_includes_horizon(self):
+        row = annotate_ticker("LLY", bubble_guard=0)
+        assert row["horizon_routing"]["T1"]["verdict"] == "質變"
+
+
+class TestNonUs:
+    def test_annotate_non_us(self):
+        from sharks.scoring.tech_dd import annotate_non_us
+        r = annotate_non_us("000660.KS")
+        assert r["region"] == "APAC" and r["currency"] == "KRW"
+        assert r["fx_caveat"] is not None and r["non_us"] is True
+
+    def test_build_report_includes_non_us(self):
+        base = build_report(out_dir="no-fom-here", include_non_us=False)
+        ext = build_report(out_dir="no-fom-here", include_non_us=True)
+        base_total = sum(len(v) for v in base["buckets"].values())
+        ext_total = sum(len(v) for v in ext["buckets"].values())
+        assert ext_total > base_total
+        assert ext["coverage"]["non_us_included"] is True

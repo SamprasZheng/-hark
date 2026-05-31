@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Optional
 
 from sharks.analysts.persona import DIMENSIONS, apply_persona_tilt
+from sharks.scoring.ticker_suffix import fx_caveat, parse_ticker, region_of
 
 # ─── Vocabulary ──────────────────────────────────────────────────────────────
 VERDICTS = ("質變", "結構", "過熱", "太早", "受損")
@@ -162,6 +163,45 @@ _ENTRIES = [
     ("GD",   "結構", "defense-tech", (), 0.35, ""),
     ("AVAV", "結構", "defense-tech", ("front_run",), 0.33, "drones; priced"),
     ("KTOS", "結構", "defense-tech", ("front_run",), 0.32, "Valkyrie drones; priced"),
+    # ── Phase C (2026-05-31) ──────────────────────────────────────────────────
+    # ai-datacenter-power (the AI power crunch)
+    ("ETN",  "結構", "ai-datacenter-power", (), 0.42, "electricals; DC order backlog"),
+    ("VRT",  "結構", "ai-datacenter-power", (), 0.42, "power + liquid cooling"),
+    ("GEV",  "結構", "ai-datacenter-power", ("front_run",), 0.38, "gas turbines; ~37-69x fwd"),
+    ("PWR",  "結構", "ai-datacenter-power", (), 0.38, "grid buildout"),
+    ("NVT",  "結構", "ai-datacenter-power", (), 0.35, "electrical connections"),
+    ("CEG",  "結構", "ai-datacenter-power", ("bottom_fish",), 0.45, "nuclear IPP; PPA wave; fell on beat"),
+    ("VST",  "結構", "ai-datacenter-power", ("bottom_fish",), 0.42, "IPP"),
+    ("TLN",  "結構", "ai-datacenter-power", ("bottom_fish",), 0.40, "IPP; Amazon PPA"),
+    ("CCJ",  "結構", "ai-datacenter-power", (), 0.40, "uranium"),
+    ("UEC",  "結構", "ai-datacenter-power", ("froth",), 0.30, "uranium small-cap"),
+    ("OKLO", "太早", "ai-datacenter-power", ("froth",), 0.15, "pre-rev SMR; COD 2027+ priced like producer"),
+    ("SMR",  "太早", "ai-datacenter-power", ("froth",), 0.15, "NuScale pre-rev SMR"),
+    ("NNE",  "太早", "ai-datacenter-power", ("froth",), 0.12, "Nano Nuclear pre-rev"),
+    # stablecoins-tokenization
+    ("CRCL", "結構", "stablecoins-tokenization", ("front_run",), 0.35, "USDC issuer; rate-sensitive, run ahead"),
+    ("COIN", "結構", "stablecoins-tokenization", (), 0.38, "~44% USDC econ + Base ~62% tx"),
+    ("V",    "結構", "stablecoins-tokenization", ("cashflow",), 0.42, "rails; quiet stablecoin winner"),
+    ("MA",   "結構", "stablecoins-tokenization", ("cashflow",), 0.42, "rails; quiet stablecoin winner"),
+    ("PYPL", "結構", "stablecoins-tokenization", ("bottom_fish",), 0.33, "PYUSD; turnaround"),
+    # cybersecurity-ai
+    ("CRWD", "結構", "cybersecurity-ai", ("front_run",), 0.42, "ARR $5.25B; ~20x fwd rev"),
+    ("PANW", "結構", "cybersecurity-ai", (), 0.40, "platformization + CyberArk identity"),
+    ("ZS",   "結構", "cybersecurity-ai", (), 0.36, "zero-trust edge"),
+    ("FTNT", "結構", "cybersecurity-ai", (), 0.38, "cheapest large consolidator"),
+    ("NET",  "結構", "cybersecurity-ai", ("front_run",), 0.35, "edge zero-trust; rich"),
+    ("S",    "結構", "cybersecurity-ai", ("bottom_fish",), 0.30, "SentinelOne turnaround (unconfirmed)"),
+    ("OKTA", "結構", "cybersecurity-ai", ("bottom_fish",), 0.33, "identity turnaround; agent-identity optionality"),
+    # china-ai-stack (US ADRs)
+    ("BABA", "結構", "china-ai-stack", ("bottom_fish",), 0.38, "Qwen + capex; policy-trap discount"),
+    ("BIDU", "結構", "china-ai-stack", ("bottom_fish",), 0.33, "Ernie; cheap"),
+    ("JD",   "結構", "china-ai-stack", ("bottom_fish",), 0.33, "value; policy risk"),
+    ("TCEHY", "結構", "china-ai-stack", (), 0.36, "Tencent ADR pink; H200-cleared"),
+    # space-economy (RKLB/ASTS already mapped under satcom-future)
+    ("LUNR", "結構", "space-economy", ("front_run",), 0.33, "lunar gov contracts; priced"),
+    ("RDW",  "結構", "space-economy", ("front_run",), 0.28, "~10x P/S Strong Sell"),
+    ("PL",   "結構", "space-economy", ("front_run",), 0.33, "EO data; ~51x P/S"),
+    # humanoid-robotics (most beneficiaries non-US; NVDA/TSLA already mapped)
 ]
 
 TECH_DD: dict[str, TechDD] = {e[0]: _dd(*e) for e in _ENTRIES}
@@ -276,6 +316,59 @@ def dd_sleeve(verdict: str, bubble_guard: Optional[float] = None,
     return {"sleeve": "FOM_CORE", "posture": "core_watch", "reason": "uncovered verdict — default core watch"}
 
 
+# ─── Multi-horizon routing (verdict_by_horizon → FOM 3m/12m/36m lenses) ────────
+# Per-trend T0-T3 verdict arcs (from tech/scoreboard.md). A name can be 過熱 at T0
+# (don't chase the 3m) yet 質變 at T2-T3 (accumulate for the 36m/value sleeve).
+_H = ("T0", "T1", "T2", "T3")
+TREND_HORIZON: dict[str, dict[str, str]] = {
+    # Phase A
+    "memory-supercycle":         {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "結構"},
+    "optical-interconnect-cpo":  {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "結構"},
+    "optical-supply-chain-deep": {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "結構"},
+    "ai-edge-devices":           {"T0": "過熱", "T1": "過熱", "T2": "結構", "T3": "結構"},
+    "autonomous-driving":        {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "質變"},
+    "ai-pharma-glp1":            {"T0": "結構", "T1": "質變", "T2": "質變", "T3": "結構"},
+    "glp1-supply-chain":         {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "結構"},
+    "quantum-vs-bitcoin":        {"T0": "太早", "T1": "太早", "T2": "太早", "T3": "結構"},
+    "ai-eats-software":          {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "質變"},
+    "model-leadership-and-data": {"T0": "質變", "T1": "結構", "T2": "結構", "T3": "結構"},
+    "youth-culture-shifts":      {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "結構"},
+    # Phase B
+    "luxury-and-apparel":        {"T0": "過熱", "T1": "結構", "T2": "結構", "T3": "結構"},
+    "ip-economy-collectibles":   {"T0": "過熱", "T1": "結構", "T2": "結構", "T3": "質變"},
+    "ai-coding-agents":          {"T0": "質變", "T1": "結構", "T2": "結構", "T3": "結構"},
+    "ar-vr-smart-glasses":       {"T0": "結構", "T1": "結構", "T2": "太早", "T3": "質變"},
+    "satcom-future":             {"T0": "結構", "T1": "結構", "T2": "太早", "T3": "太早"},
+    "defense-tech":              {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "質變"},
+    # Phase C
+    "humanoid-robotics":         {"T0": "太早", "T1": "結構", "T2": "質變", "T3": "質變"},
+    "ai-datacenter-power":       {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "太早"},
+    "stablecoins-tokenization":  {"T0": "結構", "T1": "結構", "T2": "過熱", "T3": "太早"},
+    "cybersecurity-ai":          {"T0": "結構", "T1": "質變", "T2": "質變", "T3": "結構"},
+    "china-ai-stack":            {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "質變"},
+    "space-economy":             {"T0": "結構", "T1": "質變", "T2": "太早", "T3": "太早"},
+}
+_HORIZON_TO_FOM = {"T0": "fom_3m", "T1": "fom_12m", "T2": "fom_36m", "T3": "fom_36m"}
+
+
+def dd_horizon_routing(ticker: str, bubble_guard: Optional[float] = None) -> dict:
+    """Per-horizon sleeve for a covered name: maps the trend's T0-T3 verdict arc
+    (TREND_HORIZON) onto the FOM 3m/12m/36m lenses. Realises the principal's
+    '同一檔 3m=過熱不追、36m=質變佈局'. Falls back to the headline verdict if the
+    trend carries no arc."""
+    dd = TECH_DD.get(ticker.upper())
+    if dd is None:
+        return {}
+    arc = TREND_HORIZON.get(dd.trend)
+    out = {}
+    for h in _H:
+        v = arc[h] if arc else dd.verdict
+        r = dd_sleeve(v, bubble_guard, dd.milestone_score, dd.flags)
+        out[h] = {"verdict": v, "fom_lens": _HORIZON_TO_FOM[h],
+                  "sleeve": r["sleeve"], "posture": r["posture"]}
+    return out
+
+
 def annotate_ticker(ticker: str, bubble_guard: Optional[float] = None,
                     base_weights: Optional[dict] = None) -> Optional[dict]:
     """Full DD annotation for one ticker (pure). Returns None if not covered.
@@ -299,6 +392,7 @@ def annotate_ticker(ticker: str, bubble_guard: Optional[float] = None,
         "reason": sleeve["reason"],
         "dd_tilt": tilt,
         "dd_tilted_base": apply_persona_tilt(base, tilt),   # observe-only
+        "horizon_routing": dd_horizon_routing(dd.ticker, bubble_guard),
     }
     # Cross-check against the structural character-set classifier (打臉/agreement).
     try:
@@ -310,6 +404,33 @@ def annotate_ticker(ticker: str, bubble_guard: Optional[float] = None,
         out["structural_sleeve"] = None
         out["sleeve_agreement"] = None
     return out
+
+
+def annotate_non_us(symbol: str) -> Optional[dict]:
+    """Lightweight annotation for a documented non-US node (Phase-2 後綴支援):
+    verdict-only routing + region/FX tags via ticker_suffix. bubble_guard is
+    unavailable until a regional FOM scan lands, so routing is verdict-only and
+    carries the FX caveat."""
+    rec = TECH_DD_NONUS.get(symbol)
+    if rec is None:
+        return None
+    verdict, trend, note = rec
+    sleeve = dd_sleeve(verdict, None, 0.33, ())
+    p = parse_ticker(symbol)
+    return {
+        "ticker": symbol,
+        "dd_verdict": verdict,
+        "trend": trend,
+        "note": note,
+        "milestone_score": 0.33,
+        "region": region_of(symbol),
+        "currency": p.exchange.currency if p.exchange else "USD",
+        "dd_sleeve": sleeve["sleeve"],
+        "posture": sleeve["posture"],
+        "reason": sleeve["reason"],
+        "fx_caveat": fx_caveat(symbol),
+        "non_us": True,
+    }
 
 
 # ─── FOM bubble_guard loader (no network) ──────────────────────────────────────
@@ -331,8 +452,11 @@ def load_fom_bubble_guard(out_dir: Path) -> dict:
     return bg
 
 
-def build_report(out_dir: Path = Path("outputs"), base_weights: Optional[dict] = None) -> dict:
-    """Annotate the whole DD registry, bucket by suggested sleeve, sort. Observe-first."""
+def build_report(out_dir: Path = Path("outputs"), base_weights: Optional[dict] = None,
+                 include_non_us: bool = False) -> dict:
+    """Annotate the whole DD registry, bucket by suggested sleeve, sort. Observe-first.
+    include_non_us folds the documented non-US nodes in (verdict-only routing + FX
+    caveat, Phase-2 後綴支援)."""
     bg_map = load_fom_bubble_guard(out_dir)
     annotated = []
     for t in TECH_DD:
@@ -341,6 +465,12 @@ def build_report(out_dir: Path = Path("outputs"), base_weights: Optional[dict] =
         if row:
             row["final_fom"] = (bg_map.get(t) or {}).get("final_fom")
             annotated.append(row)
+    if include_non_us:
+        for sym in TECH_DD_NONUS:
+            nr = annotate_non_us(sym)
+            if nr:
+                nr["final_fom"] = None
+                annotated.append(nr)
 
     buckets: dict[str, list] = {"FOM_CORE": [], "VALUE": [], "MOONSHOT": []}
     for r in annotated:
@@ -358,7 +488,8 @@ def build_report(out_dir: Path = Path("outputs"), base_weights: Optional[dict] =
                  "unchanged. Verdicts are screen outputs — Risk Officer + caps + the "
                  "5-dim evidence gate still govern. See tech/fom-integration.md."),
         "fom_report_used": bool(bg_map),
-        "coverage": {"us_listed": len(TECH_DD), "non_us_documented": len(TECH_DD_NONUS)},
+        "coverage": {"us_listed": len(TECH_DD), "non_us_documented": len(TECH_DD_NONUS),
+                     "non_us_included": include_non_us},
         "buckets": buckets,
         "sleeve_disagreements_vs_structural": disagreements,
     }

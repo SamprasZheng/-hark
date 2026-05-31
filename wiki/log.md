@@ -410,3 +410,14 @@ Principal authorized implementing the fom-integration design + broadening the un
 - CLI `sharks tech-dd [--dry-run]` wired (mirrors health-check); tests/test_tech_dd.py +29 (registry/tilt/routing/observe-first/CLI). Full suite green (cli-smoke + dispatcher intact).
 - First live run vs latest FOM scan: FOM_CORE 33 / VALUE 17 / MOONSHOT 21; 36 DD-vs-structural disagreements (expected — classifier defaults uncovered names to core; DD adds the froth/太早/front-run lens).
 - Guardrails: recommend-only, no trades; tilt stays out of final_fom until walk-forward IC-validated (fom-predictive-validity / nasdaq100-calibration). 太早/過熱/front-run → Moonshot ring-fence only.
+
+## [2026-05-31 05:00 +08:00] research+build | tech/ Phase C (6 trends) + tech_dd 100-name + Phase-2 後綴 + 時間軸路由 + DD-tilt IC 回測
+
+Principal: 全部做 — 開新趨勢 + Phase-2 後綴支援 + 時間軸路由進 code + DD-tilt walk-forward IC + 美股擴廣到 100.
+
+- **6 Phase-C deep-dives** (multi-horizon + milestone + winners/losers/抄底 + 自我打臉 + 考證): humanoid-robotics (結構/7; 像2019自駕, 買鏟子 NVDA+減速機, 中國贏單位戰), ai-datacenter-power (結構/9; AI 瓶頸鏈 compute→interconnect→電力; 電氣/核能IPP 真P&L, pre-rev SMR froth), stablecoins-tokenization (結構/8; 結算真質變, CRCL 利率單因子賭注), cybersecurity-ai (結構/8; AI-PROOF, ai-eats-software 的反面), china-ai-stack (結構/9; 分流已成事實, HBM 封頂), space-economy (結構/8; 發射成本崩跌質變, 在軌太早, RKLB ~90x). 全 headline 結構; T2-T3 質變候選 = power/cyber/china/humanoid.
+- **tech_dd 升級**: 美股節點 71→**103**; dd_horizon_routing (verdict_by_horizon × FOM 3m/12m/36m — 同一檔 3m過熱不追/36m質變佈局); 非美支援 via 新 ticker_suffix.py (Phase-2 後綴: .TW/.KS/.T/.HK/.SW/.PA/.DE → exchange/currency/region + FX caveat).
+- **DD-tilt walk-forward IC 回測** (tech_dd_validation.py, 2016-2026, 112 periods): tilt ΔIC_IR −0.02..−0.11 每個 horizon → **DD-TILT-NEUTRAL**; tilt 不進 final_fom (observe-first 實證得證); 判決僅作 router/annotation. Lookahead caveat (static verdicts on history) 已記錄.
+- **Tests**: +test_ticker_suffix (14), +test_tech_dd_validation (7), test_tech_dd 擴充 (horizon+non-us+100-name). 全套件綠燈.
+- **Nav**: scoreboard Phase-C 矩陣, index Phase-C 6 列, 99_cross_synthesis §C (compute→interconnect→電力 + DD-tilt-neutral 結果), _weekly-watch Phase-C 里程碑, fom-integration 驗證註記.
+- **Boundaries**: recommend-only, 無交易; src/ 是 principal-authorized 的 tech_dd 實作; observe-first (tilt 不進 final_fom).

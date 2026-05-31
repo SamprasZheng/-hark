@@ -46,6 +46,17 @@ The technology due-diligence layer of `$hark`. Each page screens one hot narrati
 | [[defense-tech]] | 結構 | 結構→質變 | 歐洲重整=NOW；軟體吃國防=T2-T3；受益者≠該價位(PLTR>85×) |
 | [[satcom-future]] | 結構 | 結構→太早 | Starlink 已質變但已定價；D2C 物理封頂=補盲；台灣上游 |
 
+## Phase C trend pages (multi-horizon T0→T3)
+
+| Trend | headline | T0 → T3 | One-line |
+|---|---|---|---|
+| [[ai-datacenter-power]] | 結構 | 結構→質變→太早 | AI 電力瓶頸；電氣/核能 IPP 真實 P&L，froth 在 pre-rev SMR(OKLO/SMR/NNE) |
+| [[china-ai-stack]] | 結構 | 結構→質變→質變 | 分流已是事實；開源中國贏，算力靠 TSMC die-bank+外購 HBM 撐到~2026末 |
+| [[cybersecurity-ai]] | 結構 | 結構→質變→結構 | AI-PROOF(攻擊面擴大)，是 ai-eats-software 的反面；agentic SOC=T1-T2；PQC 2027 |
+| [[stablecoins-tokenization]] | 結構 | 結構→過熱→太早 | 穩定幣結算是真質變；CRCL 是利率敏感單因子賭注；"全部代幣化"過頭 |
+| [[space-economy]] | 結構 | 結構→質變→太早 | 發射成本崩跌是真質變(SpaceX 壟斷)；在軌經濟太早；RKLB ~90x P/S |
+| [[humanoid-robotics]] | 結構 | 太早→質變 | 像 2019 的自駕；買鏟子(NVDA+減速機)，OEM 進 Moonshot；中國贏單位戰 |
+
 ## Deep dives (二階供應鏈 / second-derivative)
 
 - [[optical-supply-chain-deep]] — CPO picks-and-shovels: InP 基板 · CW 雷射/EML · **hybrid-bond 量測 (Auros/Onto/FormFactor) = 最未擁擠節點**；froth: AXTI/AEHR (−95)

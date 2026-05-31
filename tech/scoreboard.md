@@ -41,6 +41,19 @@ Scored matrix of the 9 Phase-A trend pages on the [[00_framework]] rubric. Each 
 
 **Phase B 讀法**: headline 全 **結構**，但多時程才是重點。**T0 已實現**只有 `ai-coding`（質變）；`luxury`/`ip-economy` 在 T0 是 **過熱/出清**。**T3 (5–10 年) 質變候選** = IP-economy、defense-autonomy、AR(條件式)、ai-coding(open)；**satcom 的 D2C-取代基地台 連 T3 仍偏太早**。跨全部 15 條最強的 desk 結論：**受益者 ≠ 該價位的股票** — Phase B 每一條都點名股價已被搶跑（Hermès、Cursor-as-platform、Pop Mart、PLTR/Anduril >85× P/S、Starlink $1.25T、Meta 眼鏡補貼）。alpha 在二階節點、條件達標的抄底、與等回檔。詳見 [[99_cross_synthesis]] §B + [[_weekly-watch]]。
 
+## Phase C 矩陣（含多時程, 2026-05-31）
+
+| 趨勢 | headline | T0 | T1 | T2 | T3 | A1·A2·A3·A4·A5 | Σ | conf |
+|---|---|---|---|---|---|---|:--:|:--:|
+| [[ai-datacenter-power]] | 結構 | 結構 | 結構 | 質變 | 太早 | 2·2·2·2·1 | **9** | 0.78 |
+| [[china-ai-stack]] | 結構 | 結構 | 結構 | 質變* | 質變 | 2·2·2·1·2 | **9** | 0.78 |
+| [[cybersecurity-ai]] | 結構 | 結構 | 質變 | 質變 | 結構 | 2·2·2·1·1 | **8** | 0.74 |
+| [[stablecoins-tokenization]] | 結構 | 結構 | 結構 | 過熱 | 太早 | 2·2·2·1·1 | **8** | 0.74 |
+| [[space-economy]] | 結構 | 結構 | 質變 | 太早 | 太早 | 2·2·2·1·1 | **8** | 0.74 |
+| [[humanoid-robotics]] | 結構 | 太早 | 結構 | 質變 | 質變 | 1·1·2·2·1 | **7** | 0.71 |
+
+**Phase C 讀法**: 仍全 **結構** headline，但時間軸顯示 **T2-T3 質變候選** = ai-datacenter-power / cybersecurity / china-ai-stack / humanoid；**T0 已實現質變僅 none**（ai-datacenter-power 最接近，電氣/核能有真實 P&L）。新增的最強 desk 觀察：AI 瓶頸鏈延伸為 **compute → interconnect → 電力**——`ai-datacenter-power` 是繼 HBM/CPO 之後的下一個綁定約束（9/10、有交付 P&L），但同樣「受益者≠該價位」(GEV ~37-69x、CRWD ~20x rev、RKLB ~90x P/S、pre-rev SMR 當生產商定價)。全 21 條的鐵律不變。詳見 [[99_cross_synthesis]] §C。
+
 ## 一句話讀法 / The one-line read
 
 > **沒有一條在頁面層級評到「質變」。** 你列的熱門題目幾乎全是 **結構**（真實但大致已被定價），外加兩個明確的陷阱：**端側 AI 過熱、量子破 BTC 太早**。唯一最接近「有現金流的質變」是 **GLP-1**。

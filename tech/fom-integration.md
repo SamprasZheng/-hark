@@ -59,7 +59,8 @@ A name promotes **watch → Core-eligible only when** its milestone ladder ([[_w
 - CLI: `sharks tech-dd [--dry-run]` (mirrors `sharks health-check`); also `python -m sharks.scoring.tech_dd`.
 - Output: `outputs/tech-dd-overlay.json` — sleeve buckets + per-name posture/reason + observe-only `dd_tilted_base` + `sleeve_disagreements_vs_structural`.
 - Tests: `tests/test_tech_dd.py` — **29 passing** (registry integrity, tilt bounds, sleeve routing, observe-first, CLI wiring).
-- First live run (reading the latest `fom-monthly-*.json`): **FOM_CORE 33 / VALUE 17 / MOONSHOT 21**.
+- Coverage now **103 US-listed + 21 non-US** (Phase-2 後綴支援 via `ticker_suffix.py`); live overlay buckets **FOM_CORE 45 / VALUE 27 / MOONSHOT 31**. Horizon-aware routing wired (`dd_horizon_routing` → `verdict_by_horizon` × FOM 3m/12m/36m lenses).
+- **Walk-forward validation (`tech_dd_validation.py`, 2016-2026, 112 periods):** the bounded DD tilt **slightly reduces** IC_IR at every horizon (Δ −0.02 @3m → −0.11 @6m) → **verdict DD-TILT-NEUTRAL.** The tilt therefore **stays out of `final_fom`** — observe-first is now empirically earned. DD verdicts are a **sleeve router + annotation only.** (Lookahead caveat: static current verdicts on history = mechanism test, not a forward edge.)
 
 `final_fom` is still untouched (observe-first). Original design sketch — `src/sharks/scoring/tech_dd.py`:
 
