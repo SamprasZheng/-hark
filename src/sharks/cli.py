@@ -129,6 +129,35 @@ def _cmd_rf_evidence(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_demand_val(args: argparse.Namespace) -> int:
+    """Order/demand-anchored forward valuation for the RF/semi names.
+
+    3 layers: curated order-book (B:B/backlog/contracted/segment-YoY) + yfinance
+    earnings-quality + curated intangible scorecard (moat/switching/optionality/
+    concentration). The RIGHT lens for earnings-inflecting names; flags order
+    deceleration as the kill-switch. RECOMMEND-ONLY.
+    """
+    from pathlib import Path
+
+    from sharks.scoring.demand_valuation import run, write_output
+
+    rows = run(network=not args.no_network)
+    if not args.dry_run:
+        path = write_output(Path(args.out_dir), rows, args.as_of or _today())
+        print(f"wrote {path}")
+    for r in sorted(rows, key=lambda x: (x["premium_to_fair"] is None, x["premium_to_fair"] or 0)):
+        prem = r["premium_to_fair"]
+        print(f"  {r['ticker']:6} fairPE={r['adjusted_fair_pe']} "
+              f"prem={(f'{prem*100:+.0f}%' if prem is not None else 'n/a')} "
+              f"traj={r['order_trajectory']} — {r['verdict']}")
+    return 0
+
+
+def _today() -> str:
+    from datetime import datetime
+    return datetime.now().strftime("%Y-%m-%d")
+
+
 def _cmd_wiki_lint(args: argparse.Namespace) -> int:
     print(
         f"[stub] sharks wiki lint called. "
@@ -241,6 +270,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_rfe.add_argument("--no-network", action="store_true", help="skip fetch (writes an empty proxy set)")
     p_rfe.add_argument("--out-dir", default="outputs", help="dir where rfpm-cycle-evidence-auto.json is written")
     p_rfe.set_defaults(func=_cmd_rf_evidence)
+
+    # `sharks demand-val` — order/demand-anchored forward valuation (REAL)
+    p_dv = subparsers.add_parser(
+        "demand-val",
+        help="order/demand-anchored forward fair value (B:B/backlog/contracted + quality + intangibles)",
+    )
+    p_dv.add_argument("--as-of", default=None, help="point-in-time date YYYY-MM-DD (default: today)")
+    p_dv.add_argument("--no-network", action="store_true", help="skip yfinance; order-book + intangibles only")
+    p_dv.add_argument("--out-dir", default="outputs", help="dir where demand-valuation-*.json is written")
+    p_dv.add_argument("--dry-run", action="store_true", help="print but do not write outputs/")
+    p_dv.set_defaults(func=_cmd_demand_val)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")
