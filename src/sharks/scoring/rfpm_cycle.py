@@ -167,19 +167,45 @@ class CycleReading:
 # Evidence layer
 # ---------------------------------------------------------------------------
 
+# Hand-curated layer (grade A/B, committed, the source of truth — edit by hand).
+CURATED_EVIDENCE_PATH = Path("watchlist/rfpm-cycle-evidence.json")
+# Auto proxy layer (grade C/D, regenerated monthly by rfpm_evidence_fetch; NOT
+# committed — lives in outputs/). Merged UNDER curated (curated always wins).
+AUTO_EVIDENCE_PATH = Path("outputs/rfpm-cycle-evidence-auto.json")
+
+
+def _read_evidence_file(path: Path) -> list[dict]:
+    if not path or not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, list) else []
+    except Exception as e:  # pragma: no cover - defensive
+        print(f"  warn: bad evidence file {path}: {e}", file=sys.stderr)
+        return []
+
+
 def load_evidence(as_of: Optional[str] = None,
-                  evidence_path: Optional[Path] = None) -> list[dict]:
-    """Return evidence entries dated ``<= as_of``. Reads the external override
-    JSON if present (``watchlist/rfpm-cycle-evidence.json``), else the seed."""
-    evidence = list(DEFAULT_EVIDENCE)
-    path = evidence_path or Path("watchlist/rfpm-cycle-evidence.json")
-    if path.exists():
-        try:
-            ext = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(ext, list) and ext:
-                evidence = ext
-        except Exception as e:  # pragma: no cover - defensive
-            print(f"  warn: bad evidence file {path}: {e}", file=sys.stderr)
+                  evidence_path: Optional[Path] = None,
+                  auto_path: Optional[Path] = None,
+                  include_auto: bool = True) -> list[dict]:
+    """Return evidence dated ``<= as_of``, merged by ``key`` across two layers:
+      - **auto** proxy layer (grade C/D, ``outputs/rfpm-cycle-evidence-auto.json``,
+        refreshed monthly by ``rfpm_evidence_fetch``) — the base, and
+      - **curated** layer (grade A/B, ``watchlist/rfpm-cycle-evidence.json``) —
+        which OVERRIDES auto by key (the hand-edited file is always authoritative).
+    Falls back to the in-module ``DEFAULT_EVIDENCE`` seed when no curated file
+    is present. ``include_auto=False`` reads the curated/seed layer only (used by
+    deterministic tests)."""
+    path = evidence_path or CURATED_EVIDENCE_PATH
+    curated = _read_evidence_file(path) or list(DEFAULT_EVIDENCE)
+    auto = _read_evidence_file(auto_path or AUTO_EVIDENCE_PATH) if include_auto else []
+    by_key: dict = {}
+    for e in auto:        # auto first (lower priority)
+        by_key[e.get("key", id(e))] = e
+    for e in curated:     # curated overrides auto by key
+        by_key[e.get("key", id(e))] = e
+    evidence = list(by_key.values())
     if as_of:
         evidence = [e for e in evidence if str(e.get("as_of", "")) <= as_of]
     return evidence
@@ -376,10 +402,13 @@ def build_reading(segments: dict[str, SegmentSignal], evidence: list[dict],
 
 def run(as_of: Optional[str] = None, *, network: bool = True,
         evidence_path: Optional[Path] = None,
-        ohlcv: Optional[dict[str, pd.DataFrame]] = None) -> CycleReading:
+        ohlcv: Optional[dict[str, pd.DataFrame]] = None,
+        include_auto: bool = True,
+        auto_path: Optional[Path] = None) -> CycleReading:
     as_of_str = as_of or datetime.now().strftime("%Y-%m-%d")
     thr = DEFAULT_THRESHOLDS
-    evidence = load_evidence(as_of_str, evidence_path)
+    evidence = load_evidence(as_of_str, evidence_path,
+                             auto_path=auto_path, include_auto=include_auto)
 
     segments: dict[str, SegmentSignal] = {}
     semi_6m = None

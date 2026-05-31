@@ -42,6 +42,14 @@ python -m sharks.backtest.portfolio_audit 2>&1 | Tee-Object -FilePath $log -Appe
 Log "Daily health-check (regime + funding + posture + hotspots)..."
 python -m sharks.cli health-check 2>&1 | Tee-Object -FilePath $log -Append
 
+# MONTHLY (first weekly day of the month): refresh the rf-cycle AUTO evidence proxy
+# layer from financials (book-to-bill / pricing-power / recovery proxies). The
+# hand-curated watchlist/rfpm-cycle-evidence.json always overrides this.
+if ($isWeekly -and ((Get-Date).Day -le 7)) {
+    Log "MONTHLY: refresh RF/PM cycle auto-evidence (financial proxies)..."
+    python -m sharks.cli rf-evidence --as-of $today 2>&1 | Tee-Object -FilePath $log -Append
+}
+
 Log "RF/PM/analog rush-order cycle (variable #15, two-door: leading vs handset)..."
 python -m sharks.cli rf-cycle --as-of $today 2>&1 | Tee-Object -FilePath $log -Append
 

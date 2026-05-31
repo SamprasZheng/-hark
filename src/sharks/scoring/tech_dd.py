@@ -248,6 +248,15 @@ _ENTRIES = [
     ("BHP",  "結構", "copper-electrification", ("cashflow",), 0.40, "Cu now 51% of EBITDA; best quality Cu leverage, lower multiple"),
     ("RIO",  "結構", "copper-electrification", ("cashflow",), 0.38, "Cu growth engine (Oyu Tolgoi); diversified, cheaper"),
     ("VALE", "結構", "copper-electrification", (), 0.30, "diversified Fe/Ni + growing Cu; cheap but not a clean Cu play"),
+    # ── Phase D — consumer-credit-stress (gap-fill #3; RISK GAUGE, A4=0; exposures not longs) ──
+    ("ALLY", "結構", "consumer-credit-stress", (), 0.25, "subprime-auto canary; NCO improving (realized) but guiding worse on labor — risk gauge, not a long thesis"),
+    ("COF",  "結構", "consumer-credit-stress", (), 0.25, "card+auto; credit improving YoY — consumer-credit gauge input"),
+    ("AFRM", "結構", "consumer-credit-stress", ("front_run",), 0.20, "BNPL leader; credit stable but equity ran — don't chase; risk-gauge exposure"),
+    ("KLAR", "結構", "consumer-credit-stress", ("front_run",), 0.15, "BNPL; provision +102% YoY + securities class action — the bear's exhibit"),
+    ("CVNA", "結構", "consumer-credit-stress", ("front_run",), 0.20, "used-car; 44% nonprime/deep-subprime credit-mix risk; equity ran hard"),
+    ("KMX",  "結構", "consumer-credit-stress", ("bottom_fish",), 0.30, "used-car; Tier-3 deepening; value but credit-cycle exposed"),
+    ("DG",   "結構", "consumer-credit-stress", ("bottom_fish",), 0.33, "dollar-store; low-income wallet read + trade-down tailwind"),
+    ("DLTR", "結構", "consumer-credit-stress", ("bottom_fish",), 0.33, "dollar-store; trade-down skews higher-income = mild positive"),
 ]
 
 TECH_DD: dict[str, TechDD] = {e[0]: _dd(*e) for e in _ENTRIES}
@@ -397,6 +406,7 @@ TREND_HORIZON: dict[str, dict[str, str]] = {
     "rf-connectivity":           {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "質變"},
     "offshore-energy":           {"T0": "結構", "T1": "結構", "T2": "質變", "T3": "太早"},
     "copper-electrification":    {"T0": "過熱", "T1": "結構", "T2": "質變", "T3": "質變"},
+    "consumer-credit-stress":    {"T0": "結構", "T1": "結構", "T2": "結構", "T3": "結構"},
 }
 _HORIZON_TO_FOM = {"T0": "fom_3m", "T1": "fom_12m", "T2": "fom_36m", "T3": "fom_36m"}
 
@@ -429,6 +439,7 @@ TREND_RUBRIC: dict[str, dict[str, int]] = {
     "rf-connectivity":           {"A1": 2, "A2": 2, "A3": 2, "A4": 2, "A5": 1},
     "offshore-energy":           {"A1": 2, "A2": 1, "A3": 1, "A4": 2, "A5": 1},
     "copper-electrification":    {"A1": 2, "A2": 2, "A3": 1, "A4": 1, "A5": 1},
+    "consumer-credit-stress":    {"A1": 2, "A2": 2, "A3": 2, "A4": 0, "A5": 1},
 }
 
 

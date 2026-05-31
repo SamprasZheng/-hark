@@ -111,6 +111,24 @@ def _cmd_rf_cycle(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_rf_evidence(args: argparse.Namespace) -> int:
+    """Monthly: refresh the rf-cycle AUTO evidence proxy layer from financials.
+
+    Derives book-to-bill / pricing-power / recovery proxies from distributor &
+    analog revenue-YoY + gross-margin-YoY-Δ (yfinance). Writes
+    outputs/rfpm-cycle-evidence-auto.json, merged UNDER the hand-curated layer by
+    rf-cycle. RECOMMEND-ONLY.
+    """
+    from pathlib import Path
+
+    from sharks.scoring.rfpm_evidence_fetch import fetch_and_write
+
+    path = fetch_and_write(as_of=args.as_of, out_dir=Path(args.out_dir),
+                           network=not args.no_network)
+    print(f"wrote {path}")
+    return 0
+
+
 def _cmd_wiki_lint(args: argparse.Namespace) -> int:
     print(
         f"[stub] sharks wiki lint called. "
@@ -213,6 +231,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="print the cycle reading but do not write outputs/rfpm-cycle-*.json",
     )
     p_rf.set_defaults(func=_cmd_rf_cycle)
+
+    # `sharks rf-evidence` — monthly auto-refresh of the rf-cycle proxy layer (REAL)
+    p_rfe = subparsers.add_parser(
+        "rf-evidence",
+        help="monthly: refresh rf-cycle AUTO evidence proxies from financials (recommend-only)",
+    )
+    p_rfe.add_argument("--as-of", default=None, help="point-in-time date YYYY-MM-DD (default: today)")
+    p_rfe.add_argument("--no-network", action="store_true", help="skip fetch (writes an empty proxy set)")
+    p_rfe.add_argument("--out-dir", default="outputs", help="dir where rfpm-cycle-evidence-auto.json is written")
+    p_rfe.set_defaults(func=_cmd_rf_evidence)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")
