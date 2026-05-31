@@ -153,6 +153,22 @@ def _cmd_demand_val(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_daily_brief(args: argparse.Namespace) -> int:
+    """游庭澔-style daily brief (早報/午報/晚報) → MD + HTML + Discord.
+
+    Macro-first morning-show flow: tape -> 速解讀 (why) -> 類股 -> 台股連結 -> 行事曆;
+    午/晚 editions add 個人進出場建議 + 推薦潛力股 (reused from fom-alpha / portfolio-
+    audit JSONs, never recomputed). Observe-first / educational — not buy/sell advice.
+    """
+    from sharks.daily_brief import generate
+
+    r = generate(args.edition, args.out_dir)
+    print(f"[{r['edition']}] wrote {r['md']}")
+    print(f"          + {r['html']}")
+    print(f"          + {r['discord']} ({r['discord_len']} chars)")
+    return 0
+
+
 def _today() -> str:
     from datetime import datetime
     return datetime.now().strftime("%Y-%m-%d")
@@ -281,6 +297,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_dv.add_argument("--out-dir", default="outputs", help="dir where demand-valuation-*.json is written")
     p_dv.add_argument("--dry-run", action="store_true", help="print but do not write outputs/")
     p_dv.set_defaults(func=_cmd_demand_val)
+
+    # `sharks daily-brief` — 游庭澔-style 早/午/晚 brief (REAL)
+    p_db = subparsers.add_parser(
+        "daily-brief",
+        help="游庭澔-style daily brief (早/午/晚) → MD + HTML + Discord (macro + 台股連結 + 進出場/潛力股)",
+    )
+    p_db.add_argument("--edition", choices=["morning", "midday", "evening"], default="morning",
+                      help="morning 早報(盤前總經) / midday 午報(盤中) / evening 晚報(收盤+進出場+潛力股)")
+    p_db.add_argument("--out-dir", default="outputs", help="dir where daily-brief-<date>-<edition>.{md,html,txt} is written")
+    p_db.set_defaults(func=_cmd_daily_brief)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")

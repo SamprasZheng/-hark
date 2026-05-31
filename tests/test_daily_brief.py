@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from sharks.daily_brief import interpret_macro, sector_rotation, tw_implication
+from sharks.daily_brief import (
+    econ_calendar,
+    interpret_macro,
+    load_picks,
+    sector_rotation,
+    tw_implication,
+)
 
 
 class TestInterpretMacro:
@@ -47,3 +53,26 @@ class TestTwImplication:
 
     def test_no_data(self):
         assert "略過" in tw_implication({})
+
+
+class TestEconCalendar:
+    def test_shape(self):
+        ev = econ_calendar("2026-06-15")
+        assert isinstance(ev, list) and len(ev) >= 1
+        assert all(len(t) == 3 for t in ev)
+
+    def test_fomc_surfaces_near_meeting(self):
+        # 2026-06-17 FOMC; on 2026-06-10 it is within the 12-day window
+        assert any("FOMC" in e for _, e, _ in econ_calendar("2026-06-10"))
+
+    def test_quiet_week_has_fallback(self):
+        ev = econ_calendar("2026-06-25")  # no NFP/CPI/FOMC nearby
+        assert len(ev) >= 1  # fallback row always present
+
+
+class TestLoadPicks:
+    def test_empty_dir(self, tmp_path):
+        pk = load_picks(tmp_path)
+        assert pk["have_fom"] is False and pk["have_audit"] is False
+        assert pk["potential"] == []
+        assert "P1_SELL" in pk["exit"] and "P2_ADD" in pk["enter"]
