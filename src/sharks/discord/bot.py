@@ -39,6 +39,7 @@ from sharks.discord import wiki_ingest, wiki_rag
 from sharks.discord.config import TPE, Settings
 from sharks.discord.content import run_content_local
 from sharks.discord.council import CouncilResult, run_council_local
+from sharks.discord.feedback import FeedbackReport, compose_feedback
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -109,6 +110,37 @@ def council_to_embed(r: CouncilResult) -> discord.Embed:
         e.add_field(name="各人投票(模型)", value="\n".join(lines)[:1024], inline=False)
     models_used = ", ".join(sorted({v.model for v in r.votes if v.model}))
     e.set_footer(text=f"本地多模型議會 · {models_used} · 僅研究非建議,永不下單"[:2048])
+    return e
+
+
+_FB_META = {
+    "HOLD_AND_DEEPEN": ("🟢 不換股 · 深挖支撐", 0x2ECC71),
+    "WATCH": ("⚪ 正常健檢", 0x95A5A6),
+    "ROTATE": ("🔴 真反轉 · 執行換股", 0xE74C3C),
+}
+
+
+def feedback_to_embed(r: FeedbackReport) -> discord.Embed:
+    """Render the performance-feedback rotation throttle as one embed."""
+    label, color = _FB_META.get(r.verdict, _FB_META["WATCH"])
+    e = discord.Embed(title=f"📊 換股節流 · {label}", description=r.note[:4096], color=color)
+    basis = ("你回報" if r.perf_basis == "stated" else "推估")
+    e.add_field(name="反饋依據",
+                value=(f"績效({basis}):**{r.perf_label}** · "
+                       f"反轉:{'是 ⚠️ ' + '、'.join(r.reversal_reasons) if r.reversal else '否'}"),
+                inline=False)
+    if r.support and r.verdict != "ROTATE":
+        lines = [f"`{h.ticker}` {h.pct:.1f}% · FOM={h.final_fom if h.final_fom is not None else '?'}"
+                 f" (mom {h.momentum}/qual {h.quality})" for h in r.support]
+        e.add_field(name="支撐數據(贏家為何續抱)", value="\n".join(lines)[:1024], inline=False)
+    if r.rotation:
+        lines = [f"`{h.ticker}` {h.pct:.1f}% · {h.verdict}"
+                 + (f" · decay {h.decay_pct}%/yr" if h.decay_pct else "") for h in r.rotation]
+        head = "換股候選" if r.verdict == "ROTATE" else "減碼衛生(非換股,槓桿 decay 優先)"
+        e.add_field(name=head, value="\n".join(lines)[:1024], inline=False)
+    e.add_field(name="翻為『換股』的觸發", value="\n".join(f"• {t}" for t in r.invalidation)[:1024],
+                inline=False)
+    e.set_footer(text="recommend-only · 永不下單 · 換股需十足證據;防守可快"[:2048])
     return e
 
 
@@ -207,7 +239,8 @@ class SharksBot(discord.Client):
             "例:`/council 今晚美股該偏多還偏空`\n"
             "`/meeting <morning|noon|evening|weekly>` — 手動開會\n"
             "`/chatter [council:1]` — 立刻產一則 #雜談 速解讀(免費新聞→本地;每小時自動)\n"
-            "`/picks` — 最近一次選股 / 訊號"), inline=False)
+            "`/picks` — 最近一次選股 / 訊號\n"
+            "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -410,6 +443,21 @@ class SharksBot(discord.Client):
             body = "\n".join(f"- `{p}`" for p in paths) if paths else "(還沒有灌入任何筆記)"
             await interaction.response.send_message("最近的知識注入:\n" + body, ephemeral=True)
 
+        @tree.command(name="feedback",
+                      description="換股節流:績效強→不換股+深挖支撐;真反轉→才換股")
+        @app_commands.describe(perf="你的投組績效(可省略 → 用持倉強度推估)")
+        @app_commands.choices(perf=[
+            app_commands.Choice(name="非常好 → 續抱、深挖支撐", value="great"),
+            app_commands.Choice(name="普通", value="ok"),
+            app_commands.Choice(name="差", value="bad"),
+        ])
+        async def feedback_cmd(interaction: discord.Interaction,
+                               perf: Optional[app_commands.Choice[str]] = None):
+            await interaction.response.defer(thinking=True)
+            rep = await asyncio.to_thread(
+                compose_feedback, settings.outputs_dir, perf.value if perf else None)
+            await interaction.followup.send(embed=feedback_to_embed(rep))
+
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
         await interaction.followup.send(parts[0])
@@ -556,6 +604,11 @@ class SharksBot(discord.Client):
             )
             if council.votes:
                 embeds.append(council_to_embed(council))
+
+        # 4) performance-feedback rotation throttle (pure/local, no cost)
+        if s.feedback_in_meetings:
+            fb = await asyncio.to_thread(compose_feedback, s.outputs_dir, None)
+            embeds.append(feedback_to_embed(fb))
 
         if interaction is not None:
             for e in embeds:

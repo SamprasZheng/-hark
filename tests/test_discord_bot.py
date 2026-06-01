@@ -176,3 +176,39 @@ def test_wiki_ingest_recent_lists_newest(tmp_path):
     wiki_ingest.ingest("note one", settings=s)
     wiki_ingest.ingest("note two", settings=s)
     assert len(wiki_ingest.recent(s, 5)) == 2
+
+
+# ── performance-feedback rotation throttle ────────────────────────────────────-
+def _write_feedback_fixtures(tmp_path, regime, funding, systemic):
+    (tmp_path / "portfolio-audit-2026-06-01.json").write_text(json.dumps({
+        "as_of": "2026-06-01",
+        "portfolio_1_audit": [
+            {"ticker": "NOW", "pct": 10.0, "verdict": "HOLD", "category": "cash_equity",
+             "fom_breakdown": {"final_fom": 62, "momentum": 80, "quality": 70}},
+            {"ticker": "PG", "pct": 6.0, "verdict": "HOLD-Buffett-tier", "category": "cash_equity",
+             "fom_breakdown": {"final_fom": 55, "momentum": 50, "quality": 78}},
+            {"ticker": "LABU", "pct": 5.0, "verdict": "SELL", "category": "leveraged_etf",
+             "leveraged_scorer": {"annual_decay_pct": 60.8}},
+        ],
+    }, ensure_ascii=False), encoding="utf-8")
+    (tmp_path / "daily-health-check-2026-06-01.json").write_text(json.dumps({
+        "regime": {"label": regime}, "funding_stress": {"verdict": funding},
+        "posture": {"systemic_risk": systemic, "deploy_bear_hedges": systemic},
+    }, ensure_ascii=False), encoding="utf-8")
+
+
+def test_feedback_hold_and_deepen_when_strong_no_reversal(tmp_path):
+    from sharks.discord.feedback import compose_feedback
+    _write_feedback_fixtures(tmp_path, "late_bull", "CALM", False)
+    r = compose_feedback(tmp_path, "great")
+    assert r.verdict == "HOLD_AND_DEEPEN" and not r.reversal
+    assert any(h.ticker == "NOW" for h in r.support)        # winner surfaced for deep-dive
+    assert any(h.ticker == "LABU" for h in r.rotation)      # decay hygiene still listed
+
+
+def test_feedback_rotate_on_real_reversal(tmp_path):
+    from sharks.discord.feedback import compose_feedback
+    _write_feedback_fixtures(tmp_path, "risk_off", "STRESS", True)
+    r = compose_feedback(tmp_path, "great")                 # even if perf great
+    assert r.verdict == "ROTATE" and r.reversal
+    assert r.reversal_reasons

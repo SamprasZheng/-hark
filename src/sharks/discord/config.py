@@ -159,6 +159,9 @@ class Settings:
     # Append a short Claude-Code research narrative (今日國際局勢 / 台美股行情) to
     # each meeting. Costs a few cents per meeting; needs a non-local backend.
     meeting_research: bool = True
+    # Append the performance-feedback rotation throttle (績效強→不換股+深挖支撐;
+    # 真反轉→換股) to each meeting. Pure/local, no cost.
+    feedback_in_meetings: bool = True
 
     # ── Misc ─────────────────────────────────────────────────────────────────
     outputs_dir: Path = field(default_factory=lambda: PROJECT_ROOT / "outputs")
@@ -208,6 +211,7 @@ class Settings:
             meetings_enabled=_env("SHARKS_DISCORD_MEETINGS", "1") != "0",
             meeting_refresh=_env("SHARKS_DISCORD_MEETING_REFRESH", "1") != "0",
             meeting_research=_env("SHARKS_DISCORD_MEETING_RESEARCH", "1") != "0",
+            feedback_in_meetings=_env("SHARKS_DISCORD_FEEDBACK", "1") != "0",
             enable_voice=_env("SHARKS_DISCORD_VOICE", "0") == "1",
         )
 
