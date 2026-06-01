@@ -162,8 +162,8 @@ def compose_feedback(outputs_dir: Path, stated_perf: Optional[str] = None,
 
     if reversal:
         rep.verdict = "ROTATE"
-        rep.note = ("真反轉確認 — 放行換股紀律:先處理系統性風險與下列 SELL/TRIM。"
-                    "防守可以快(系統性觸發即動)。")
+        rep.note = ("真反轉確認 — 放行換股紀律:先處理系統性風險與下列 SELL/TRIM,"
+                    "再用 `/dipbuy` 看抄底起漲候選(換進什麼)。防守可以快(系統性觸發即動)。")
     elif strong:
         rep.verdict = "HOLD_AND_DEEPEN"
         rep.note = ("績效強 + 無真反轉 → 不主動換掉強勢現股,改深挖支撐數據(下方)。"

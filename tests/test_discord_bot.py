@@ -212,3 +212,27 @@ def test_feedback_rotate_on_real_reversal(tmp_path):
     r = compose_feedback(tmp_path, "great")                 # even if perf great
     assert r.verdict == "ROTATE" and r.reversal
     assert r.reversal_reasons
+
+
+# ── 抄底起漲 dip-buy screener (stubbed price fetch) ───────────────────────────-
+def test_dipbuy_screen_classifies(tmp_path):
+    from sharks.discord import dipbuy
+
+    def fetch(tickers):
+        series = {
+            # ~30% off high and turning up over the last month → 起漲候選
+            "RISE": [100] * 200 + [60] * 40 + [62, 64, 66, 68, 70] * 4,
+            # ~40% off high but flat at the lows → 抄底待起漲
+            "WAIT": [100] * 200 + [60] * 60,
+            # pressed against the highs → 近高不抄
+            "HIGH": list(range(50, 300)),
+        }
+        return {t: series[t] for t in tickers if t in series}
+
+    rows = dipbuy.screen(["RISE", "WAIT", "HIGH"], fetch=fetch,
+                         quality_by_ticker={"RISE": 70.0})
+    by = {c.ticker: c for c in rows}
+    assert by["RISE"].rising and by["RISE"].verdict.startswith("🟢")
+    assert (not by["WAIT"].rising) and "待起漲" in by["WAIT"].verdict
+    assert "近高" in by["HIGH"].verdict
+    assert rows[0].ticker == "RISE"      # highest dip_score ranks first

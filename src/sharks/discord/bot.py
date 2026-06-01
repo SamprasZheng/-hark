@@ -40,6 +40,7 @@ from sharks.discord.config import TPE, Settings
 from sharks.discord.content import run_content_local
 from sharks.discord.council import CouncilResult, run_council_local
 from sharks.discord.feedback import FeedbackReport, compose_feedback
+from sharks.discord.dipbuy import DipCandidate, run_dipbuy
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -144,6 +145,31 @@ def feedback_to_embed(r: FeedbackReport) -> discord.Embed:
     return e
 
 
+def dipbuy_to_embed(title: str, rows: list[DipCandidate]) -> discord.Embed:
+    """Render the 抄底起漲 screen (距高 + 盈利 + 起漲) as one embed."""
+    e = discord.Embed(
+        title=f"🎯 抄底起漲 · {title}",
+        description="距 ATH 有段 + 盈利支持 + 開始起漲。賣弱→抄底起漲(H2-2026 頂底互換)。",
+        color=0x1ABC9C,
+    )
+    hot = [c for c in rows if c.verdict.startswith(("🟢", "🟡"))]
+    wait = [c for c in rows if c.verdict.startswith("🔵")]
+    other = [c for c in rows if c not in hot and c not in wait]
+    def line(c: DipCandidate) -> str:
+        if c.last is None:
+            return f"`{c.ticker}` — {c.note}"
+        return (f"`{c.ticker}` {c.verdict} · 距高 {c.dist_ath_pct:.0f}% · "
+                f"1m {c.ret_1m:+.0f}%" + (f" · q{c.quality:.0f}" if c.quality is not None else ""))
+    if hot:
+        e.add_field(name="🟢 起漲候選(可進場觀察)", value="\n".join(line(c) for c in hot)[:1024], inline=False)
+    if wait:
+        e.add_field(name="🔵 抄底待起漲(等動能轉強)", value="\n".join(line(c) for c in wait)[:1024], inline=False)
+    if other:
+        e.add_field(name="其他(近高/太深/資料不足)", value="\n".join(line(c) for c in other)[:1024], inline=False)
+    e.set_footer(text="recommend-only · 即時 yfinance + FOM quality · 盈利 TBD=待納入 FOM 宇宙")
+    return e
+
+
 class SharksBot(discord.Client):
     def __init__(self, settings: Settings, run_once: Optional[list[str]] = None):
         intents = discord.Intents.default()
@@ -240,7 +266,8 @@ class SharksBot(discord.Client):
             "`/meeting <morning|noon|evening|weekly>` — 手動開會\n"
             "`/chatter [council:1]` — 立刻產一則 #雜談 速解讀(免費新聞→本地;每小時自動)\n"
             "`/picks` — 最近一次選股 / 訊號\n"
-            "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)"), inline=False)
+            "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)\n"
+            "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -457,6 +484,21 @@ class SharksBot(discord.Client):
             rep = await asyncio.to_thread(
                 compose_feedback, settings.outputs_dir, perf.value if perf else None)
             await interaction.followup.send(embed=feedback_to_embed(rep))
+
+        @tree.command(name="dipbuy",
+                      description="抄底起漲篩選(距高+盈利+起漲):H2-2026 頂底互換名單")
+        @app_commands.describe(which="software / crypto / all")
+        @app_commands.choices(which=[
+            app_commands.Choice(name="軟體/AI 抄底名單", value="software"),
+            app_commands.Choice(name="加密/fintech 觀察", value="crypto"),
+            app_commands.Choice(name="全部", value="all"),
+        ])
+        async def dipbuy_cmd(interaction: discord.Interaction,
+                             which: Optional[app_commands.Choice[str]] = None):
+            await interaction.response.defer(thinking=True)   # yfinance fetch ~10-20s
+            title, rows = await asyncio.to_thread(
+                run_dipbuy, which.value if which else "software", settings=settings)
+            await interaction.followup.send(embed=dipbuy_to_embed(title, rows))
 
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
