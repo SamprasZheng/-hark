@@ -1,0 +1,60 @@
+﻿[project]
+name = "sharks"
+version = "0.1.0"
+description = "Sharks trading system (Phase 1: scaffold)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Sampras Zheng", email = "[redacted-email]" }
+]
+keywords = ["trading", "swing", "llm-wiki", "mag7", "compile-first"]
+
+# Phase 1 dependencies are empty by design. The data clients are stubs that
+# raise NotImplementedError until Phase 2 wires real APIs. See docs/ROADMAP.md.
+dependencies = []
+
+[project.optional-dependencies]
+# Reserved for Phase 2 — uncomment when wiring APIs.
+data = [
+    # "yfinance",
+    # "polygon-api-client",
+    # "finnhub-python",
+    # "finviz",
+    # "ccxt",
+    # "python-dotenv",
+    # "pyyaml",
+]
+backtest = [
+    # "vectorbt",
+    # "pandas",
+    # "numpy",
+]
+dev = [
+    "pytest>=7.0",
+]
+# Discord layer (src/sharks/discord/). Kept optional so the core stays dep-free.
+#   uv pip install -e ".[discord]"   (or: uv pip install discord.py python-dotenv)
+discord = [
+    "discord.py>=2.3",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+sharks = "sharks.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sharks"]
+
+[tool.uv]
+# uv-managed Python environment
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
+

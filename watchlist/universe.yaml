@@ -1,0 +1,109 @@
+schema_version: 1
+as_of: 2026-05-30
+notes: |
+  Phase 1 universe seed. Tier 1 + Tier 2 are concrete tickers; Tier 3 mid-cap pool
+  remains empty until the Phase 4 Finviz screener is live (see
+  philosophy/04-sector-and-finviz.md). Sector buckets are pre-declared but
+  most are disabled until the macro regime detector (Phase 3) enables them.
+
+  Per philosophy/09-point-in-time.md, every edit to this file produces a
+  snapshot under watchlist/history/universe-YYYY-MM-DD.yaml at the time of
+  the edit. Backtests look up the universe as of the trade date, not today's.
+
+tiers:
+  tier1_mag7:
+    description: Seven mega-cap leaders, core watch always-on
+    tickers: [NVDA, AAPL, TSLA, AMZN, GOOGL, MSFT, META]
+
+  tier2_supply_chain:
+    description: Upstream bottlenecks and key component suppliers (US-listed or ADR)
+    tickers: [TSM, ASML, AVGO, AMD, ARM, MU, AMAT, LRCX]
+    notes: |
+      Initial seed. Phase 2 expansion may add: TXN (analog), MRVL (DPU /
+      networking), CRDO (interconnect), ANET (data center networking), TER /
+      AEHR (test equipment), HIMX (display driver). Each addition requires
+      the supply-chain-bottleneck framework justification per
+      philosophy/concepts/supply-chain-bottleneck.md.
+
+  tier3_mid_cap_pool:
+    description: |
+      Dynamic mid-cap rotation pool ("腰股"). Populated by Phase 4 Finviz
+      screener using the filter set in philosophy/04-sector-and-finviz.md.
+      Stays empty in Phase 1.
+    tickers: []
+
+  tier2b_fom_expansion:
+    description: |
+      Fix D (2026-05-30) FOM-universe expansion, mirrored from
+      src/sharks/scoring/fom.py DEFAULT_UNIVERSE so the universe-of-record and
+      the scorer agree. Promoted from
+      philosophy/_proposals/fom-regime-and-universe-2026-05-30.md.
+      US-listed only; non-US bottleneck pure plays (Taiwan/Japan/Korea/China)
+      await Phase 2 ticker-suffix support and live in
+      watchlist/serenity-supply-chain.yaml.
+    groups:
+      hardware_oem: [DELL, HPE, HPQ]
+      speculative_narrative: [MSTR, COIN, HOOD, PLTR, APP, CVNA]
+      quantum: [QBTS, IONQ, RGTI]
+      thematic_2026_buys: [RIVN, NTLA, UEC, BLDP, AOSL, LPL, TBCH, CRWV, ALGM]
+      wiki16_themes: [DNN, CCJ, BEAM, NEM, VAL, AESI, GLD]
+      serenity_supply_chain: [TSEM, MRVL, VPG, VSH]
+    notes: |
+      FOM-scoring-universe members, NOT position recommendations. Several carry
+      limited price history (CRWV, TBCH, QBTS, IONQ) → momentum defaults to
+      neutral 50 until enough history accrues.
+
+sector_buckets:
+  - name: technology
+    enabled: true
+    weight_cap_pct: 40
+  - name: semiconductors
+    enabled: true
+    weight_cap_pct: 25
+  - name: defensive_staples
+    enabled: false
+    weight_cap_pct: 15
+    enabling_trigger: SPX below 200MA AND VIX > 25
+  - name: rate_sensitive
+    enabled: false
+    weight_cap_pct: 10
+    enabling_trigger: Fed pivot probability > 0.60 per OIS or Polymarket
+  - name: energy
+    enabled: false
+    weight_cap_pct: 10
+    enabling_trigger: geopolitical disruption signal in wiki/01_macro_state.md
+  - name: financial
+    enabled: false
+    weight_cap_pct: 10
+    enabling_trigger: 10y / 2y spread re-steepening (Compiler-monitored)
+  - name: biotech_small
+    enabled: false
+    weight_cap_pct: 10
+    enabling_trigger: XBI / IBB outperforming SPX over trailing 60 days
+  - name: defense
+    enabled: false
+    weight_cap_pct: 10
+    enabling_trigger: persistent geopolitical premium
+
+price_floor_exceptions:
+  description: Tickers permitted below the $5 penny floor in philosophy/06-exclusions.md
+  tickers: []
+
+short_blacklist:
+  description: |
+    Names where direct-borrow short is structurally forbidden regardless of
+    point-in-time short interest. These names are short-only via Put or
+    sector inverse ETF (see philosophy/03-long-short-taxonomy.md iron rules).
+  tickers: [GME, AMC, BBBY, MULN]
+  note: |
+    The list is illustrative for Phase 1. Phase 2 implementation reads
+    short_interest_pct_of_float dynamically and adds names exceeding 20%
+    threshold to the runtime blacklist automatically.
+
+human_overrides:
+  description: |
+    Per-ticker manual annotations. The Risk Officer respects these.
+  - ticker: TSLA
+    notes: Sentiment-volatile; mandatory social-volume z-score check on every entry decision.
+  - ticker: TSM
+    notes: Geopolitical premium can move price independent of fundamentals; size at 60% of standard tier2 cap when US-China tension index in wiki/01_macro_state.md is "elevated".

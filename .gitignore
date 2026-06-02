@@ -1,0 +1,72 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# uv
+uv.lock
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Trading-system specific
+outputs/*.json
+outputs/*.csv
+!outputs/.gitkeep
+
+# Crypto tracker daily snapshots — immutable raw, regenerated each run (like outputs/).
+# watchlist.yaml, watchlist_history/, and analysis/*.md stay tracked (point-in-time integrity).
+crypto/data/*.json
+!crypto/data/.gitkeep
+
+# Cached / downloaded data — never commit raw market data
+raw/market_data/*.csv
+raw/market_data/*.parquet
+!raw/market_data/.gitkeep
+
+# Watchlist snapshots — committed in current form; history snapshots in
+# Phase 2+ go to watchlist/history/ which IS tracked (point-in-time integrity)
+# (no rule needed; they're kept)
+
+# Temporary downloads / scratch
+.scratch/
+*.tmp
+.karpathy-gist-raw.txt
+
+# Derived OCR working copies of broker screenshots (originals kept as provenance)
+raw/portfolio/_resized/

@@ -1,0 +1,21 @@
+# H2-2026 頂底互換 dip-buy thesis watchlist
+# Principal directive 2026-06-01. recommend-only research watchlist (NOT positions).
+# Canonical lists mirrored in src/sharks/discord/dipbuy.py (the screener reads those).
+schema_version: 1
+as_of: 2026-06-01
+thesis: |
+  預計 2026 下半年「頂底互換」:半導體(現在的領頭)高檔整理/撐盤,資金輪動到
+  落後的軟體 / AI 股 → 軟體股暴漲。操作紀律:**賣掉弱的、抄底起漲的**。
+criteria:
+  beaten_from_high: 距 ATH / 52 週高有一段(深度回檔,不是貼著高點,也不是落刀)
+  profit_support:   有盈利支持(FOM quality / 獲利能力背書,排除價值陷阱)
+  starting_to_rise: 開始起漲(短線動能轉強:1m 報酬 > 0 且站上 50 日線)
+software_ai_dipbuy:   [ADBE, MSFT, NOW, CRM, META, AI, SOUN, OUST, DOCN, RIVN]
+crypto_fintech_observe: [HOOD, SOFI, RUN, ENPH, MSTR, BTC, ETH, SOL, DOT]
+pairs_with: |
+  feedback.py 換股節流的買方:節流閥說「何時換股」(真反轉才放行);本名單說
+  「換進什麼」(距高+盈利+起漲)。賣弱→抄底起漲。
+coverage_note: |
+  ADBE/AI/SOUN/OUST/DOCN/SOFI/RUN/ENPH 尚未在 fom.py DEFAULT_UNIVERSE,所以 FOM
+  盈利維度暫缺(screener 以 yfinance 即時算距高+起漲,盈利標 TBD)。要補齊盈利維度
+  → 把這些加進 fom.py DEFAULT_UNIVERSE 後重跑週度 FOM(待主理人核可)。

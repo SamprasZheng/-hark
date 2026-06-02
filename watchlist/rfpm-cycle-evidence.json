@@ -1,0 +1,72 @@
+[
+  {
+    "key": "distributor_book_to_bill",
+    "door": "leading",
+    "signal": 1,
+    "weight": 1.0,
+    "as_of": "2026-05-31",
+    "grade": "B",
+    "note": "Arrow first YoY component growth since 2022 + B:B>1 all 3 regions; Avnet B:B>1; Microchip 4yr-high bookings",
+    "source": "Distribution Strategy Group / Digitimes"
+  },
+  {
+    "key": "list_price_hikes",
+    "door": "leading",
+    "signal": 1,
+    "weight": 1.0,
+    "as_of": "2026-05-31",
+    "grade": "C",
+    "note": "TI +15-85% (Apr 1), ADI +15% line-wide (Feb 1); even China (SG Micro/Novosense/3Peak) hiking - destock complete",
+    "source": "Digitimes (SKU% paywalled; direction multi-sourced)"
+  },
+  {
+    "key": "channel_inventory_days",
+    "door": "leading",
+    "signal": 1,
+    "weight": 0.8,
+    "as_of": "2026-05-31",
+    "grade": "A",
+    "note": "Microchip distribution inventory 26 days (historic low end), restocking expected; ADI ~6 weeks ordering-to-consumption",
+    "source": "MCHP FQ4'26 8-K"
+  },
+  {
+    "key": "analog_broad_recovery",
+    "door": "leading",
+    "signal": 1,
+    "weight": 0.8,
+    "as_of": "2026-05-31",
+    "grade": "A",
+    "note": "ADI +30% broad-based recovery; NXP Ind&IoT +24%; SYNA Core IoT +31%; DIOD 6th straight double-digit qtr",
+    "source": "ADI / NXPI / SYNA / DIOD 8-Ks"
+  },
+  {
+    "key": "ai_datacenter_power_pull",
+    "door": "leading",
+    "signal": 1,
+    "weight": 0.6,
+    "as_of": "2026-05-31",
+    "grade": "A",
+    "note": "MPWR Enterprise Data +97.7%; ON AI-DC +30% QoQ; VICR backlog +70%/B:B>2 - the AI overlay on the cyclical turn",
+    "source": "MPWR / ON / VICR earnings"
+  },
+  {
+    "key": "smartphone_units",
+    "door": "lagging",
+    "signal": -1,
+    "weight": 1.0,
+    "as_of": "2026-05-31",
+    "grade": "B",
+    "note": "IDC: smartphones -12.9% to 1.12B in 2026 (steepest on record), memory-shortage starves handset BoM; +2% 2027",
+    "source": "IDC"
+  },
+  {
+    "key": "handset_rf_content",
+    "door": "lagging",
+    "signal": 0,
+    "weight": 0.6,
+    "as_of": "2026-05-31",
+    "grade": "B",
+    "note": "SWKS: blended RF content 'roughly flat'; RFFE TAM $15.4B(2024)->$17B(2030) - content tailwind has flattened",
+    "source": "SWKS Q2'26 call / Yole"
+  }
+]

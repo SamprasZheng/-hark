@@ -1,0 +1,43 @@
+# weights.yaml -- the calibratable evaluation-function knobs the checklist reads.
+#
+# The confidence LADDER mirrors philosophy/05-decision-rubric.md (0.50 / 0.65 / 0.80
+# are EXISTING anchors, not invented). The bounded `adjustments` are conservative
+# PRE-CALIBRATION seeds; src/sharks/decision/calibrate.py refreshes them (and records
+# the measured IC / win-rate) from the walk-forward FOM validation backtest. Nothing
+# in this file changes position caps -- it only shapes the confidence score.
+#
+# calibration_status flips to "calibrated-<date>" once calibrate.py has folded in a
+# real validation artifact. Until then the checklist flags confidence as provisional.
+schema_version: 1
+calibration_status: "phase1-seed-uncalibrated"
+
+# base confidence by how many of the 4 signal dimensions (02-signal-taxonomy) align
+confidence_ladder:
+  zero: 0.30
+  one_dimension: 0.42
+  two_aligned: 0.55
+  three_aligned: 0.65
+  confluence_four: 0.80
+
+# bounded nudges (each small; the ladder stays the primary driver)
+adjustments:
+  fom_top_quartile: 0.05
+  fom_bottom_quartile: -0.05
+  valuation_cheap_15pct: 0.04
+  valuation_rich_15pct: -0.06
+  order_accelerating: 0.04
+  order_decelerating: -0.10
+  cycle_rollover: -0.06
+  cycle_expansion: 0.04
+
+clamp:
+  min: 0.0
+  max: 0.95
+
+# populated by calibrate.py from outputs/fom-validation-*.json (observed, not a knob)
+observed:
+  best_horizon: null
+  ic_mean: null
+  ic_ir: null
+  hit_rate: null
+  source_artifact: null
