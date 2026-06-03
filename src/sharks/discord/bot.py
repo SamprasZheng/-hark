@@ -35,7 +35,7 @@ from sharks.discord.brains import (
     ask_wiki,
     list_ollama_models,
 )
-from sharks.discord import wiki_ingest, wiki_rag
+from sharks.discord import vision, wiki_ingest, wiki_rag
 from sharks.discord.config import TPE, Settings
 from sharks.discord.content import run_content_local
 from sharks.discord.council import CouncilResult, run_council_local
@@ -333,6 +333,10 @@ class SharksBot(discord.Client):
             "`/notebook <問題>` — 用本地 qwen 讀整個 $hark 回答(附出處);或在 **#筆記本** 直接打字\n"
             "`/ingest <文字或網址> [標題]` — 把知識灌進 $hark;或在 **#知識注入** 直接貼(手機也行)\n"
             "`/wikisearch <關鍵字>` 直接找片段 · `/recent` 看最近灌入"), inline=False)
+        e.add_field(name="🖼️ 截圖判讀(本地 vision · 私密)", value=(
+            "`/portfolio <圖>` — 判讀投組截圖:持倉抽取 + 集中/槓桿風險讀數\n"
+            "`/factcheck <圖>` — 查核貼文/損益截圖:可查核 vs 紅旗(報酬異常/拉群/截圖非證據)\n"
+            "或直接把圖丟進 **#截圖評估** / **#查核**"), inline=False)
         e.add_field(name="⚙️ 其他", value="`/status` · `!cmd` / `!help` 這張表", inline=False)
         e.set_footer(text="只建議不下單 · 議會/人格跑本地 · /ask 唯讀")
         return e
@@ -592,6 +596,32 @@ class SharksBot(discord.Client):
                 cufolio_optimize, syms, solver=slv, w_max=wmax, num_scen=3000)
             await interaction.followup.send(embed=optimize_to_embed(res, label, slv))
 
+        # ── 截圖判讀(本地 vision · 私密不外傳)──────────────────────────────────
+        @tree.command(name="portfolio",
+                      description="判讀投組截圖:持倉抽取+集中/槓桿風險讀數(本地 vision,私密)")
+        @app_commands.describe(image="投組/持倉截圖")
+        async def portfolio_cmd(interaction: discord.Interaction, image: discord.Attachment):
+            if not (image.content_type or "").startswith("image/"):
+                await interaction.response.send_message("請附一張圖片。", ephemeral=True)
+                return
+            await interaction.response.defer(thinking=True)
+            data = await image.read()
+            res = await asyncio.to_thread(vision.eval_portfolio_image, data, settings)
+            await self._send_followup(interaction, res.message if res.ok else f"⚠️ {res.error}")
+
+        @tree.command(name="factcheck",
+                      description="查核貼文/損益截圖:紅旗 + FOM實際數據對照(deep=web 深查)")
+        @app_commands.describe(image="要查核的截圖", deep="深度 web 查核(Claude+WebSearch,較慢)")
+        async def factcheck_cmd(interaction: discord.Interaction, image: discord.Attachment,
+                                deep: bool = False):
+            if not (image.content_type or "").startswith("image/"):
+                await interaction.response.send_message("請附一張圖片。", ephemeral=True)
+                return
+            await interaction.response.defer(thinking=True)
+            data = await image.read()
+            res = await asyncio.to_thread(vision.factcheck_image, data, settings, deep_web=deep)
+            await self._send_followup(interaction, res.message if res.ok else f"⚠️ {res.error}")
+
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
         await interaction.followup.send(parts[0])
@@ -604,6 +634,21 @@ class SharksBot(discord.Client):
             return
         ch_name = getattr(message.channel, "name", "")
         content = (message.content or "").strip()
+
+        # 截圖判讀:an image dropped in 截圖評估/查核 → local vision analysis.
+        if message.attachments and ch_name in (C.CH_SHOTEVAL, C.CH_FACTCHECK):
+            imgs = [a for a in message.attachments
+                    if (a.content_type or "").startswith("image/")]
+            if imgs:
+                fn = (vision.eval_portfolio_image if ch_name == C.CH_SHOTEVAL
+                      else vision.factcheck_image)
+                async with message.channel.typing():
+                    data = await imgs[0].read()
+                    res = await asyncio.to_thread(fn, data, self.settings)
+                for c in _chunks(res.message if res.ok else f"⚠️ {res.error}"):
+                    await message.channel.send(c)
+                return
+
         if not content:
             return
 

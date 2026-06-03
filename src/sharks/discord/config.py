@@ -38,12 +38,15 @@ CH_CONTENT = "自媒體"
 CH_NOTEBOOK = "筆記本"     # ask-the-folder: local qwen RAG over $hark (NotebookLM)
 CH_INGEST = "知識注入"     # paste text/URL → ingested into $hark wiki
 CH_GENERAL = "雜談"
+CH_SHOTEVAL = "截圖評估"   # drop a portfolio 截圖 → 持倉抽取 + 風險讀數 (local vision)
+CH_FACTCHECK = "查核"      # drop a post/PnL 截圖 → 可查核 vs 紅旗 (local vision)
 
 # Full minimal channel layout under one category, in display order.
 MINIMAL_CATEGORY = "PolkaSharks"
 MINIMAL_CHANNELS: tuple[str, ...] = (
     CH_STATUS, CH_MORNING, CH_NOON, CH_EVENING, CH_MARKET,
     CH_PICKS, CH_ASK, CH_COUNCIL, CH_CONTENT, CH_NOTEBOOK, CH_INGEST, CH_GENERAL,
+    CH_SHOTEVAL, CH_FACTCHECK,
 )
 # Optional voice channels (created by setup_guild only if SHARKS_DISCORD_VOICE=1).
 VOICE_CHANNELS: tuple[str, ...] = ("盤中-trading-floor", "深夜")
@@ -124,6 +127,10 @@ class Settings:
     # that returns empty content when the budget is spent thinking. qwen2.5:7b
     # answers 繁中 directly. Override with SHARKS_DISCORD_LOCAL_MODEL.
     local_model: str = "qwen2.5:7b"
+    # Local Ollama VISION model for 截圖判讀 (portfolio eval + post fact-check).
+    # "" → auto-pick the first vision-capable model pulled (qwen2.5vl / llama3.2-vision
+    # / minicpm-v / llava). Override with SHARKS_DISCORD_VISION_MODEL.
+    vision_model: str = ""
     persona_temperature: float = 0.6
     persona_max_tokens: int = 700
     default_persona: str = "sharks"    # house view if none specified
@@ -184,6 +191,7 @@ class Settings:
             claude_timeout_s=_env_int("SHARKS_DISCORD_CLAUDE_TIMEOUT_S", 180),
             add_dirs=add_dirs,
             local_model=_env("SHARKS_DISCORD_LOCAL_MODEL", "qwen2.5:7b"),
+            vision_model=_env("SHARKS_DISCORD_VISION_MODEL", ""),
             persona_temperature=_env_float("SHARKS_DISCORD_PERSONA_TEMP", 0.6),
             persona_max_tokens=_env_int("SHARKS_DISCORD_PERSONA_MAXTOK", 700),
             default_persona=_env("SHARKS_DISCORD_DEFAULT_PERSONA", "sharks").lower(),
