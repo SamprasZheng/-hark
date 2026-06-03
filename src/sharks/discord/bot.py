@@ -40,7 +40,13 @@ from sharks.discord.config import TPE, Settings
 from sharks.discord.content import run_content_local
 from sharks.discord.council import CouncilResult, run_council_local
 from sharks.discord.feedback import FeedbackReport, compose_feedback
-from sharks.discord.dipbuy import DipCandidate, run_dipbuy
+from sharks.discord.dipbuy import (
+    CRYPTO_FINTECH_OBSERVE,
+    SOFTWARE_AI_DIPBUY,
+    DipCandidate,
+    run_dipbuy,
+)
+from sharks.scoring.cufolio_optimize import optimize as cufolio_optimize
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -170,6 +176,56 @@ def dipbuy_to_embed(title: str, rows: list[DipCandidate]) -> discord.Embed:
     return e
 
 
+# ── cuFOLIO Mean-CVaR (GPU cuOpt on RTX 5070) ────────────────────────────────
+_CRYPTO_YF = {"BTC": "BTC-USD", "ETH": "ETH-USD", "SOL": "SOL-USD", "DOT": "DOT-USD"}
+_MEGACAP = ["MSFT", "AAPL", "GOOGL", "AMZN", "META", "NVDA", "AVGO", "AMD"]
+
+
+def _resolve_universe(uni: str, tickers: Optional[str]) -> tuple[list[str], str]:
+    """Map a /optimize universe choice (or free-text tickers) to a symbol list."""
+    if tickers:
+        syms = [s.strip().upper() for s in tickers.replace(",", " ").split() if s.strip()]
+        return syms, f"自訂 {len(syms)} 檔"
+    if uni == "crypto":
+        return [_CRYPTO_YF.get(t, t) for t in CRYPTO_FINTECH_OBSERVE], "加密/fintech"
+    if uni == "megacap":
+        return list(_MEGACAP), "大型科技權值"
+    return list(SOFTWARE_AI_DIPBUY), "軟體/AI 抄底"
+
+
+def optimize_to_embed(res: dict, label: str, solver: str) -> discord.Embed:
+    """Render a cuFOLIO Mean-CVaR weight suggestion as one embed."""
+    if not res.get("ok"):
+        e = discord.Embed(title="🧮 Mean-CVaR 最佳化", color=0xE74C3C,
+                          description=f"⚠️ {res.get('error', '失敗')}")
+        if res.get("detail"):
+            e.add_field(name="detail", value=f"```{str(res['detail'])[:300]}```", inline=False)
+        return e
+    dev = "GPU cuOpt · RTX 5070" if solver == "cuopt" else "CPU CLARABEL"
+    er, cvar = res.get("expected_return"), res.get("CVaR")
+    er_a = f"{er * 252 * 100:+.0f}%/yr" if isinstance(er, (int, float)) else "—"   # daily→年化(約)
+    cvar_s = f"{cvar * 100:.2f}%/day" if isinstance(cvar, (int, float)) else "—"
+    e = discord.Embed(
+        title=f"🧮 Mean-CVaR 最佳建議權重 · {label}",
+        description=(f"在候選集合上最小化尾部風險(CVaR@95%)的 long-only 配置。\n"
+                     f"預期報酬 ≈ **{er_a}** · 日 CVaR ≈ **{cvar_s}** · "
+                     f"納入 **{res.get('used', '?')}/{res.get('requested', '?')}** 檔"),
+        color=0x9B59B6)
+    rows = res.get("top") or []
+    held = [(t, w) for t, w in rows if w and w > 0.001]
+    if held:
+        bars = "\n".join(f"`{t:<6}` {'█' * max(1, round(w * 20))} {w * 100:4.1f}%"
+                         for t, w in held)
+        e.add_field(name="建議權重(long-only)", value=bars[:1024], inline=False)
+    zeros = [t for t, w in rows if not w or w <= 0.001]
+    if zeros:
+        e.add_field(name="排除(權重→0:尾部風險/相關性不划算)",
+                    value=" ".join(f"`{t}`" for t in zeros)[:1024], inline=False)
+    e.set_footer(text=f"recommend-only · {dev} · 解題 {res.get('solve_time', '?')}s · "
+                      f"非投資建議,Risk Officer 與證據門檻仍有最終否決權")
+    return e
+
+
 class SharksBot(discord.Client):
     def __init__(self, settings: Settings, run_once: Optional[list[str]] = None):
         intents = discord.Intents.default()
@@ -267,7 +323,9 @@ class SharksBot(discord.Client):
             "`/chatter [council:1]` — 立刻產一則 #雜談 速解讀(免費新聞→本地;每小時自動)\n"
             "`/picks` — 最近一次選股 / 訊號\n"
             "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)\n"
-            "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)"), inline=False)
+            "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)\n"
+            "`/optimize [universe|tickers] [cap] [solver]` — GPU Mean-CVaR 最佳權重(cuFOLIO/RTX 5070)"),
+            inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -499,6 +557,40 @@ class SharksBot(discord.Client):
             title, rows = await asyncio.to_thread(
                 run_dipbuy, which.value if which else "software", settings=settings)
             await interaction.followup.send(embed=dipbuy_to_embed(title, rows))
+
+        @tree.command(name="optimize",
+                      description="GPU Mean-CVaR 最佳權重(cuFOLIO/cuOpt on RTX 5070;只建議)")
+        @app_commands.describe(
+            universe="預設名單;給 tickers 則覆蓋",
+            tickers="自訂標的,逗號或空白分隔",
+            cap="單檔權重上限 0.05–1.0(預設 0.25)",
+            solver="cuopt=GPU(預設)/ clarabel=CPU")
+        @app_commands.choices(
+            universe=[
+                app_commands.Choice(name="軟體/AI 抄底名單", value="software"),
+                app_commands.Choice(name="加密/fintech 觀察", value="crypto"),
+                app_commands.Choice(name="大型科技權值", value="megacap"),
+            ],
+            solver=[
+                app_commands.Choice(name="GPU cuOpt(RTX 5070)", value="cuopt"),
+                app_commands.Choice(name="CPU CLARABEL", value="clarabel"),
+            ])
+        async def optimize_cmd(interaction: discord.Interaction,
+                               universe: Optional[app_commands.Choice[str]] = None,
+                               tickers: Optional[str] = None,
+                               cap: Optional[float] = None,
+                               solver: Optional[app_commands.Choice[str]] = None):
+            await interaction.response.defer(thinking=True)   # yfinance + GPU ~15-40s
+            uni = universe.value if universe else "software"
+            slv = solver.value if solver else "cuopt"
+            wmax = max(0.05, min(1.0, cap if cap else 0.25))
+            syms, label = _resolve_universe(uni, tickers)
+            if len(syms) < 2:
+                await interaction.followup.send("⚠️ 需要至少 2 檔有效標的(逗號分隔)")
+                return
+            res = await asyncio.to_thread(
+                cufolio_optimize, syms, solver=slv, w_max=wmax, num_scen=3000)
+            await interaction.followup.send(embed=optimize_to_embed(res, label, slv))
 
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
