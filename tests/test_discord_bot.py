@@ -103,15 +103,25 @@ def test_parse_claude_success_error_and_raw():
 
 # ── council debate engine (stubbed LLM) ──────────────────────────────────────-
 def test_council_engine_with_stub_ask():
+    """Drive the full cross-examination debate (開場→質詢→答辯→投票→正反方→主席)
+    with a marker-branching stub LLM and assert each artifact is produced."""
     from sharks.discord import council as CO
     from sharks.discord.personas import ChatPersona
 
     def ask(system, user, max_tokens):
-        if "其他分析師的立場" in user:          # round 2: 質疑 + 投票
-            return "我反駁 sam。\n投票: 多 | 信心: 4 | 動作: 持有 ARM", True
-        if "議會票數" in user:                   # chair synthesis
-            return "結論:整體偏多,最大分歧在風險控管。保持紀律。", True
-        return "看多。半導體強勢。", True         # round 1: 立場
+        if CO._M_CROSS in user:        # R2 交叉質詢: name an opponent + ask
+            return "提問對象: sam·長線\n問題: 你忽略了估值過高的風險?", True
+        if CO._M_DEFEND in user:       # R3 答辯
+            return "我承認估值不低,但 AI 成長更快,本益比會被消化。", True
+        if CO._M_VOTE in user:         # R4 最終投票
+            return "聽完後我仍看多。\n投票: 多 | 信心: 4 | 動作: 持有 ARM", True
+        if CO._M_LEDGER in user:       # R5 正反方對照
+            return ("【正方·看多】\n- 半導體訂單強(數據: AI 訂單+30%)\n"
+                    "【反方·看空】\n- 估值偏高(數據: 本益比 35x)\n"
+                    "【關鍵分歧】成長能否消化估值\n【待驗證】下季財報", True)
+        if CO._M_CHAIR in user:        # chair synthesis
+            return "結論:整體偏多,最大分歧在估值。保持紀律。", True
+        return "看多。半導體強勢,AI 訂單增 30%。", True   # R1 開場立場
 
     council = [ChatPersona("huang", "huang·黃", "SYS", "huang.md"),
                ChatPersona("sam", "sam·長線", "SYS", "sam.md")]
@@ -122,7 +132,26 @@ def test_council_engine_with_stub_ask():
     assert r.ok and len(r.votes) == 2
     assert all(v.vote == "多" and v.conviction == 4 for v in r.votes)
     assert r.tally["多"] == 2 and r.lean() == "多"
+    # cross-examination: huang questioned sam, sam answered (交叉辯論)
+    assert any(ex.target == "sam" and ex.question and ex.answer for ex in r.exchanges)
+    by = {v.persona: v for v in r.votes}
+    assert by["sam"].answer and "估值" in by["sam"].answer
+    # 正反方數據對照 parsed out of the 書記 ledger
+    assert r.bull and r.bear and r.crux
     assert "結論" in r.conclusion
+
+
+def test_council_ledger_and_question_parsers():
+    from sharks.discord.council import _parse_ledger, _parse_question, Vote
+
+    bull, bear, crux, unresolved = _parse_ledger(
+        "【正方·看多】\n- 訂單強(數據: +30%)\n- 毛利升\n"
+        "【反方·看空】\n- 估值貴(數據: 35x)\n【關鍵分歧】估值 vs 成長\n【待驗證】財報")
+    assert bull and bear and "估值" in crux and unresolved
+    # question target matches an opponent by title; question text extracted
+    others = [Vote("sam", "sam·長線"), Vote("bear", "bear·空頭")]
+    tgt, q = _parse_question("提問對象: bear·空頭\n問題: 你的停損點在哪?", others)
+    assert tgt == "bear" and "停損" in q
 
 
 def test_council_multimodel_assignment():

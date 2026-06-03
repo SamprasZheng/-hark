@@ -47,6 +47,7 @@ from sharks.discord.dipbuy import (
     run_dipbuy,
 )
 from sharks.scoring.cufolio_optimize import optimize as cufolio_optimize
+from sharks.scoring import chokepoint
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -94,30 +95,79 @@ def digest_to_embeds(d: MeetingDigest, narrative: Optional[str] = None) -> list[
     return embeds
 
 
-def council_to_embed(r: CouncilResult) -> discord.Embed:
-    """Render a council debate (vote tally + chair conclusion) as one embed."""
+def council_to_embeds(r: CouncilResult) -> list[discord.Embed]:
+    """Render a cross-examination debate as up to 2 embeds:
+    (1) 結論 + 正反方數據對照 + 票數/各人投票, (2) 交叉質詢逐筆 Q→答辯."""
     lean = r.lean()
-    e = discord.Embed(
+    t = r.tally or {}
+    e1 = discord.Embed(
         title=f"🗳️ 議會結論 · 傾向 {_VOTE_EMOJI.get(lean, '')} {lean}",
-        description=(r.conclusion or "—")[:4096],
+        description=(r.conclusion or "—")[:2048],
         color=_COLORS["council"],
     )
-    t = r.tally or {}
-    e.add_field(
-        name="投票",
+    e1.add_field(
+        name="票數",
         value=(f"🟢 多 {t.get('多', 0)} · 🔴 空 {t.get('空', 0)} · "
                f"⚪ 中性 {t.get('中性', 0)} · 平均信心 {t.get('avg_conviction', '?')}/5"),
         inline=False,
     )
+    if r.bull or r.bear:
+        if r.bull:
+            e1.add_field(name="🟢 正方 · 看多",
+                         value="\n".join(f"• {b}" for b in r.bull)[:1024], inline=True)
+        if r.bear:
+            e1.add_field(name="🔴 反方 · 看空",
+                         value="\n".join(f"• {b}" for b in r.bear)[:1024], inline=True)
+    elif r.ledger:                                   # parse failed → show raw ledger
+        e1.add_field(name="⚔️ 正反方對照", value=r.ledger[:1024], inline=False)
+    if r.crux or r.unresolved:
+        crux = (f"⚖️ 分歧:{r.crux}" if r.crux else "")
+        unres = (f"\n🔍 待驗證:{r.unresolved}" if r.unresolved else "")
+        e1.add_field(name="關鍵", value=(crux + unres).strip()[:1024], inline=False)
     lines = [
         f"{_VOTE_EMOJI.get(v.vote, '')} **{v.title}** `{v.model}` 信心{v.conviction} · {v.action or '—'}"
         for v in r.votes
     ]
     if lines:
-        e.add_field(name="各人投票(模型)", value="\n".join(lines)[:1024], inline=False)
+        e1.add_field(name="🗳️ 各人投票(模型)", value="\n".join(lines)[:1024], inline=False)
     models_used = ", ".join(sorted({v.model for v in r.votes if v.model}))
-    e.set_footer(text=f"本地多模型議會 · {models_used} · 僅研究非建議,永不下單"[:2048])
-    return e
+    e1.set_footer(text=f"本地多模型議會 · {models_used} · 僅研究非建議,永不下單"[:2048])
+    embeds = [e1]
+
+    # (2) 交叉辯論 — group questions by the persona being interrogated
+    if r.exchanges:
+        e2 = discord.Embed(title="🔁 交叉質詢 · 互相提問與答辯",
+                           color=_COLORS.get("council", 0x5865F2))
+        by_target: dict[str, list] = {}
+        for ex in r.exchanges:
+            by_target.setdefault(ex.target, []).append(ex)
+        for tname, exs in list(by_target.items())[:25]:
+            qs = "\n".join(f"❓ {ex.asker_title}:{ex.question}" for ex in exs)
+            ans = exs[0].answer or "(未答辯)"
+            val = f"{qs}\n\n💬 **{exs[0].target_title}**:{ans}"
+            e2.add_field(name=f"🎯 質詢 {exs[0].target_title}", value=val[:1024], inline=False)
+        if e2.fields:
+            embeds.append(e2)
+    return embeds
+
+
+def council_to_embed(r: CouncilResult) -> discord.Embed:
+    """Back-compat single-embed view (結論 + 正反方); callers prefer council_to_embeds."""
+    return council_to_embeds(r)[0]
+
+
+def _brief_with_news(base: str, n: int = 6) -> str:
+    """Append a few live RSS headlines so the debate argues over 數據+消息, not data
+    alone. Best-effort — network failure just returns the data-only brief."""
+    try:
+        from sharks.discord.chatter import fetch_headlines
+        heads = fetch_headlines(n)[0]
+    except Exception:
+        heads = []
+    if not heads:
+        return base
+    news = "\n".join(f"- {h}" for h in heads[:n])
+    return f"{base}\n\n近期消息(point-in-time 頭條):\n{news}"
 
 
 _FB_META = {
@@ -226,6 +276,34 @@ def optimize_to_embed(res: dict, label: str, solver: str) -> discord.Embed:
     return e
 
 
+def chokepoint_to_embed(result: dict) -> discord.Embed:
+    """Render a chokepoint analysis (bottleneck -> FOM-scored candidates) as one embed."""
+    bt_types = chokepoint.BOTTLENECK_TYPES
+    e = discord.Embed(
+        title=f"🔗 卡脖子分析 · {result['topic'][:200]}",
+        description=("供應鏈瓶頸 → 握有瓶頸的公司 → 用你的 FOM 重新評分。研究非建議。"
+                     + ("" if result["matched"] else " ⚠️ 無對應 lane,以下為本地 LLM 提名,需查證。")),
+        color=0x8E44AD,
+    )
+    for lane in result["lanes"][:3]:
+        lines = []
+        for r in (lane.get("candidates") or [])[:6]:
+            rr = f"{r['ret_3m']:+.0f}%" if r.get("ret_3m") is not None else "—"
+            lines.append(
+                f"`{r['ticker']}` FOMα{r.get('final_fom_alpha', 0):.0f} · 護城河{r.get('ip_defensibility', '?')}"
+                f" · 逆勢{r.get('contrarian', 0):.0f} · 動能{r.get('momentum', 0):.0f} · 近3月{rr}")
+        bt = bt_types.get(lane.get("bottleneck_type"))
+        body = f"**瓶頸**:{lane['bottleneck']}" + (f"({bt})" if bt else "")
+        if lane.get("stack"):
+            body += "\n**stack**:" + " → ".join(lane["stack"])
+        body += "\n" + ("\n".join(lines) if lines else "(無有效標的資料)")
+        if lane.get("thesis_breaker"):
+            body += f"\n_破論點:{lane['thesis_breaker']}_"
+        e.add_field(name=f"▸ {lane['label']}", value=body[:1024], inline=False)
+    e.set_footer(text="recommend-only · FOM 自評分(不採信外部分數)· 永不下單")
+    return e
+
+
 class SharksBot(discord.Client):
     def __init__(self, settings: Settings, run_once: Optional[list[str]] = None):
         intents = discord.Intents.default()
@@ -317,7 +395,7 @@ class SharksBot(discord.Client):
             "在 **#分析師議會** 打 `huang: 你的問題`(預設 sharks)\n"
             "`/personas` — 列出全部人格"), inline=False)
         e.add_field(name="🗳️ 議會 / 會議", value=(
-            "`/council <主題>` — 6 人質疑→投票→結論(本地)\n"
+            "`/council <主題>` — 交叉辯論:開場→互相質詢→答辯→投票→正反方數據(本地)\n"
             "例:`/council 今晚美股該偏多還偏空`\n"
             "`/meeting <morning|noon|evening|weekly>` — 手動開會\n"
             "`/chatter [council:1]` — 立刻產一則 #雜談 速解讀(免費新聞→本地;每小時自動)\n"
@@ -337,6 +415,9 @@ class SharksBot(discord.Client):
             "`/portfolio <圖>` — 判讀投組截圖:持倉抽取 + 集中/槓桿風險讀數\n"
             "`/factcheck <圖>` — 查核貼文/損益截圖:可查核 vs 紅旗(報酬異常/拉群/截圖非證據)\n"
             "或直接把圖丟進 **#截圖評估** / **#查核**"), inline=False)
+        e.add_field(name="🔗 卡脖子(供應鏈瓶頸)", value=(
+            "`/chokepoint <主題>` — 拆瓶頸 → 握瓶頸的公司 → 你的 FOM 評分\n"
+            "例:`/chokepoint AI 工廠` · `/chokepoint CPO 矽光子` · `/chokepoint 液冷`"), inline=False)
         e.add_field(name="⚙️ 其他", value="`/status` · `!cmd` / `!help` 這張表", inline=False)
         e.set_footer(text="只建議不下單 · 議會/人格跑本地 · /ask 唯讀")
         return e
@@ -407,23 +488,25 @@ class SharksBot(discord.Client):
             await interaction.response.defer(thinking=True)
             await self.post_meeting(kind, interaction=interaction)
 
-        @tree.command(name="council", description="召開分析師議會辯論(本地模型:質疑→投票→結論)")
+        @tree.command(name="council", description="議會交叉辯論(開場→互相質詢→答辯→投票→正反方→結論)")
         @app_commands.describe(topic="要辯論的主題")
         async def council_cmd(interaction: discord.Interaction, topic: str):
             await interaction.response.defer(thinking=True)
             digest = compose_evening(settings, datetime.now(TPE))
+            base = digest_to_brief(digest)
             result = await asyncio.to_thread(
-                run_council_local, topic, digest_to_brief(digest),
-                model=settings.effective_council_model(),
-                council_names=tuple(settings.council_personas),
-                chair_name=settings.council_chair,
-                council_models=tuple(settings.council_models),
-                personas=self.personas, settings=settings,
-            )
+                lambda: run_council_local(
+                    topic, _brief_with_news(base, 6),
+                    model=settings.effective_council_model(),
+                    council_names=tuple(settings.council_personas),
+                    chair_name=settings.council_chair,
+                    council_models=tuple(settings.council_models),
+                    personas=self.personas, settings=settings,
+                ))
             if not result.votes:
                 await interaction.followup.send(f"議會無法召開:{result.note or '人格載入失敗'}")
                 return
-            await interaction.followup.send(embed=council_to_embed(result))
+            await interaction.followup.send(embeds=council_to_embeds(result))
 
         @tree.command(name="content",
                       description="生成自媒體草稿(x/blog/youtube)→ 只產草稿,不自動發佈")
@@ -622,6 +705,18 @@ class SharksBot(discord.Client):
             res = await asyncio.to_thread(vision.factcheck_image, data, settings, deep_web=deep)
             await self._send_followup(interaction, res.message if res.ok else f"⚠️ {res.error}")
 
+        @tree.command(name="chokepoint",
+                      description="卡脖子分析:供應鏈瓶頸 → 握瓶頸的公司 → 你的 FOM 評分")
+        @app_commands.describe(topic="主題/終端系統,例:AI 工廠 · HBM · CPO 矽光子 · 液冷 · RF 前端")
+        async def chokepoint_cmd(interaction: discord.Interaction, topic: str):
+            await interaction.response.defer(thinking=True)   # yfinance fetch ~15-30s
+            res = await asyncio.to_thread(chokepoint.analyze, topic, settings)
+            if not res["lanes"]:
+                await interaction.followup.send(
+                    "沒有對應的 lane,且本地 LLM 未提名標的。試試:AI 工廠 / HBM / CPO / 液冷 / RF 前端。")
+                return
+            await interaction.followup.send(embed=chokepoint_to_embed(res))
+
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
         await interaction.followup.send(parts[0])
@@ -782,7 +877,7 @@ class SharksBot(discord.Client):
                 personas=self.personas, settings=s,
             )
             if council.votes:
-                embeds.append(council_to_embed(council))
+                embeds.extend(council_to_embeds(council))
 
         # 4) performance-feedback rotation throttle (pure/local, no cost)
         if s.feedback_in_meetings:
@@ -847,7 +942,7 @@ class SharksBot(discord.Client):
                 personas=self.personas, settings=s,
             )
             if result.votes:
-                await ch.send(embed=council_to_embed(result))
+                await ch.send(embeds=council_to_embeds(result))
 
 
 def main(argv: Optional[list[str]] = None) -> int:
