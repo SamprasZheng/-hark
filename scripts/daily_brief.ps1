@@ -1,11 +1,17 @@
 # scripts/daily_brief.ps1
-# Generate the 游庭澔-style daily brief for ONE edition, as a cadence-correct CHAIN:
-#   all editions : refresh free news RSS  (cheap; fills the 隔夜頭條 / 速解讀 slot)
-#   evening       : refresh portfolio-audit DAILY (so 進出場建議 is fresh)
-#                   refresh fom-alpha 潛力股 ONLY on the weekly day (Monday) --
-#                   FOM is a 3-6m tilt, not a daily timer (per daily_routine philosophy)
-#   then          : render the brief (MD + HTML + Discord)
-# Local file generation only -- NO outbound post. ASCII-only per repo convention.
+# Generate the analyst-style (Yu Ting-hao) daily brief for ONE edition, as a
+# cadence-correct CHAIN:
+#   all editions : refresh free news RSS  (cheap; fills the overnight-headlines / quick-read slot)
+#   evening      : refresh portfolio-audit DAILY (so the entry/exit picks are fresh)
+#                  refresh fom-alpha picks ONLY on the weekly day (Monday) --
+#                  FOM is a 3-6m tilt, not a daily timer (per daily_routine philosophy)
+#   then         : render the brief (MD + HTML + Discord)
+# Local file generation only -- NO outbound post.
+#
+# ASCII-ONLY per repo convention: PowerShell 5.1 (Task Scheduler default) reads a
+# UTF-8 file as the system ANSI codepage and MIS-PARSES inline non-ASCII -- a CJK
+# byte in a double-quoted string can swallow the closing quote and break the whole
+# script. Keep every byte ASCII here; CJK lives in the Python layer, not this shim.
 #
 # Usage:
 #   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\daily_brief.ps1 -Edition morning
@@ -27,7 +33,7 @@ if (-not (Test-Path $py)) { Write-Error "venv python not found: $py (run from $r
 if ($Edition -eq "evening") {
     & $py -m sharks.backtest.portfolio_audit
     if ((Get-Date).DayOfWeek -eq "Monday") {
-        Write-Output "[chain] weekly day -> refreshing FOM-alpha 潛力股"
+        Write-Output "[chain] weekly day -> refreshing FOM-alpha picks"
         & $py -m sharks.scoring.fom_alpha
     } else {
         Write-Output "[chain] non-weekly day -> keeping last weekly FOM picks (FOM = 3-6m tilt)"
