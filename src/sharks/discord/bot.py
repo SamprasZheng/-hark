@@ -202,13 +202,32 @@ class SharksBot(discord.Client):
         if self.run_once:
             return  # one-shot: skip command sync + scheduler
         self._register_commands()
-        guild = self._guild()
-        if guild:
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)   # instant in one guild
-        else:
-            await self.tree.sync()
-        self.scheduler.start()
+        # NOTE: do NOT sync here — setup_hook runs before the gateway connects, so
+        # self.guilds is empty and a guild sync silently degrades to a *global*
+        # sync (up to ~1h to show new commands). We sync in on_ready instead, where
+        # the guild is known → instant. Wrapped so a sync hiccup can't crash startup.
+        try:
+            self.scheduler.start()
+        except Exception as exc:  # never let the scheduler take the bot down
+            log.exception("scheduler failed to start: %s", exc)
+
+    async def _sync_commands(self) -> None:
+        """Sync the slash-command tree once, to the guild (instant) if known."""
+        if getattr(self, "_synced", False):
+            return
+        try:
+            guild = self._guild()
+            if guild:
+                self.tree.copy_global_to(guild=guild)
+                synced = await self.tree.sync(guild=guild)   # instant in one guild
+                log.info("synced %d slash commands to guild %s", len(synced), guild.id)
+            else:
+                synced = await self.tree.sync()              # global: ~1h to propagate
+                log.warning("no guild in cache — synced %d commands GLOBALLY "
+                            "(can take ~1h to appear)", len(synced))
+            self._synced = True
+        except Exception as exc:  # a sync failure must not break the live bot
+            log.exception("slash-command sync failed: %s", exc)
 
     async def on_ready(self) -> None:
         log.info("logged in as %s (guilds=%d)", self.user, len(self.guilds))
@@ -220,6 +239,7 @@ class SharksBot(discord.Client):
                     log.exception("run_once meeting %s failed: %s", kind, exc)
             await self.close()
             return
+        await self._sync_commands()      # now that the guild is in cache → instant
         ch = self._channel(C.CH_STATUS)
         if ch:
             await ch.send(embed=self._status_embed("✅ 上線"))
