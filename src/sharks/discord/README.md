@@ -49,7 +49,8 @@ models → empty `content` when truncated), `phi3.5` (simplified), `llama3.2:3b`
 /picks                      最近一次選股 / 訊號
 /content <x|blog|youtube|all> [主題]      自媒體草稿 → #自媒體（不代發）
 /status                     bot 設定與狀態
-!cmd / !help                指令表（任何頻道可用）
+/cmd                        指令教學範例（情境→指令→會發生什麼;主打議會閉環）
+!cmd / !help                指令表（任何頻道可用）· !教學 / !tutorial = /cmd 範例
 ```
 
 ## Council debate

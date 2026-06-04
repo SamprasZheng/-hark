@@ -279,8 +279,46 @@ class SharksBot(discord.Client):
             "`/notebook <問題>` — 用本地 qwen 讀整個 $hark 回答(附出處);或在 **#筆記本** 直接打字\n"
             "`/ingest <文字或網址> [標題]` — 把知識灌進 $hark;或在 **#知識注入** 直接貼(手機也行)\n"
             "`/wikisearch <關鍵字>` 直接找片段 · `/recent` 看最近灌入"), inline=False)
-        e.add_field(name="⚙️ 其他", value="`/status` · `!cmd` / `!help` 這張表", inline=False)
+        e.add_field(name="⚙️ 其他", value="`/status` · `/cmd` 教學範例 · `!cmd` / `!help` 這張表", inline=False)
         e.set_footer(text="只建議不下單 · 議會/人格跑本地 · /ask 唯讀")
+        return e
+
+    def _tutorial_embed(self) -> discord.Embed:
+        """A worked, step-by-step 教學範例 (distinct from the flat /help table).
+
+        Each field is a 情境 → 指令 → 會發生什麼 walkthrough, headlined by the
+        council closed loop so a new user can see the memory build up across runs."""
+        e = discord.Embed(
+            title="🎓 PolkaSharks 指令教學範例",
+            description=("一步步帶你走一輪。每格是「**情境 → 指令 → 會發生什麼**」。\n"
+                         "斜線指令直接打 `/`;前提:本地 Ollama 已啟動(`/models` 可驗)。"),
+            color=_COLORS["council"],
+        )
+        e.add_field(name="① 召開議會(主打:一個指令跑完閉環)", value=(
+            "**情境**:想知道今晚美股偏多偏空。\n"
+            "**指令**:`/council 今晚美股該偏多還偏空`\n"
+            "**會發生**:多人格 `立場 → 交叉質詢 → 投票 → 主席結論`,結果貼出投票統計+結論,"
+            "並**自動回寫** `wiki/council/`。你什麼都不用多做。"), inline=False)
+        e.add_field(name="② 再開一次 → 看「記憶」生效", value=(
+            "**情境**:隔天同主題再問。\n"
+            "**指令**:`/council 今晚美股該偏多還偏空`\n"
+            "**會發生**:主席會說這次是**延續**還是**反轉**上次;每個人格被提醒「你上次投什麼」,"
+            "要嘛延續、要嘛認錯修正 → 越開越有效率(記憶會累積,第一次跑是空白起步)。"), inline=False)
+        e.add_field(name="③ 餵知識 → 讓議會更聰明", value=(
+            "**情境**:看到一篇關鍵新聞/研究。\n"
+            "**指令**:在 **#知識注入** 直接貼網址,或 `/ingest https://… CoWoS 產能`\n"
+            "**會發生**:存進 `wiki/inbox/` 並立刻可被搜尋。**下一次 `/council`** 的主題 RAG 會把它"
+            "(連同 `philosophy/` 底層邏輯)一起讀進去 → 本機+網路文檔一起推理。"), inline=False)
+        e.add_field(name="④ 回讀結論 / 找片段", value=(
+            "**指令**:`/notebook 最近議會對半導體的結論是什麼`(本地 qwen 讀整個 $hark,附出處)\n"
+            "或 `/wikisearch 議會 半導體` 直接撈片段 · `/recent` 看最近灌入了什麼。"), inline=False)
+        e.add_field(name="⑤ 單獨問一個人格", value=(
+            "**指令**:`/persona huang CoWoS 還能追嗎`,或在 **#分析師議會** 打 `serenity: 總經怎麼看`。\n"
+            "`/personas` 列出全部(議會預設席位:quant 四人 + huang/serenity/sam/yupupin/bear/momentum)。"), inline=False)
+        e.add_field(name="想關掉某層?", value=(
+            "全在 `.env`:`SHARKS_DISCORD_COUNCIL_CROSSEXAM=0`(關交叉質詢,改快速版)、"
+            "`…_MEMORY=0`(不讀記憶)、`…_WRITEBACK=0`(不回寫)。`/status` 看目前開關。"), inline=False)
+        e.set_footer(text="閉環:結論 → wiki → RAG → 下一場記憶 → 新結論 · 只建議不下單,永不下單")
         return e
 
     async def _persona_say(self, channel: discord.abc.Messageable,
@@ -422,6 +460,12 @@ class SharksBot(discord.Client):
             await interaction.response.send_message(embed=self._status_embed("狀態"),
                                                     ephemeral=True)
 
+        @tree.command(name="cmd",
+                      description="指令教學範例(情境→指令→會發生什麼;主打議會閉環)")
+        async def cmd_cmd(interaction: discord.Interaction):
+            await interaction.response.send_message(embed=self._tutorial_embed(),
+                                                    ephemeral=True)
+
         @tree.command(name="chatter",
                       description="立刻產一則 #雜談 速解讀(免費新聞→本地 LLM 因果鏈);council:1 同時開議會")
         @app_commands.describe(council="是否同時召開議會辯論(預設否)")
@@ -522,6 +566,11 @@ class SharksBot(discord.Client):
         # !cmd / !help — cheat-sheet, works in ANY channel.
         if content.lower() in ("!cmd", "!cmds", "!help", "!commands", "!指令"):
             await message.channel.send(embed=self._help_embed())
+            return
+
+        # !教學 / !tutorial — worked step-by-step examples (the /cmd tutorial).
+        if content.lower() in ("!教學", "!tutorial", "!範例", "!example", "!教學範例"):
+            await message.channel.send(embed=self._tutorial_embed())
             return
 
         if ch_name == C.CH_COUNCIL:
