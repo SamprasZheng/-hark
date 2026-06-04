@@ -153,6 +153,133 @@ def test_council_vote_parser():
     assert _parse_vote("沒有結構化投票")[0] == "中性"   # tolerant default
 
 
+def test_council_cross_exam_layer_runs_distinct_round():
+    """cross_exam=True inserts a 交叉質詢 round that fills Vote.crossexam without a vote."""
+    from sharks.discord import council as CO
+    from sharks.discord.personas import ChatPersona
+
+    prompts: list[str] = []
+
+    def ask(system, user, max_tokens):
+        prompts.append(user)
+        if "交叉質詢" in user and "最終投票" not in user:   # the dedicated cross-exam round
+            return "我質疑 bear:你的下行情境忽略了庫存回補。", True
+        if "其他分析師的立場" in user:                       # final vote round
+            return "投票: 多 | 信心: 4 | 動作: 持有 NVDA", True
+        if "議會票數" in user:
+            return "結論:整體偏多。", True
+        return "看多。", True
+
+    council = [ChatPersona("huang", "huang", "S", "f"),
+               ChatPersona("bear", "bear", "S", "f")]
+    r = CO.run_council("偏多偏空?", "regime late_bull", council=council,
+                       ask_maker=lambda m: (ask, "test"), cross_exam=True)
+    assert any("交叉質詢" in p for p in prompts)           # the layer actually ran
+    assert all(v.crossexam and "質疑" in v.crossexam for v in r.votes)
+    assert all(v.vote == "多" for v in r.votes)
+
+
+def test_council_memory_injected_into_prompts():
+    """memory + persona_memory are threaded into the round-1 prompt."""
+    from sharks.discord import council as CO
+    from sharks.discord.personas import ChatPersona
+
+    seen: list[str] = []
+
+    def ask(system, user, max_tokens):
+        seen.append(user)
+        if "其他分析師的立場" in user:
+            return "投票: 空 | 信心: 3 | 動作: 觀望", True
+        if "議會票數" in user:
+            return "結論。", True
+        return "看空。", True
+
+    council = [ChatPersona("huang", "huang", "S", "f")]
+    CO.run_council("t", "b", council=council, ask_maker=lambda m: (ask, "test"),
+                   cross_exam=False, memory="【近期議會記憶】上次偏多",
+                   persona_memory={"huang": "你上次投多"})
+    r1 = seen[0]
+    assert "近期議會記憶" in r1 and "你上次投多" in r1
+
+
+# ── council memory: write-back + recall (the closed loop) ─────────────────────-
+def _fake_result(topic="今晚美股偏多偏空", lean_votes=("多", "空")):
+    from sharks.discord.council import CouncilResult, Vote
+    votes = [Vote(persona="huang", title="huang·黃", model="qwen2.5:7b",
+                  stance="看多半導體", vote=lean_votes[0], conviction=4, action="持有 NVDA"),
+             Vote(persona="bear", title="bear·空", model="llama3.1:8b",
+                  stance="風險未除", vote=lean_votes[1], conviction=3, action="減碼")]
+    r = CouncilResult(topic=topic, votes=votes, ok=True,
+                      conclusion="整體偏多但留意資金面。")
+    r.tally = {"多": 1, "空": 1, "中性": 0, "avg_conviction": 3.5}
+    return r
+
+
+def test_council_memory_record_writes_md_and_jsonl_and_is_searchable(tmp_path):
+    from sharks.discord import council_memory as CM, wiki_rag
+    s = Settings(token="x")
+    s.project_root = tmp_path
+    res = CM.record(_fake_result(), s, topic="今晚美股偏多偏空")
+    assert res["ok"]
+    md = tmp_path / res["path"]
+    assert md.exists()
+    body = md.read_text(encoding="utf-8")
+    assert "type: council-conclusion" in body and "主席結論" in body and "huang" in body
+    assert (tmp_path / "wiki" / "council" / "_history.jsonl").exists()
+    # conclusion is now searchable knowledge (RAG cache was invalidated)
+    hits = wiki_rag.search("美股偏多偏空", tmp_path, 5)
+    assert any("council" in h.path for h in hits)
+
+
+def test_council_memory_brief_and_persona_memories_recall(tmp_path):
+    from sharks.discord import council_memory as CM
+    s = Settings(token="x")
+    s.project_root = tmp_path
+    CM.record(_fake_result(topic="昨日結論"), s, topic="昨日結論")
+    brief = CM.memory_brief(s, "昨日結論", with_rag=False)
+    assert "近期議會記憶" in brief and "昨日結論" in brief
+    pmem = CM.persona_memories(s)
+    assert "huang" in pmem and "bear" in pmem
+    assert "你最近的紀錄" in pmem["huang"]
+
+
+def test_run_council_local_closes_the_loop(tmp_path):
+    """run_council_local writes each conclusion back AND feeds prior memory in."""
+    from sharks.discord import council as CO
+    from sharks.discord.personas import ChatPersona
+
+    s = Settings(token="x")
+    s.project_root = tmp_path
+    personas = {"huang": ChatPersona("huang", "huang", "S", "f"),
+                "sharks": ChatPersona("sharks", "sharks", "S", "f")}
+
+    seen: list[str] = []
+
+    def ask_maker(model):
+        def ask(system, user, max_tokens):
+            seen.append(user)
+            if "其他分析師的立場" in user:
+                return "投票: 多 | 信心: 4 | 動作: 持有", True
+            if "議會票數" in user:
+                return "結論:偏多。", True
+            return "看多。", True
+        return ask, "test"
+
+    common = dict(council_names=("huang",), chair_name="sharks",
+                  personas=personas, settings=s, cross_exam=False, ask_maker=ask_maker)
+
+    # 1st council → conclusion written back to wiki/council/
+    CO.run_council_local("第一題", "brief", **common)
+    hist = tmp_path / "wiki" / "council" / "_history.jsonl"
+    assert hist.exists() and "第一題" in hist.read_text(encoding="utf-8")
+
+    # 2nd council → the 1st conclusion is recalled into this debate's prompts
+    seen.clear()
+    CO.run_council_local("第二題", "brief", **common)
+    assert any("近期議會記憶" in p and "第一題" in p for p in seen)
+    assert hist.read_text(encoding="utf-8").count("第二題") == 1
+
+
 # ── wiki ingest + RAG (local NotebookLM write/read sides) ─────────────────────-
 def test_wiki_ingest_writes_note_and_is_searchable(tmp_path):
     from sharks.discord import wiki_ingest, wiki_rag

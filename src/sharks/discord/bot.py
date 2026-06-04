@@ -110,7 +110,8 @@ def council_to_embed(r: CouncilResult) -> discord.Embed:
     if lines:
         e.add_field(name="各人投票(模型)", value="\n".join(lines)[:1024], inline=False)
     models_used = ", ".join(sorted({v.model for v in r.votes if v.model}))
-    e.set_footer(text=f"本地多模型議會 · {models_used} · 僅研究非建議,永不下單"[:2048])
+    e.set_footer(text=f"本地多模型議會(立場→交叉質詢→投票)· {models_used} · "
+                      f"結論回寫 wiki 記憶 · 僅研究非建議,永不下單"[:2048])
     return e
 
 
@@ -234,7 +235,10 @@ class SharksBot(discord.Client):
                     value=f"{s.morning_hhmm} / {s.noon_hhmm} / {s.evening_hhmm} TPE", inline=True)
         e.add_field(name="議會",
                     value=(f"{'on' if s.council_enabled else 'off'} · "
-                           f"{s.effective_council_model()} · {'/'.join(s.council_personas)}"),
+                           f"{s.effective_council_model()} · {'/'.join(s.council_personas)}\n"
+                           f"交叉質詢 {'on' if s.council_cross_exam else 'off'} · "
+                           f"記憶 {'on' if s.council_memory_enabled else 'off'} · "
+                           f"回寫wiki {'on' if s.council_writeback else 'off'}"),
                     inline=False)
         e.add_field(name="雜談",
                     value=(f"{'on' if s.chatter_enabled else 'off'} · 每小時速解讀 → #{C.CH_GENERAL} · "
@@ -261,7 +265,7 @@ class SharksBot(discord.Client):
             "在 **#分析師議會** 打 `huang: 你的問題`(預設 sharks)\n"
             "`/personas` — 列出全部人格"), inline=False)
         e.add_field(name="🗳️ 議會 / 會議", value=(
-            "`/council <主題>` — 6 人質疑→投票→結論(本地)\n"
+            "`/council <主題>` — 多人格 立場→交叉質詢→投票→結論(本地;結論回寫 wiki 記憶)\n"
             "例:`/council 今晚美股該偏多還偏空`\n"
             "`/meeting <morning|noon|evening|weekly>` — 手動開會\n"
             "`/chatter [council:1]` — 立刻產一則 #雜談 速解讀(免費新聞→本地;每小時自動)\n"
