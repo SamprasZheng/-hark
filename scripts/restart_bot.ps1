@@ -9,6 +9,15 @@ $root = "D:\DOT\`$hark"
 Set-Location $root
 $log = Join-Path $root "outputs\discord_bot.log"
 
+# 0) pull latest code so a restart also picks up new commands (best-effort).
+#    On restart the bot re-registers + guild-syncs its slash commands, so new
+#    commands like /rescan /cmd appear instantly once the new code is loaded.
+#    --ff-only never clobbers local edits; failures are logged and ignored.
+Write-Output "Pulling latest code (git pull --ff-only)..."
+try {
+    git -C $root pull --ff-only 2>&1 | ForEach-Object { Write-Output "  $_" }
+} catch { Write-Output "  git pull skipped: $($_.Exception.Message)" }
+
 # 1) stop any existing bot process (match the module on the command line)
 Write-Output "Stopping any running Sharks Discord bot..."
 Get-CimInstance Win32_Process -Filter "Name='python.exe'" |

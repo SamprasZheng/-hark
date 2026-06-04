@@ -47,7 +47,8 @@ models → empty `content` when truncated), `phi3.5` (simplified), `llama3.2:3b`
 /council <主題>             召開議會辯論（多人格、多模型、投票、結論）
 /meeting <morning|noon|evening|weekly>   手動開會
 /picks                      最近一次選股 / 訊號（只貼快取，不重跑）
-/rescan <fom|health|all>    重跑選股/健檢掃描（本地;FOM 全宇宙較久）→ 貼最新結果
+/rescan <fom|signals|health|all>  重跑選股/訊號/健檢掃描（本地）→ 貼最新結果
+                            fom=FOM 全宇宙掃描 · signals=籌碼 FSM→每日10訊號 · health=持倉+姿態
 /content <x|blog|youtube|all> [主題]      自媒體草稿 → #自媒體（不代發）
 /status                     bot 設定與狀態
 /cmd                        指令教學範例（情境→指令→會發生什麼;主打議會閉環）
