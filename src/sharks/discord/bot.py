@@ -60,6 +60,16 @@ _COLORS = {
 }
 _VOTE_EMOJI = {"多": "🟢", "空": "🔴", "中性": "⚪"}
 
+# /rescan job sets — (label, `python -m` args, timeout_s). Run in project_root so
+# each module writes outputs/<…>-<date>.json that /picks then reposts. FOM is the
+# real 選股 (full-universe scan, can be slow); health = 持倉 + 姿態 refresh.
+_SCAN_SETS: dict[str, list[tuple[str, list[str], int]]] = {
+    "fom": [("選股 · FOM 全宇宙掃描", ["sharks.scoring.fom"], 600)],
+    "health": [("持倉健檢 (portfolio audit)", ["sharks.backtest.portfolio_audit"], 240),
+               ("姿態健檢 (regime + posture)", ["sharks.cli", "health-check"], 180)],
+}
+_SCAN_SETS["all"] = _SCAN_SETS["fom"] + _SCAN_SETS["health"]
+
 
 def _chunks(text: str, size: int = 1990) -> list[str]:
     text = text or "—"
@@ -269,7 +279,8 @@ class SharksBot(discord.Client):
             "例:`/council 今晚美股該偏多還偏空`\n"
             "`/meeting <morning|noon|evening|weekly>` — 手動開會\n"
             "`/chatter [council:1]` — 立刻產一則 #雜談 速解讀(免費新聞→本地;每小時自動)\n"
-            "`/picks` — 最近一次選股 / 訊號\n"
+            "`/picks` — 貼最近一次選股 / 訊號(不重跑,只貼快取)\n"
+            "`/rescan [fom|health|all]` — **重跑**選股/健檢掃描(本地;FOM 全宇宙較久)再貼最新\n"
             "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)\n"
             "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
@@ -309,10 +320,15 @@ class SharksBot(discord.Client):
             "**指令**:在 **#知識注入** 直接貼網址,或 `/ingest https://… CoWoS 產能`\n"
             "**會發生**:存進 `wiki/inbox/` 並立刻可被搜尋。**下一次 `/council`** 的主題 RAG 會把它"
             "(連同 `philosophy/` 底層邏輯)一起讀進去 → 本機+網路文檔一起推理。"), inline=False)
-        e.add_field(name="④ 回讀結論 / 找片段", value=(
+        e.add_field(name="④ 重跑一次選股", value=(
+            "**情境**:想要最新一輪選股,而不是看上次快取。\n"
+            "**指令**:`/rescan`(預設 `fom` = FOM 全宇宙掃描;`/rescan all` 連持倉+姿態一起)\n"
+            "**會發生**:本地重跑掃描 → 寫進 `outputs/` → 直接貼出更新後的選股。"
+            "FOM 全宇宙較久,跑完才會回貼;只想看上次就用 `/picks`(不重跑)。"), inline=False)
+        e.add_field(name="⑤ 回讀結論 / 找片段", value=(
             "**指令**:`/notebook 最近議會對半導體的結論是什麼`(本地 qwen 讀整個 $hark,附出處)\n"
             "或 `/wikisearch 議會 半導體` 直接撈片段 · `/recent` 看最近灌入了什麼。"), inline=False)
-        e.add_field(name="⑤ 單獨問一個人格", value=(
+        e.add_field(name="⑥ 單獨問一個人格", value=(
             "**指令**:`/persona huang CoWoS 還能追嗎`,或在 **#分析師議會** 打 `serenity: 總經怎麼看`。\n"
             "`/personas` 列出全部(議會預設席位:quant 四人 + huang/serenity/sam/yupupin/bear/momentum)。"), inline=False)
         e.add_field(name="想關掉某層?", value=(
@@ -548,6 +564,31 @@ class SharksBot(discord.Client):
                 run_dipbuy, which.value if which else "software", settings=settings)
             await interaction.followup.send(embed=dipbuy_to_embed(title, rows))
 
+        @tree.command(name="rescan",
+                      description="重跑選股/健檢掃描(本地;FOM 全宇宙掃描較久),完成後貼最新結果")
+        @app_commands.describe(scope="fom=選股掃描(預設)· health=持倉+姿態 · all=全部")
+        @app_commands.choices(scope=[
+            app_commands.Choice(name="選股(FOM 全宇宙掃描)", value="fom"),
+            app_commands.Choice(name="持倉 + 姿態健檢", value="health"),
+            app_commands.Choice(name="全部(選股+健檢,較久)", value="all"),
+        ])
+        async def rescan_cmd(interaction: discord.Interaction,
+                             scope: Optional[app_commands.Choice[str]] = None):
+            key = scope.value if scope else "fom"
+            jobs = _SCAN_SETS.get(key, _SCAN_SETS["fom"])
+            await interaction.response.defer(thinking=True)   # scans run locally, can be slow
+            results = []
+            for label, modargs, timeout in jobs:
+                ok, tail = await self._run_scan_module(modargs, timeout)
+                results.append((label, ok, tail))
+            status = "\n".join(
+                f"{'✅' if ok else '⚠️'} {label}" + (f" — {tail}" if (tail and not ok) else "")
+                for label, ok, tail in results)
+            digest = compose_evening(settings, datetime.now(TPE))
+            await interaction.followup.send(
+                content=f"🔄 重跑完成({key}):\n{status}\n\n下面是更新後的最新結果:",
+                embeds=digest_to_embeds(digest))
+
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
         await interaction.followup.send(parts[0])
@@ -716,17 +757,27 @@ class SharksBot(discord.Client):
         for e in embeds:
             await channel.send(embed=e)
 
+    async def _run_scan_module(self, args: list[str], timeout: int) -> tuple[bool, str]:
+        """Run `python -m <args>` in project_root → (ok, last_output_line). Never raises."""
+        try:
+            proc = await asyncio.to_thread(
+                subprocess.run,
+                [sys.executable, "-m", *args],
+                cwd=str(self.settings.project_root),
+                capture_output=True, text=True, timeout=timeout,
+            )
+            out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+            tail = out.splitlines()[-1] if out else ""
+            return proc.returncode == 0, tail[:300]
+        except subprocess.TimeoutExpired:
+            return False, f"逾時(>{timeout}s) — 全宇宙掃描較久,可稍後再看 /picks"
+        except Exception as exc:  # never let a scan failure crash the handler
+            log.warning("scan %s failed: %s", args, exc)
+            return False, str(exc)[:300]
+
     async def _refresh_outputs(self) -> None:
         """Run `sharks health-check` to refresh outputs/ before a meeting."""
-        try:
-            await asyncio.to_thread(
-                subprocess.run,
-                [sys.executable, "-m", "sharks.cli", "health-check"],
-                cwd=str(self.settings.project_root),
-                capture_output=True, text=True, timeout=180,
-            )
-        except Exception as exc:  # never let a refresh failure block the meeting
-            log.warning("health-check refresh failed: %s", exc)
+        await self._run_scan_module(["sharks.cli", "health-check"], 180)
 
     # ── hourly #雜談 chatter ──────────────────────────────────────────────────
     async def post_chatter(self, run_council: bool = False) -> None:
