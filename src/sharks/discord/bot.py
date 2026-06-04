@@ -257,7 +257,8 @@ class SharksBot(discord.Client):
                     value=(f"{'on' if s.chatter_enabled else 'off'} · 每小時速解讀 → #{C.CH_GENERAL} · "
                            f"council 每 {s.chatter_council_every} 次"), inline=False)
         e.add_field(name="人格", value=", ".join(sorted(self.personas)) or "—", inline=False)
-        e.set_footer(text="recommend-only · 永不下單 · /ask 唯讀 · 議會/雜談跑本地")
+        ncmds = len(self.tree.get_commands())
+        e.set_footer(text=f"code {self._git_rev()} · {ncmds} 指令 · recommend-only · 永不下單 · 議會/雜談跑本地")
         return e
 
     def _help_embed(self) -> discord.Embed:
@@ -293,7 +294,9 @@ class SharksBot(discord.Client):
             "`/notebook <問題>` — 用本地 qwen 讀整個 $hark 回答(附出處);或在 **#筆記本** 直接打字\n"
             "`/ingest <文字或網址> [標題]` — 把知識灌進 $hark;或在 **#知識注入** 直接貼(手機也行)\n"
             "`/wikisearch <關鍵字>` 直接找片段 · `/recent` 看最近灌入"), inline=False)
-        e.add_field(name="⚙️ 其他", value="`/status` · `/cmd` 教學範例 · `!cmd` / `!help` 這張表", inline=False)
+        e.add_field(name="⚙️ 其他", value=(
+            "`/status` 看狀態(含 code 版本)· `/cmd` 教學範例 · `!cmd` / `!help` 這張表\n"
+            "`!sync` 重新同步斜線指令並列出本機實際擁有的指令(找不到新指令時用這個查)"), inline=False)
         e.set_footer(text="只建議不下單 · 議會/人格跑本地 · /ask 唯讀")
         return e
 
@@ -619,6 +622,29 @@ class SharksBot(discord.Client):
             await message.channel.send(embed=self._tutorial_embed())
             return
 
+        # !sync / !ver — force re-sync slash commands AND report what THIS running
+        # process actually has. If `rescan` is missing from the list, the bot is on
+        # OLD code (git pull + restart needed); if it's listed but not in Discord's
+        # menu, this re-sync fixes it. Either way you can tell which it is.
+        if content.lower() in ("!sync", "!resync", "!同步", "!ver", "!version", "!版本"):
+            rev = await asyncio.to_thread(self._git_rev)
+            have = sorted(c.name for c in self.tree.get_commands())
+            note = "" if "rescan" in have else "\n⚠️ 這個 process 沒有 `rescan` → 跑的是舊程式碼,請 git pull + 重啟。"
+            try:
+                g = self._guild()
+                if g:
+                    self.tree.copy_global_to(guild=g)
+                    synced = await self.tree.sync(guild=g)
+                else:
+                    synced = await self.tree.sync()
+                await message.channel.send(
+                    f"✅ 已重新同步 {len(synced)} 個斜線指令(code `{rev}`):\n"
+                    f"{', '.join(sorted(c.name for c in synced))}{note}")
+            except Exception as exc:
+                await message.channel.send(
+                    f"⚠️ 同步失敗(code `{rev}`):{exc}\n本 process 現有指令:{', '.join(have)}{note}")
+            return
+
         if ch_name == C.CH_COUNCIL:
             persona, q = resolve_persona(content, self.personas, self.settings.default_persona)
             if persona is None:
@@ -761,6 +787,16 @@ class SharksBot(discord.Client):
             return
         for e in embeds:
             await channel.send(embed=e)
+
+    def _git_rev(self) -> str:
+        """Short commit the bot's code is running, for 'is it on new code?' checks."""
+        try:
+            p = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                               cwd=str(self.settings.project_root),
+                               capture_output=True, text=True, timeout=10)
+            return (p.stdout or "").strip() or "?"
+        except Exception:
+            return "?"
 
     async def _run_scan_module(self, args: list[str], timeout: int) -> tuple[bool, str]:
         """Run `python -m <args>` in project_root → (ok, last_output_line). Never raises."""
