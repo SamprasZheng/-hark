@@ -77,6 +77,29 @@ def test_build_signals_from_basecross_candidates():
     assert by["ZZZ"].dims["capital"] is None and not by["ZZZ"].buy_consider
 
 
+def test_quality_prior_fills_when_fom_missing_and_fom_overrides():
+    class C:
+        def __init__(self, t):
+            self.ticker, self.rising, self.golden_cross = t, True, False
+            self.bottom_zone, self.vol_surge = False, 1.5
+    # JMIA not in FOM scan → conservative prior (28) fills 基本面
+    [jmia] = R.build_signals([C("JMIA")])
+    assert jmia.dims["fundamental"] == R.QUALITY_PRIORS["JMIA"] == 28
+    # RVLV with a real FOM quality → FOM wins over the prior
+    [rvlv] = R.build_signals([C("RVLV")], quality_by_ticker={"RVLV": 75.0})
+    assert rvlv.dims["fundamental"] == 75.0
+
+
+def test_build_signals_from_basecross_candidates_fallback_off():
+    class C:
+        def __init__(self, t):
+            self.ticker, self.rising, self.golden_cross = t, False, False
+            self.bottom_zone, self.vol_surge = False, None
+    # explicit empty priors → 基本面 stays TBD
+    [s] = R.build_signals([C("JMIA")], quality_priors={})
+    assert s.dims["fundamental"] is None
+
+
 def test_rank_orders_buy_considers_first():
     items = [
         {"ticker": "LOW", "dims": {"technical": 30, "capital": 20}},

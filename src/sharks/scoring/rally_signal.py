@@ -63,6 +63,21 @@ HOT_DIM = 65.0            # 單維過熱(技術/資金)
 CATALYST_MIN = 50.0       # 基本面/供應鏈/消息 任一達此 = 有題材撐
 MIN_STREAK_BUY = 3        # 連續起漲幾「期」才考慮買入
 
+# 盈利先驗(0..100,**保守相對分級,非具體財務數字**)— 在 FOM 還沒把這些票重跑出
+# quality 之前,給 /rally 的「基本面」維度一個合理起點。FOM 真值一出現就會覆蓋它
+# (build_signals 先取 FOM quality,缺了才用這裡)。分級依「獲利/現金流/資產負債」的
+# 相對強弱,對齊 watchlist/thesis_ecommerce_agentic.md 的盈利分層。
+QUALITY_PRIORS: dict[str, float] = {
+    # 電商大/中型 — 已獲利規模平台
+    "AMZN": 80, "PDD": 80, "MELI": 78, "BABA": 70, "EBAY": 68, "JD": 65,
+    "ETSY": 65, "SHOP": 62, "CPNG": 60, "SE": 58, "CHWY": 55, "GLBE": 50,
+    "W": 40, "BIGC": 42,
+    # 小型 / 長尾電商(主理人點名)— 依盈利分層保守給分
+    "RVLV": 68, "VIPS": 70, "CART": 62,             # 已獲利、有空間
+    "FIGS": 55, "WRBY": 52, "MYTE": 50, "REAL": 48, "SFIX": 45,  # 轉盈中
+    "JMIA": 28, "RENT": 25,                          # 燒錢 / 高風險
+}
+
 
 @dataclass
 class RallySignal:
@@ -155,17 +170,23 @@ def assess(ticker: str, dims: dict, *, prior_streak: int = 0,
 
 def build_signals(candidates, *, quality_by_ticker: Optional[dict] = None,
                   prior_streaks: Optional[dict] = None,
-                  news_by_ticker: Optional[dict] = None) -> list["RallySignal"]:
+                  news_by_ticker: Optional[dict] = None,
+                  quality_priors: Optional[dict] = None) -> list["RallySignal"]:
     """Fuse a list of basecross candidates + FOM quality + prior streaks → ranked
-    起漲 signals. The glue the /rally command runs (pure given its inputs)."""
+    起漲 signals. 基本面 uses FOM quality first; if a name isn't in the latest FOM
+    scan yet, fall back to a conservative ``quality_priors`` (defaults to
+    QUALITY_PRIORS) so the dimension isn't blank. Pure given its inputs."""
     quality_by_ticker = quality_by_ticker or {}
     prior_streaks = prior_streaks or {}
     news_by_ticker = news_by_ticker or {}
+    quality_priors = QUALITY_PRIORS if quality_priors is None else quality_priors
     items = []
     for c in candidates:
         t = getattr(c, "ticker", "")
-        dims = dims_from_basecross(c, fom_quality=quality_by_ticker.get(t),
-                                   news=news_by_ticker.get(t))
+        q = quality_by_ticker.get(t)
+        if q is None:
+            q = quality_priors.get(t)
+        dims = dims_from_basecross(c, fom_quality=q, news=news_by_ticker.get(t))
         items.append({"ticker": t, "dims": dims, "prior_streak": prior_streaks.get(t, 0)})
     return rank(items)
 
