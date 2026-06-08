@@ -372,7 +372,7 @@ class SharksBot(discord.Client):
             "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)\n"
             "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)\n"
             "`/basecross [killed2022|ai_software|all] [tickers:CRWD,VST]` — 月線底部金叉+資金介入(Boeing/Snowflake 大底)\n"
-            "`/rally [which] [tickers:INTC,MU,NVDA]` — 起漲訊號追蹤(5維融合;連續起漲才可考慮買入)"), inline=False)
+            "`/rally [killed2022|ai_software|ecommerce|all] [tickers:SHOP,SE]` — 起漲訊號追蹤(5維融合;連續起漲才可考慮買入)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -659,11 +659,12 @@ class SharksBot(discord.Client):
 
         @tree.command(name="basecross",
                       description="月線底部金叉+資金介入篩選(2022殺/AI錯殺軟體;可丟自訂 ticker)")
-        @app_commands.describe(which="killed2022 / ai_software / all(預設)",
-                               tickers="額外加篩的代號,逗號分隔(例:CRWD,VST,ADBE)")
+        @app_commands.describe(which="killed2022 / ai_software / ecommerce / all(預設)",
+                               tickers="額外加篩的代號,逗號分隔(例:CRWD,VST,8454.TW)")
         @app_commands.choices(which=[
             app_commands.Choice(name="2022 殺下來的大底", value="killed2022"),
             app_commands.Choice(name="AI 錯殺軟體股", value="ai_software"),
+            app_commands.Choice(name="電商 · agentic-commerce", value="ecommerce"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def basecross_cmd(interaction: discord.Interaction,
@@ -678,11 +679,12 @@ class SharksBot(discord.Client):
 
         @tree.command(name="rally",
                       description="起漲訊號追蹤(融合資金/技術/消息/供應鏈/基本面;連續起漲才可考慮買入)")
-        @app_commands.describe(which="killed2022 / ai_software / all(預設)",
-                               tickers="額外加入的代號,逗號分隔(例:INTC,MU,NVDA,TSLA)")
+        @app_commands.describe(which="killed2022 / ai_software / ecommerce / all(預設)",
+                               tickers="額外加入的代號,逗號分隔(例:SHOP,SE,MELI,8454.TW)")
         @app_commands.choices(which=[
             app_commands.Choice(name="2022 殺下來的大底", value="killed2022"),
             app_commands.Choice(name="AI 錯殺軟體股", value="ai_software"),
+            app_commands.Choice(name="電商 · agentic-commerce", value="ecommerce"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def rally_cmd(interaction: discord.Interaction,

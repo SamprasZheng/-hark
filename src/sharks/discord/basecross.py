@@ -37,6 +37,13 @@ AI_OVERSOLD_SOFTWARE = [
     "ADBE", "CRM", "NOW", "INTU", "WDAY", "HUBS", "DDOG", "MDB", "SNOW", "TEAM",
     "DOCU", "ESTC", "TWLO", "ZI", "PATH", "AI", "S", "BRZE", "GTLB", "CHGG",
 ]
+# Agentic-commerce 題材:AI 代理(自動比價/下單)利好的電商平台 + 金流/物流基建。
+# 富邦媒(8454.TW)/網家(8044.TW)等台股需 Phase-2 suffix,先放 watchlist;這裡列
+# US/ADR(yfinance 直接抓得到)。用 /basecross ecommerce 或 tickers:8454.TW 補台股。
+ECOMMERCE_AGENTIC = [
+    "AMZN", "SHOP", "SE", "MELI", "BABA", "PDD", "CPNG", "ETSY", "EBAY",
+    "W", "CHWY", "GLBE", "BIGC", "JD",
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -209,11 +216,14 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
-        "all": ("月線大底金叉全名單", sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE))),
+        "ecommerce": ("電商 · agentic-commerce", ECOMMERCE_AGENTIC),
+        "all": ("月線大底金叉全名單",
+                sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE) | set(ECOMMERCE_AGENTIC))),
     }
     title, base = lists.get(which, lists["all"])
     theme = {t: "2022殺" for t in KILLED_2022}
     theme.update({t: (theme.get(t, "") + "+AI錯殺").lstrip("+") for t in AI_OVERSOLD_SOFTWARE})
+    theme.update({t: (theme.get(t, "") + "+電商").lstrip("+") for t in ECOMMERCE_AGENTIC})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),

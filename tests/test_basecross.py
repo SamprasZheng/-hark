@@ -68,9 +68,17 @@ def test_insufficient_data():
 
 def test_run_basecross_extra_tickers_and_themes():
     series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
-              for t in ("ADBE", "INTC", "ZZZZ")}
+              for t in ("ADBE", "INTC", "MELI", "ZZZZ")}
     title, rows = BC.run_basecross("all", fetch=_fetch(series), extra_tickers=["ZZZZ"])
     by = {r.ticker: r for r in rows}
     assert "ZZZZ" in by                                # 自訂 ticker 進得來
     assert by["INTC"].theme and "2022殺" in by["INTC"].theme
     assert "AI錯殺" in by["ADBE"].theme
+    assert "電商" in by["MELI"].theme                  # agentic-commerce theme tag
+
+
+def test_run_basecross_ecommerce_list():
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
+              for t in BC.ECOMMERCE_AGENTIC}
+    title, rows = BC.run_basecross("ecommerce", fetch=_fetch(series))
+    assert "電商" in title and {r.ticker for r in rows} == set(BC.ECOMMERCE_AGENTIC)

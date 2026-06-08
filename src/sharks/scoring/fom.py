@@ -162,6 +162,16 @@ ROTATION_2022_AI = [
     "BRZE", "CHGG",
 ]
 
+# ── 2026-06-08: 電商 / agentic-commerce 題材 ─────────────────────────────────────
+# AI 代理(自動比價/下單,如 agentic checkout)利好「agent-readable」的電商平台 +
+# 金流/物流基建。富邦媒(8454.TW)Momo 大漲是端倪;台股(8454/8044.TW)需 Phase-2
+# suffix,放 watchlist/thesis_ecommerce_agentic.md。這裡為 US/ADR(AMZN/SHOP/SE 已在
+# 別群,set() 去重)。注意:agentic 比價是**雙面刃**——基建/規模平台受惠,subscale
+# 純比價平台反而被商品化,所以仍靠 FOM quality(盈利)維度過濾。
+ECOMMERCE_AGENTIC = [
+    "MELI", "BABA", "PDD", "CPNG", "ETSY", "EBAY", "W", "CHWY", "GLBE", "BIGC", "JD",
+]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -170,7 +180,7 @@ DEFAULT_UNIVERSE = sorted(set(
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
     SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
-    ROTATION_2022_AI
+    ROTATION_2022_AI + ECOMMERCE_AGENTIC
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───
