@@ -99,3 +99,12 @@ def test_run_basecross_space_list():
     assert "太空" in title and {r.ticker for r in rows} == set(BC.SPACE_PUREPLAYS)
     by = {r.ticker: r for r in rows}
     assert "RKLB" in by and "ASTS" in by and "太空" in by["RKLB"].theme
+
+
+def test_run_basecross_diversified_list():
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
+              for t in BC.DIVERSIFIED_TURNAROUND}
+    title, rows = BC.run_basecross("diversified", fetch=_fetch(series))
+    assert "分散" in title and {r.ticker for r in rows} == set(BC.DIVERSIFIED_TURNAROUND)
+    assert len(BC.DIVERSIFIED_TURNAROUND) == 15      # 15 檔跨產業
+    assert "分散" in {r.ticker: r for r in rows}["KVUE"].theme

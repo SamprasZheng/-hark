@@ -192,6 +192,11 @@ BROADENING_LAGGARDS = [
     "PFE", "MRNA", "BMY", "CVS", "HUM", "GILD", "DXCM",
 ]
 
+# 跨產業分散轉機股(非-科技為主)— 補進宇宙讓 /basecross diversified 有盈利維度。
+# mirrored in discord/basecross.DIVERSIFIED_TURNAROUND. 多數已在他群,新增的:
+# ALB(鋰/材料)、MMM(工業)、F(汽車)、WBD(媒體)、PYPL(金融)。
+DIVERSIFIED_TURNAROUND = ["ALB", "MMM", "F", "WBD", "PYPL", "DIS"]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -200,7 +205,7 @@ DEFAULT_UNIVERSE = sorted(set(
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
     SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
-    ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS
+    ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS + DIVERSIFIED_TURNAROUND
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───

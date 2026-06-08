@@ -67,6 +67,13 @@ SPACE_PUREPLAYS = [
     "PL", "BKSY", "SPIR",            # 對地觀測 / 數據
     "RDW", "LUNR",                   # 製造 / 月球 / 政府合約
 ]
+# 跨產業分散的「錯殺大底 + 有存活基本面」轉機股(不是只挑科技)。兼顧收益(深跌有空間)
+# 與風險(有真生意/現金流/股息當地板)。見 watchlist/thesis_diversified_turnaround.md。
+DIVERSIFIED_TURNAROUND = [
+    "KVUE", "PFE", "TGT", "NKE", "KHC", "CVS",   # 必需消費 / 醫療 / 零售(防禦、有股息)
+    "SBUX", "DIS", "EL", "ALB", "MMM",            # 餐飲 / 媒體 / 美妝 / 材料 / 工業(轉機)
+    "PYPL", "RKLB", "F", "WBD",                   # 金融 / 太空 / 汽車 / 媒體(高賠率)
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -238,7 +245,8 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     settings = settings or Settings.load()
     ecommerce_all = ECOMMERCE_AGENTIC + ECOMMERCE_SMALL
     everything = sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE)
-                        | set(ecommerce_all) | set(BROADENING_LAGGARDS) | set(SPACE_PUREPLAYS))
+                        | set(ecommerce_all) | set(BROADENING_LAGGARDS)
+                        | set(SPACE_PUREPLAYS) | set(DIVERSIFIED_TURNAROUND))
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
@@ -246,6 +254,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
         "ecommerce_small": ("小型電商(高賠率高風險)", ECOMMERCE_SMALL),
         "broadening": ("廣度輪動 · 錯殺民生/消費/醫療", BROADENING_LAGGARDS),
         "space": ("太空板塊 · SpaceX IPO 催化", SPACE_PUREPLAYS),
+        "diversified": ("跨產業分散轉機股", DIVERSIFIED_TURNAROUND),
         "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
@@ -255,6 +264,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     theme.update({t: (theme.get(t, "") + "·小型").lstrip("+") for t in ECOMMERCE_SMALL})
     theme.update({t: (theme.get(t, "") + "+廣度").lstrip("+") for t in BROADENING_LAGGARDS})
     theme.update({t: (theme.get(t, "") + "+太空").lstrip("+") for t in SPACE_PUREPLAYS})
+    theme.update({t: (theme.get(t, "") + "+分散").lstrip("+") for t in DIVERSIFIED_TURNAROUND})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),
