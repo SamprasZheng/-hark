@@ -61,7 +61,12 @@ RALLY_MIN = 55.0          # 今天算「起漲」的 composite 門檻
 BUY_MIN = 62.0            # 夠強到可考慮(需配合 streak)
 HOT_DIM = 65.0            # 單維過熱(技術/資金)
 CATALYST_MIN = 50.0       # 基本面/供應鏈/消息 任一達此 = 有題材撐
+WAVE_FUEL_MIN = 55.0      # 「真會賺錢 或 真有題材」的燃料門檻(比 catalyst 更嚴)
 MIN_STREAK_BUY = 3        # 連續起漲幾「期」才考慮買入
+
+# 規模/廣度的 regime:2021 是大降息瘋牛(loose,雞犬升天、廣度大);現在不是(tight,
+# 廣度小)→ 只有「真會賺錢 或 真有題材」的票才撐得起大浪。預設 tight(主理人 2026-06)。
+TIGHT_REGIME_DEFAULT = True
 
 # 盈利先驗(0..100,**保守相對分級,非具體財務數字**)— 在 FOM 還沒把這些票重跑出
 # quality 之前,給 /rally 的「基本面」維度一個合理起點。FOM 真值一出現就會覆蓋它
@@ -156,6 +161,8 @@ class RallySignal:
     streak: int = 0                               # 連續起漲期數
     catalyst: bool = False                        # 有基本面/供應鏈/消息撐
     price_hot: bool = False                       # 技術+資金過熱
+    has_fuel: bool = False                         # 真會賺錢(基本面) 或 真有題材(供應鏈/消息)
+    wave_candidate: bool = False                  # 夠格展開「大浪」(有燃料 + 起漲)
     dna_match: float = 0.0                         # 與暴漲股 DNA 的相符度 0..100
     conviction: str = ""
     buy_consider: bool = False
@@ -202,8 +209,13 @@ def update_streak(prior_streak: int, is_rallying: bool) -> int:
 
 
 def assess(ticker: str, dims: dict, *, prior_streak: int = 0,
-           evidence_confirmed: bool = False, weights: Optional[dict] = None) -> RallySignal:
-    """Fuse the five dimensions + persistence into one 起漲 verdict for a ticker."""
+           evidence_confirmed: bool = False, weights: Optional[dict] = None,
+           tight_regime: bool = TIGHT_REGIME_DEFAULT) -> RallySignal:
+    """Fuse the five dimensions + persistence into one 起漲 verdict for a ticker.
+
+    ``tight_regime`` (default True, the 2026 non-2021 reality): 廣度小,只有「真會賺錢
+    (基本面)或真有題材(供應鏈/消息)」= **有燃料**的票才撐得起大浪;沒燃料的深跌反彈
+    被降級為『反彈非大浪』,且不給買入考慮。loose(2021 式瘋牛)則放寬。"""
     sig = RallySignal(ticker=ticker, dims={d: dims.get(d) for d in DIMENSIONS})
     sig.composite = composite_score(dims, weights)
     tech = dims.get("technical")
@@ -213,21 +225,33 @@ def assess(ticker: str, dims: dict, *, prior_streak: int = 0,
     sig.catalyst = evidence_confirmed or any(
         (dims.get(d) is not None and float(dims.get(d)) >= CATALYST_MIN)
         for d in ("fundamental", "supply_chain", "news"))
+    # 燃料 = 真會賺錢(基本面高)或 真有題材(供應鏈/消息高),比 catalyst 更嚴。
+    sig.has_fuel = evidence_confirmed or any(
+        (dims.get(d) is not None and float(dims.get(d)) >= WAVE_FUEL_MIN)
+        for d in ("fundamental", "supply_chain", "news"))
+    sig.wave_candidate = sig.has_fuel and sig.is_rallying
     sig.price_hot = (float(dims.get("technical") or 0) >= HOT_DIM
                      and float(dims.get("capital") or 0) >= HOT_DIM)
     sig.dna_match = dna_match(dims)
+    # tight regime 下,買入考慮一定要有燃料;loose 則 catalyst 即可。
+    fuel_ok = sig.has_fuel if tight_regime else sig.catalyst
 
     if sig.price_hot and not sig.catalyst:
         # graveyard pattern: vertical price + 資金, zero catalyst → WARN, never buy.
         sig.conviction = "🚫 純炒作·無實證(墓園型)"
         sig.warning = "技術/資金過熱但無基本面/供應鏈/消息題材;這是追高墓園型,先找題材或站旁邊"
-    elif sig.streak >= MIN_STREAK_BUY and sig.composite >= BUY_MIN and sig.catalyst:
+    elif sig.streak >= MIN_STREAK_BUY and sig.composite >= BUY_MIN and fuel_ok:
         sig.conviction = f"🟢 連續起漲 {sig.streak} 期 · 可考慮買入(分批/小倉)"
         sig.buy_consider = True
-        sig.note = "五維共振 + 連續起漲 + 有題材撐 → 符合暴漲股點火形態,仍 recommend-only"
+        sig.note = "有燃料(真賺錢/真題材)+ 連續起漲 → 這個 regime 撐得起大浪,仍 recommend-only"
+    elif tight_regime and not sig.has_fuel and (sig.is_rallying or sig.composite >= 45):
+        # 非-2021:有點動但沒燃料(無真盈利/真題材)→ 撐不起大浪,降級為反彈。
+        sig.conviction = "🪨 缺燃料·反彈非大浪" + (f" 第 {sig.streak} 期" if sig.is_rallying else "")
+        sig.warning = "不是 2021 瘋牛:無真盈利/真題材,這個 regime 撐不起大浪,反彈不追"
+        sig.note = "要嘛等盈利(基本面)轉強、要嘛等真題材出現,才有機會展開大浪"
     elif sig.is_rallying:
         sig.conviction = f"🟡 起漲中 第 {sig.streak} 期(觀察,未達連續門檻)"
-        sig.note = f"等連續 ≥ {MIN_STREAK_BUY} 期 + composite ≥ {BUY_MIN:.0f} + 有題材才考慮"
+        sig.note = f"等連續 ≥ {MIN_STREAK_BUY} 期 + composite ≥ {BUY_MIN:.0f} + 有燃料才考慮"
     elif sig.composite >= 45:
         sig.conviction = "🔵 蓄勢(尚未起漲)"
     else:
@@ -238,7 +262,8 @@ def assess(ticker: str, dims: dict, *, prior_streak: int = 0,
 def build_signals(candidates, *, quality_by_ticker: Optional[dict] = None,
                   prior_streaks: Optional[dict] = None,
                   news_by_ticker: Optional[dict] = None,
-                  quality_priors: Optional[dict] = None) -> list["RallySignal"]:
+                  quality_priors: Optional[dict] = None,
+                  tight_regime: bool = TIGHT_REGIME_DEFAULT) -> list["RallySignal"]:
     """Fuse a list of basecross candidates + FOM quality + prior streaks → ranked
     起漲 signals. 基本面 uses FOM quality first; if a name isn't in the latest FOM
     scan yet, fall back to a conservative ``quality_priors`` (defaults to
@@ -255,14 +280,16 @@ def build_signals(candidates, *, quality_by_ticker: Optional[dict] = None,
             q = quality_priors.get(t)
         dims = dims_from_basecross(c, fom_quality=q, news=news_by_ticker.get(t))
         items.append({"ticker": t, "dims": dims, "prior_streak": prior_streaks.get(t, 0)})
-    return rank(items)
+    return rank(items, tight_regime=tight_regime)
 
 
-def rank(items: list[dict], *, weights: Optional[dict] = None) -> list[RallySignal]:
+def rank(items: list[dict], *, weights: Optional[dict] = None,
+         tight_regime: bool = TIGHT_REGIME_DEFAULT) -> list[RallySignal]:
     """Assess a batch. Each item = {ticker, dims, prior_streak?, evidence_confirmed?}.
     Sorted: buy-considers first, then composite, then dna_match."""
     out = [assess(it["ticker"], it["dims"], prior_streak=it.get("prior_streak", 0),
-                  evidence_confirmed=it.get("evidence_confirmed", False), weights=weights)
+                  evidence_confirmed=it.get("evidence_confirmed", False), weights=weights,
+                  tight_regime=tight_regime)
            for it in items]
     out.sort(key=lambda s: (s.buy_consider, s.composite, s.dna_match), reverse=True)
     return out

@@ -229,8 +229,9 @@ def rally_to_embed(title: str, signals: list) -> discord.Embed:
         return (f"`{s.ticker}` C{s.composite:.0f}/DNA{s.dna_match:.0f} 連{s.streak} · "
                 f"{dimstr(s)}")
     buy = [s for s in signals if s.buy_consider]
-    rising = [s for s in signals if s.is_rallying and not s.buy_consider]
-    grave = [s for s in signals if s.warning]
+    rising = [s for s in signals if s.is_rallying and not s.buy_consider and not s.warning]
+    grave = [s for s in signals if s.conviction.startswith("🚫")]
+    nofuel = [s for s in signals if s.conviction.startswith("🪨")]
     coil = [s for s in signals if not s.is_rallying and not s.warning and s.composite >= 45]
     if buy:
         e.add_field(name="🟢 連續起漲 · 可考慮買入(分批/小倉)",
@@ -241,11 +242,14 @@ def rally_to_embed(title: str, signals: list) -> discord.Embed:
     if coil:
         e.add_field(name="🔵 蓄勢(尚未起漲)",
                     value="\n".join(line(s) for s in coil[:8])[:1024], inline=False)
+    if nofuel:
+        e.add_field(name="🪨 缺燃料·反彈非大浪(此 regime 撐不起 — 不追)",
+                    value="\n".join(line(s) for s in nofuel[:8])[:1024], inline=False)
     if grave:
         e.add_field(name="🚫 純炒作·無實證(墓園型 — 不追)",
                     value="\n".join(f"`{s.ticker}` {s.warning[:60]}" for s in grave[:6])[:1024],
                     inline=False)
-    e.set_footer(text="recommend-only · 連續起漲才考慮 · 墓園型一律不追 · 進場仍配 regime/資金面健檢")
+    e.set_footer(text="recommend-only · 非2021瘋牛:要真盈利/真題材才成大浪 · 墓園/缺燃料不追 · 配 regime 健檢")
     return e
 
 

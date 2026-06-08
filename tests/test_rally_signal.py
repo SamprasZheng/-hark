@@ -34,6 +34,29 @@ def test_single_green_bar_is_not_a_buy():
     assert not s.buy_consider and "起漲中" in s.conviction   # needs persistence
 
 
+def test_tight_regime_no_fuel_is_downgraded_to_bounce_not_wave():
+    # 有點動(蓄勢/起漲)但無真盈利/真題材、技術不過熱(非墓園)→ 缺燃料降級
+    dims = {"technical": 64, "capital": 60, "fundamental": 35, "supply_chain": 35, "news": 30}
+    s = R.assess("BOUNCE", dims, prior_streak=5, tight_regime=True)
+    assert not s.buy_consider and not s.has_fuel and not s.wave_candidate
+    assert "缺燃料" in s.conviction and s.warning
+
+
+def test_fuel_present_allows_wave_buy_in_tight_regime():
+    dims = {"technical": 70, "capital": 65, "fundamental": 75, "supply_chain": 50}
+    s = R.assess("REAL", dims, prior_streak=3, tight_regime=True)
+    assert s.has_fuel and s.wave_candidate and s.buy_consider
+
+
+def test_loose_regime_relaxes_fuel_requirement():
+    # 同樣無強燃料(只有 catalyst 50 級),loose 下不被降級為缺燃料
+    dims = {"technical": 60, "capital": 55, "fundamental": 50}
+    tight = R.assess("X", dims, prior_streak=5, tight_regime=True)
+    loose = R.assess("X", dims, prior_streak=5, tight_regime=False)
+    assert "缺燃料" in tight.conviction          # fundamental 50 < 55 fuel bar
+    assert "缺燃料" not in loose.conviction       # loose 只要 catalyst(>=50)
+
+
 def test_pure_hype_no_catalyst_is_graveyard_warned():
     dims = {"technical": 90, "capital": 85, "fundamental": 20,
             "supply_chain": 30, "news": 10}
