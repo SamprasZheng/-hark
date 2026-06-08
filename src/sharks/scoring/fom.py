@@ -149,6 +149,19 @@ TECH_DD_NODES = [
     "RXRX", "SDGR",          # AI-drug-discovery (太早→結構 option)
 ]
 
+# ── 2026-06-08: "Intel 領漲 → 補炒 2022 殺下來 + AI 錯殺軟體股" 輪動論點 ──────────
+# Multi-year-base names (Boeing/Snowflake 形態) the principal wants in the FOM
+# universe so /basecross gets a 盈利(quality) dimension and the 起漲 tracker can
+# fuse fundamentals. Mirrors KILLED_2022 + AI_OVERSOLD_SOFTWARE in
+# src/sharks/discord/basecross.py + watchlist/thesis_basecross.yaml. Names already
+# covered above (CRM/NOW/NFLX/INTU/ADBE/INTC/MU/AI/PLTR/RIVN…) dedupe via set().
+ROTATION_2022_AI = [
+    "BA", "SNOW", "PYPL", "NKE", "DIS", "ROKU", "TWLO", "DDOG", "NET", "OKTA",
+    "ZS", "MDB", "SHOP", "U", "PATH", "RBLX", "PINS", "SE", "ABNB", "DOCU",
+    "WDAY", "TEAM", "BILL", "CFLT", "GTLB", "ESTC", "DOCN", "HUBS", "ZI", "S",
+    "BRZE", "CHGG",
+]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -156,7 +169,8 @@ DEFAULT_UNIVERSE = sorted(set(
     BETA_ANCHORS + R2K_AI +
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
-    SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES
+    SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
+    ROTATION_2022_AI
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───

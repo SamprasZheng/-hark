@@ -47,6 +47,7 @@ logs/
 # Trading-system specific
 outputs/*.json
 outputs/*.csv
+outputs/*.jsonl
 !outputs/.gitkeep
 
 # Council debate conclusions — machine-generated dynamic state (like outputs/);

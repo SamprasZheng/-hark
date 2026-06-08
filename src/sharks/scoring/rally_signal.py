@@ -1,0 +1,252 @@
+"""起漲訊號追蹤 — Rally-ignition tracker fusing 資金 / 技術 / 消息 / 供應鏈 / 基本面.
+
+The principal's directive (2026-06-08): 把候選都納入宇宙,然後**追蹤起漲訊號**——
+五個維度(資金、技術、消息、供應鏈、基本面)——**連續起漲才考慮買入**,並期待複製
+2020~2026 代表性暴漲股(INTC / MU / NVDA / TSLA …)的「點火 DNA」。
+
+This is the *fusion + persistence* layer that sits ON TOP of the single-signal
+modules already in the repo:
+
+  技術 technical   ← basecross.py(月線底部金叉/起漲)+ dipbuy.py(日線動能)
+  資金 capital     ← basecross 量能放大 / chip_flow_fsm(籌碼)/ moonshot volume_surge
+  基本面 fundamental ← fom.py quality(盈利支持)
+  供應鏈 supply_chain ← 供應鏈 design-win 名單(huang/serenity 題材)
+  消息 news        ← news_sentiment(可選;沒有就標 TBD,不亂猜)
+
+Two disciplines, straight from the constitution + moonshot_hunter:
+  1. **連續起漲才買** — one green bar is noise; we require the rally to PERSIST
+     (streak ≥ MIN_STREAK_BUY) before it is even "可考慮買入". Persistence is the
+     repeatable feature of the 2020-26 winners (they trended, not one-day spikes).
+  2. **墓園守門** — hot price/資金 with NO 基本面/供應鏈/消息 catalyst = 純炒作,
+     the graveyard pattern. We WARN and refuse the buy-consideration, exactly like
+     moonshot_hunter's PURE-HYPE-NO-EVIDENCE gate.
+
+Pure stdlib + every dimension is INJECTED (0..100 or None=TBD), so the whole
+fusion/persistence is unit-testable offline. recommend-only — never an order.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+# The five dimensions the principal listed, with display labels.
+DIMENSIONS = ("capital", "technical", "news", "supply_chain", "fundamental")
+DIM_ZH = {"capital": "資金", "technical": "技術", "news": "消息",
+          "supply_chain": "供應鏈", "fundamental": "基本面"}
+
+# Default fusion weights — 技術 + 資金 are the ignition (when it MOVES); 基本面 +
+# 供應鏈 are the catalyst (whether it DESERVES to); 消息 is confirmation.
+DEFAULT_WEIGHTS = {"technical": 0.30, "capital": 0.25, "fundamental": 0.20,
+                   "supply_chain": 0.13, "news": 0.12}
+
+# 2020-2026 代表性暴漲股 — the "ignition DNA" we want a candidate to rhyme with:
+# a deep base / cycle-bottom turn → accelerating momentum + volume expansion +
+# a confirmed catalyst (earnings inflection / supply-chain design-win).
+WINNER_EXEMPLARS = ("INTC", "MU", "NVDA", "TSLA", "AMD", "AVGO",
+                    "SMCI", "PLTR", "ARM", "APP", "CVNA", "MSTR")
+
+# Supply-chain design-win / bottleneck tags (題材 = 真有卡位), mirrored from the
+# huang / serenity universes. In the set → strong 供應鏈 dimension when un-scored.
+SUPPLY_CHAIN_TAGS = frozenset({
+    "TSM", "ASML", "AVGO", "AMD", "ARM", "MU", "AMAT", "LRCX", "KLAC", "ANET",
+    "COHR", "LITE", "CIEN", "CRDO", "ALAB", "AEHR", "MRVL", "VRT", "ETN", "GEV",
+    "NVDA", "AMKR", "TER", "ON", "MPWR", "POET", "AAOI", "FN", "GLW",
+})
+
+RALLY_MIN = 55.0          # 今天算「起漲」的 composite 門檻
+BUY_MIN = 62.0            # 夠強到可考慮(需配合 streak)
+HOT_DIM = 65.0            # 單維過熱(技術/資金)
+CATALYST_MIN = 50.0       # 基本面/供應鏈/消息 任一達此 = 有題材撐
+MIN_STREAK_BUY = 3        # 連續起漲幾「期」才考慮買入
+
+
+@dataclass
+class RallySignal:
+    ticker: str
+    dims: dict = field(default_factory=dict)     # {dim: 0..100 | None}
+    composite: float = 0.0
+    rising: bool = False                          # 技術維起漲
+    is_rallying: bool = False                     # 今期是否起漲(技術+composite)
+    streak: int = 0                               # 連續起漲期數
+    catalyst: bool = False                        # 有基本面/供應鏈/消息撐
+    price_hot: bool = False                       # 技術+資金過熱
+    dna_match: float = 0.0                         # 與暴漲股 DNA 的相符度 0..100
+    conviction: str = ""
+    buy_consider: bool = False
+    warning: str = ""
+    note: str = ""
+
+
+# ── pure fusion ────────────────────────────────────────────────────────────────
+
+def composite_score(dims: dict, weights: Optional[dict] = None) -> float:
+    """Weighted blend over the AVAILABLE dimensions (None = TBD, skipped and the
+    remaining weights renormalised — absence of a signal must not score as zero)."""
+    weights = weights or DEFAULT_WEIGHTS
+    num = den = 0.0
+    for d in DIMENSIONS:
+        v = dims.get(d)
+        if v is None:
+            continue
+        w = weights.get(d, 0.0)
+        num += w * float(v)
+        den += w
+    return round(num / den, 1) if den else 0.0
+
+
+def dna_match(dims: dict) -> float:
+    """0..100 — how well the profile rhymes with the 2020-26 winner ignition DNA:
+    moving (技術) + money-in (資金) AND a real catalyst (基本面/供應鏈/消息)."""
+    tech = float(dims.get("technical") or 0)
+    cap = float(dims.get("capital") or 0)
+    catal = max(float(dims.get("supply_chain") or 0),
+                float(dims.get("fundamental") or 0),
+                float(dims.get("news") or 0))
+    ignition = 0.5 * tech + 0.5 * cap
+    score = 0.6 * ignition + 0.4 * catal
+    # a vertical move with no catalyst is NOT the winner DNA — it is the pump DNA.
+    if catal < 30 and ignition >= HOT_DIM:
+        score *= 0.6
+    return round(max(0.0, min(100.0, score)), 1)
+
+
+def update_streak(prior_streak: int, is_rallying: bool) -> int:
+    """連續起漲 counter: +1 while rallying, reset to 0 the moment it stalls."""
+    return (max(0, prior_streak) + 1) if is_rallying else 0
+
+
+def assess(ticker: str, dims: dict, *, prior_streak: int = 0,
+           evidence_confirmed: bool = False, weights: Optional[dict] = None) -> RallySignal:
+    """Fuse the five dimensions + persistence into one 起漲 verdict for a ticker."""
+    sig = RallySignal(ticker=ticker, dims={d: dims.get(d) for d in DIMENSIONS})
+    sig.composite = composite_score(dims, weights)
+    tech = dims.get("technical")
+    sig.rising = tech is not None and float(tech) >= RALLY_MIN
+    sig.is_rallying = sig.rising and sig.composite >= RALLY_MIN
+    sig.streak = update_streak(prior_streak, sig.is_rallying)
+    sig.catalyst = evidence_confirmed or any(
+        (dims.get(d) is not None and float(dims.get(d)) >= CATALYST_MIN)
+        for d in ("fundamental", "supply_chain", "news"))
+    sig.price_hot = (float(dims.get("technical") or 0) >= HOT_DIM
+                     and float(dims.get("capital") or 0) >= HOT_DIM)
+    sig.dna_match = dna_match(dims)
+
+    if sig.price_hot and not sig.catalyst:
+        # graveyard pattern: vertical price + 資金, zero catalyst → WARN, never buy.
+        sig.conviction = "🚫 純炒作·無實證(墓園型)"
+        sig.warning = "技術/資金過熱但無基本面/供應鏈/消息題材;這是追高墓園型,先找題材或站旁邊"
+    elif sig.streak >= MIN_STREAK_BUY and sig.composite >= BUY_MIN and sig.catalyst:
+        sig.conviction = f"🟢 連續起漲 {sig.streak} 期 · 可考慮買入(分批/小倉)"
+        sig.buy_consider = True
+        sig.note = "五維共振 + 連續起漲 + 有題材撐 → 符合暴漲股點火形態,仍 recommend-only"
+    elif sig.is_rallying:
+        sig.conviction = f"🟡 起漲中 第 {sig.streak} 期(觀察,未達連續門檻)"
+        sig.note = f"等連續 ≥ {MIN_STREAK_BUY} 期 + composite ≥ {BUY_MIN:.0f} + 有題材才考慮"
+    elif sig.composite >= 45:
+        sig.conviction = "🔵 蓄勢(尚未起漲)"
+    else:
+        sig.conviction = "⚪ 觀察(訊號不足)"
+    return sig
+
+
+def build_signals(candidates, *, quality_by_ticker: Optional[dict] = None,
+                  prior_streaks: Optional[dict] = None,
+                  news_by_ticker: Optional[dict] = None) -> list["RallySignal"]:
+    """Fuse a list of basecross candidates + FOM quality + prior streaks → ranked
+    起漲 signals. The glue the /rally command runs (pure given its inputs)."""
+    quality_by_ticker = quality_by_ticker or {}
+    prior_streaks = prior_streaks or {}
+    news_by_ticker = news_by_ticker or {}
+    items = []
+    for c in candidates:
+        t = getattr(c, "ticker", "")
+        dims = dims_from_basecross(c, fom_quality=quality_by_ticker.get(t),
+                                   news=news_by_ticker.get(t))
+        items.append({"ticker": t, "dims": dims, "prior_streak": prior_streaks.get(t, 0)})
+    return rank(items)
+
+
+def rank(items: list[dict], *, weights: Optional[dict] = None) -> list[RallySignal]:
+    """Assess a batch. Each item = {ticker, dims, prior_streak?, evidence_confirmed?}.
+    Sorted: buy-considers first, then composite, then dna_match."""
+    out = [assess(it["ticker"], it["dims"], prior_streak=it.get("prior_streak", 0),
+                  evidence_confirmed=it.get("evidence_confirmed", False), weights=weights)
+           for it in items]
+    out.sort(key=lambda s: (s.buy_consider, s.composite, s.dna_match), reverse=True)
+    return out
+
+
+# ── dimension mapping from existing signals (pure helpers) ─────────────────────
+
+def dims_from_basecross(c, *, fom_quality: Optional[float] = None,
+                        news: Optional[float] = None) -> dict:
+    """Map a basecross.BaseCrossCandidate + optional FOM quality/news → the 5 dims.
+
+    技術 from the monthly cross/rising; 資金 from the volume surge; 基本面 from FOM
+    quality; 供應鏈 from the design-win tag set; 消息 injected (else TBD)."""
+    tech = 40.0
+    if getattr(c, "rising", False):
+        tech += 30
+    if getattr(c, "golden_cross", False) and getattr(c, "bottom_zone", False):
+        tech += 30
+    tech = min(100.0, tech)
+
+    vs = getattr(c, "vol_surge", None)
+    capital: Optional[float] = None
+    if vs is not None:
+        # ×1.0→30, ×1.3→~48, ×2→~70, ×3→~88, saturate ~100
+        import math
+        capital = max(0.0, min(100.0, 30.0 + 55.0 * math.log2(max(vs, 1e-9))))
+
+    supply = 80.0 if (getattr(c, "ticker", "") in SUPPLY_CHAIN_TAGS) else 45.0
+    return {
+        "technical": round(tech, 1),
+        "capital": round(capital, 1) if capital is not None else None,
+        "fundamental": round(float(fom_quality), 1) if fom_quality is not None else None,
+        "supply_chain": supply,
+        "news": round(float(news), 1) if news is not None else None,
+    }
+
+
+# ── persistence (連續起漲 across runs) ──────────────────────────────────────────
+
+def load_prior_streaks(outputs_dir: Path, before: Optional[str] = None) -> dict[str, int]:
+    """{ticker: streak} from the most recent rally-state-*.jsonl strictly before
+    ``before`` (default today) — so today's streak can continue yesterday's."""
+    before = before or datetime.now().strftime("%Y-%m-%d")
+    files = sorted(Path(outputs_dir).glob("rally-state-*.jsonl"))
+    prior = [f for f in files if f.stem.replace("rally-state-", "") < before]
+    if not prior:
+        return {}
+    out: dict[str, int] = {}
+    try:
+        for line in prior[-1].read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            r = json.loads(line)
+            if r.get("ticker"):
+                out[r["ticker"]] = int(r.get("streak", 0))
+    except Exception:
+        return out
+    return out
+
+
+def write_state(outputs_dir: Path, signals: list[RallySignal],
+                as_of: Optional[str] = None) -> Path:
+    """Append-free snapshot of today's streaks, so the next run continues them."""
+    as_of = as_of or datetime.now().strftime("%Y-%m-%d")
+    outputs_dir = Path(outputs_dir)
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+    path = outputs_dir / f"rally-state-{as_of}.jsonl"
+    lines = [json.dumps({
+        "ticker": s.ticker, "streak": s.streak, "composite": s.composite,
+        "is_rallying": s.is_rallying, "buy_consider": s.buy_consider,
+        "conviction": s.conviction, "date": as_of,
+    }, ensure_ascii=False) for s in signals]
+    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+    return path

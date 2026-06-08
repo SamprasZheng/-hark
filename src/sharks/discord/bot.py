@@ -42,6 +42,8 @@ from sharks.discord.council import CouncilResult, run_council_local
 from sharks.discord.feedback import FeedbackReport, compose_feedback
 from sharks.discord.dipbuy import DipCandidate, run_dipbuy
 from sharks.discord.basecross import BaseCrossCandidate, run_basecross
+from sharks.discord import basecross as _basecross
+from sharks.scoring import rally_signal as _rally
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -211,6 +213,41 @@ def basecross_to_embed(title: str, rows: list[BaseCrossCandidate]) -> discord.Em
     return e
 
 
+def rally_to_embed(title: str, signals: list) -> discord.Embed:
+    """Render the 起漲訊號 tracker (5維融合 + 連續起漲 → 可考慮買入)."""
+    e = discord.Embed(
+        title=f"🚀 起漲訊號追蹤 · {title}",
+        description="融合 資金/技術/消息/供應鏈/基本面;**連續起漲**才『可考慮買入』。"
+                    "對齊 2020–26 暴漲股 DNA(INTC/MU/NVDA/TSLA…)。",
+        color=0xE74C3C,
+    )
+    def dimstr(s) -> str:
+        return " ".join(f"{_rally.DIM_ZH[d]}{int(s.dims[d])}" if s.dims.get(d) is not None
+                        else f"{_rally.DIM_ZH[d]}–" for d in _rally.DIMENSIONS)
+    def line(s) -> str:
+        return (f"`{s.ticker}` C{s.composite:.0f}/DNA{s.dna_match:.0f} 連{s.streak} · "
+                f"{dimstr(s)}")
+    buy = [s for s in signals if s.buy_consider]
+    rising = [s for s in signals if s.is_rallying and not s.buy_consider]
+    grave = [s for s in signals if s.warning]
+    coil = [s for s in signals if not s.is_rallying and not s.warning and s.composite >= 45]
+    if buy:
+        e.add_field(name="🟢 連續起漲 · 可考慮買入(分批/小倉)",
+                    value="\n".join(line(s) for s in buy)[:1024], inline=False)
+    if rising:
+        e.add_field(name="🟡 起漲中(觀察,未達連續門檻)",
+                    value="\n".join(line(s) for s in rising[:10])[:1024], inline=False)
+    if coil:
+        e.add_field(name="🔵 蓄勢(尚未起漲)",
+                    value="\n".join(line(s) for s in coil[:8])[:1024], inline=False)
+    if grave:
+        e.add_field(name="🚫 純炒作·無實證(墓園型 — 不追)",
+                    value="\n".join(f"`{s.ticker}` {s.warning[:60]}" for s in grave[:6])[:1024],
+                    inline=False)
+    e.set_footer(text="recommend-only · 連續起漲才考慮 · 墓園型一律不追 · 進場仍配 regime/資金面健檢")
+    return e
+
+
 class SharksBot(discord.Client):
     def __init__(self, settings: Settings, run_once: Optional[list[str]] = None):
         intents = discord.Intents.default()
@@ -334,7 +371,8 @@ class SharksBot(discord.Client):
             "`/rescan [fom|signals|health|all]` — **重跑**選股/訊號/健檢掃描(本地)再貼最新\n"
             "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)\n"
             "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)\n"
-            "`/basecross [killed2022|ai_software|all] [tickers:CRWD,VST]` — 月線底部金叉+資金介入(Boeing/Snowflake 大底)"), inline=False)
+            "`/basecross [killed2022|ai_software|all] [tickers:CRWD,VST]` — 月線底部金叉+資金介入(Boeing/Snowflake 大底)\n"
+            "`/rally [which] [tickers:INTC,MU,NVDA]` — 起漲訊號追蹤(5維融合;連續起漲才可考慮買入)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -637,6 +675,29 @@ class SharksBot(discord.Client):
                 run_basecross, which.value if which else "all",
                 settings=settings, extra_tickers=extra or None)
             await interaction.followup.send(embed=basecross_to_embed(title, rows))
+
+        @tree.command(name="rally",
+                      description="起漲訊號追蹤(融合資金/技術/消息/供應鏈/基本面;連續起漲才可考慮買入)")
+        @app_commands.describe(which="killed2022 / ai_software / all(預設)",
+                               tickers="額外加入的代號,逗號分隔(例:INTC,MU,NVDA,TSLA)")
+        @app_commands.choices(which=[
+            app_commands.Choice(name="2022 殺下來的大底", value="killed2022"),
+            app_commands.Choice(name="AI 錯殺軟體股", value="ai_software"),
+            app_commands.Choice(name="全名單", value="all"),
+        ])
+        async def rally_cmd(interaction: discord.Interaction,
+                            which: Optional[app_commands.Choice[str]] = None,
+                            tickers: str = ""):
+            await interaction.response.defer(thinking=True)   # yfinance 5y fetch, ~slow
+            extra = [t.strip().upper() for t in tickers.replace(" ", ",").split(",") if t.strip()]
+            title, rows = await asyncio.to_thread(
+                run_basecross, which.value if which else "all",
+                settings=settings, extra_tickers=extra or None)
+            quality = await asyncio.to_thread(_basecross.quality_from_fom, settings.outputs_dir)
+            prior = await asyncio.to_thread(_rally.load_prior_streaks, settings.outputs_dir)
+            signals = _rally.build_signals(rows, quality_by_ticker=quality, prior_streaks=prior)
+            await asyncio.to_thread(_rally.write_state, settings.outputs_dir, signals)
+            await interaction.followup.send(embed=rally_to_embed(title, signals))
 
         @tree.command(name="rescan",
                       description="重跑選股/訊號/健檢掃描(本地;FOM 全宇宙掃描較久),完成後貼最新結果")
