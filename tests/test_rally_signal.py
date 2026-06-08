@@ -114,6 +114,20 @@ def test_provisional_rank_blends_priors_and_folds_in_live_momentum():
     assert not shop["momentum_pending"] and shop["momentum"] == 95
 
 
+def test_ecommerce_rank_folds_live_momentum_and_fom():
+    class C:
+        def __init__(self, t, rising, gc, vs):
+            self.ticker, self.rising, self.golden_cross = t, rising, gc
+            self.bottom_zone, self.vol_surge = gc, vs
+    cands = [C("JMIA", True, True, 3.0),      # hot 動能 but weak 基本面 prior (28)
+             C("VIPS", False, False, None)]   # strong priors, cold 動能
+    ranked = R.ecommerce_rank(cands, quality_by_ticker={"VIPS": 75.0})
+    by = {r["ticker"]: r for r in ranked}
+    assert not by["JMIA"]["momentum_pending"]       # live 動能 folded in
+    assert by["JMIA"]["momentum"] > 80               # rising + bottom cross + ×3 vol
+    assert by["VIPS"]["fundamental"] == 75.0         # FOM overrode the prior
+
+
 def test_rank_orders_buy_considers_first():
     items = [
         {"ticker": "LOW", "dims": {"technical": 30, "capital": 20}},

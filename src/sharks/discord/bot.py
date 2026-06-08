@@ -248,6 +248,35 @@ def rally_to_embed(title: str, signals: list) -> discord.Embed:
     return e
 
 
+def ecomrank_to_embed(rows: list, small_set: set) -> discord.Embed:
+    """Render the 電商綜合排名 (獲利空間 × 基本面 × 炒作動能)."""
+    e = discord.Embed(
+        title="🏆 電商綜合排名 · 獲利空間 × 基本面 × 炒作動能",
+        description="基本面(FOM/先驗)35% + 獲利空間(估值+距高先驗)35% + 炒作動能"
+                    "(技術+資金即時)30%。先驗會被即時數據覆蓋。recommend-only。",
+        color=0xF1C40F,
+    )
+    def fmt(v) -> str:
+        return f"{v:.0f}" if isinstance(v, (int, float)) else "–"
+    lines = []
+    for i, r in enumerate(rows[:24], 1):
+        sz = "小" if r["ticker"] in small_set else "大"
+        mom = "待" if r.get("momentum_pending") else fmt(r.get("momentum"))
+        lines.append(f"{i:>2} `{r['ticker']:<5}` 綜{r['composite']:>4.0f} · "
+                     f"基{fmt(r.get('fundamental'))}/空{fmt(r.get('upside'))}/動{mom} [{sz}]")
+    # split into <=1024-char fields
+    chunk, n = [], 0
+    for ln in lines:
+        if n + len(ln) + 1 > 1000 and chunk:
+            e.add_field(name="排名", value="\n".join(chunk), inline=False)
+            chunk, n = [], 0
+        chunk.append(ln); n += len(ln) + 1
+    if chunk:
+        e.add_field(name="排名(續)" if e.fields else "排名", value="\n".join(chunk), inline=False)
+    e.set_footer(text="基本面/獲利空間=保守相對先驗(被 FOM/即時距高覆蓋)· 動能=basecross 即時 · 非個人化建議")
+    return e
+
+
 class SharksBot(discord.Client):
     def __init__(self, settings: Settings, run_once: Optional[list[str]] = None):
         intents = discord.Intents.default()
@@ -372,7 +401,8 @@ class SharksBot(discord.Client):
             "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)\n"
             "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)\n"
             "`/basecross [killed2022|ai_software|all] [tickers:CRWD,VST]` — 月線底部金叉+資金介入(Boeing/Snowflake 大底)\n"
-            "`/rally [killed2022|ai_software|ecommerce|all] [tickers:SHOP,SE]` — 起漲訊號追蹤(5維融合;連續起漲才可考慮買入)"), inline=False)
+            "`/rally [killed2022|ai_software|ecommerce|all] [tickers:SHOP,SE]` — 起漲訊號追蹤(5維融合;連續起漲才可考慮買入)\n"
+            "`/ecomrank [scope] [tickers:8454.TW]` — 電商綜合排名(獲利空間×基本面×炒作動能)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -702,6 +732,22 @@ class SharksBot(discord.Client):
             signals = _rally.build_signals(rows, quality_by_ticker=quality, prior_streaks=prior)
             await asyncio.to_thread(_rally.write_state, settings.outputs_dir, signals)
             await interaction.followup.send(embed=rally_to_embed(title, signals))
+
+        @tree.command(name="ecomrank",
+                      description="電商綜合排名(獲利空間×基本面×炒作動能;動能即時 fold-in)")
+        @app_commands.describe(scope="ecommerce(大+小,預設)/ ecommerce_small / all",
+                               tickers="額外加入的代號(例:8454.TW,8044.TW)")
+        async def ecomrank_cmd(interaction: discord.Interaction,
+                               scope: str = "ecommerce", tickers: str = ""):
+            await interaction.response.defer(thinking=True)   # yfinance 5y fetch
+            scope = scope.strip().lower() or "ecommerce"
+            extra = [t.strip().upper() for t in tickers.replace(" ", ",").split(",") if t.strip()]
+            title, rows = await asyncio.to_thread(
+                run_basecross, scope, settings=settings, extra_tickers=extra or None)
+            quality = await asyncio.to_thread(_basecross.quality_from_fom, settings.outputs_dir)
+            ranked = _rally.ecommerce_rank(rows, quality_by_ticker=quality)
+            small = set(_basecross.ECOMMERCE_SMALL)
+            await interaction.followup.send(embed=ecomrank_to_embed(ranked, small))
 
         @tree.command(name="rescan",
                       description="重跑選股/訊號/健檢掃描(本地;FOM 全宇宙掃描較久),完成後貼最新結果")

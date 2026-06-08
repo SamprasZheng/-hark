@@ -124,6 +124,28 @@ def provisional_rank(tickers: list[str], *, quality_priors: Optional[dict] = Non
     return out
 
 
+def ecommerce_rank(candidates, *, quality_by_ticker: Optional[dict] = None) -> list[dict]:
+    """綜合排名 for e-commerce, with LIVE 炒作動能 folded in.
+
+    動能 = mean(技術, 資金) from each basecross candidate; 基本面 = FOM quality where
+    present else QUALITY_PRIORS; 獲利空間 = UPSIDE_PRIORS. Returns provisional_rank
+    output with momentum no longer pending. This is what /ecomrank runs."""
+    quality_by_ticker = quality_by_ticker or {}
+    merged_quality = dict(QUALITY_PRIORS)
+    merged_quality.update({k: v for k, v in quality_by_ticker.items() if v is not None})
+    momentum: dict[str, float] = {}
+    tickers: list[str] = []
+    for c in candidates:
+        t = getattr(c, "ticker", "")
+        tickers.append(t)
+        d = dims_from_basecross(c)
+        vals = [x for x in (d["technical"], d["capital"]) if x is not None]
+        if vals:
+            momentum[t] = round(sum(vals) / len(vals), 1)
+    return provisional_rank(tickers, quality_priors=merged_quality,
+                            momentum_by_ticker=momentum)
+
+
 @dataclass
 class RallySignal:
     ticker: str
