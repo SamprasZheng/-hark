@@ -170,6 +170,9 @@ ROTATION_2022_AI = [
 # 純比價平台反而被商品化,所以仍靠 FOM quality(盈利)維度過濾。
 ECOMMERCE_AGENTIC = [
     "MELI", "BABA", "PDD", "CPNG", "ETSY", "EBAY", "W", "CHWY", "GLBE", "BIGC", "JD",
+    # 小型 / 長尾(主理人點名 Jumia/Wayfair/Etsy + 同型小型電商)— 高賠率高風險,
+    # 仍靠盈利(quality)維度過濾。mirrored in discord/basecross.ECOMMERCE_SMALL.
+    "JMIA", "RVLV", "VIPS", "REAL", "SFIX", "WRBY", "MYTE", "CART", "FIGS", "RENT",
 ]
 
 # ── Master universe assembly ───────────────────────────────────────────────

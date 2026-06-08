@@ -41,8 +41,14 @@ FOM 宇宙 `ECOMMERCE_AGENTIC` 群。
 - **偏弱 / 結構壓力**:W(Wayfair)、PChome 8044、BIGC/GLBE(小)。
 
 ## 候選宇宙
-US/ADR(yfinance 直接抓):`AMZN, SHOP, SE, MELI, BABA, PDD, CPNG, ETSY, EBAY, W, CHWY, GLBE, BIGC, JD`
+US/ADR 大中型(yfinance 直接抓):`AMZN, SHOP, SE, MELI, BABA, PDD, CPNG, ETSY, EBAY, W, CHWY, GLBE, BIGC, JD`
+**小型 / 長尾(高賠率高風險,主理人點名)**:`JMIA, RVLV, VIPS, REAL, SFIX, WRBY, MYTE, CART, FIGS, RENT`
 台股(需 Phase-2 suffix,先用 tickers: 丟):`8454.TW`(富邦媒 Momo)、`8044.TW`(網家 PChome)、`2912.TW`(統一超,通路)
+
+### 小型電商盈利分層(「還有利潤空間」的紀律)
+- 🟢 **已獲利 + 還沒噴(有空間)**:`RVLV`(時尚,長期賺錢、現金多)、`VIPS`(中國折扣,賺錢+回購、估值低,但中國/退市風險)、`CART`(已轉盈,grocery 規模)。
+- 🟡 **轉盈中 / 接近損益兩平(賭轉機)**:`REAL`(精品二手,毛利改善)、`SFIX`(縮表轉盈)、`WRBY`(眼鏡 DTC,展店放量)、`MYTE`(精品,併購 YNAP 後規模)、`FIGS`(醫護服飾,獲利但成長放緩)。
+- 🔴 **燒錢 / 結構壓力(高風險,純賠率)**:`JMIA`(非洲電商,深跌、敘事大、尚未穩定獲利 → `/rally` 容易被打成「純炒作·無實證」,只能極小倉/觀察)、`W`(Wayfair,薄利+利率逆風)、`RENT`(Rent the Runway,長期燒錢)。
 
 ## 怎麼追蹤(系統現有工具)
 ```

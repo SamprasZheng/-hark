@@ -44,6 +44,11 @@ ECOMMERCE_AGENTIC = [
     "AMZN", "SHOP", "SE", "MELI", "BABA", "PDD", "CPNG", "ETSY", "EBAY",
     "W", "CHWY", "GLBE", "BIGC", "JD",
 ]
+# 小型 / 長尾電商(更高賠率、也更高風險;含主理人點名的 Jumia/Wayfair/Etsy)。
+# 用 /basecross ecommerce 一起篩;盈利分層見 watchlist/thesis_ecommerce_agentic.md。
+ECOMMERCE_SMALL = [
+    "JMIA", "RVLV", "VIPS", "REAL", "SFIX", "WRBY", "MYTE", "CART", "FIGS", "RENT",
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -213,17 +218,20 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     """Screen a thesis list. which ∈ {killed2022, ai_software, all}; ``extra_tickers``
     lets you throw arbitrary names (e.g. straight from a Finviz/Pelosi screenshot)."""
     settings = settings or Settings.load()
+    ecommerce_all = ECOMMERCE_AGENTIC + ECOMMERCE_SMALL
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
-        "ecommerce": ("電商 · agentic-commerce", ECOMMERCE_AGENTIC),
+        "ecommerce": ("電商 · agentic-commerce(含小型)", ecommerce_all),
+        "ecommerce_small": ("小型電商(高賠率高風險)", ECOMMERCE_SMALL),
         "all": ("月線大底金叉全名單",
-                sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE) | set(ECOMMERCE_AGENTIC))),
+                sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE) | set(ecommerce_all))),
     }
     title, base = lists.get(which, lists["all"])
     theme = {t: "2022殺" for t in KILLED_2022}
     theme.update({t: (theme.get(t, "") + "+AI錯殺").lstrip("+") for t in AI_OVERSOLD_SOFTWARE})
-    theme.update({t: (theme.get(t, "") + "+電商").lstrip("+") for t in ECOMMERCE_AGENTIC})
+    theme.update({t: (theme.get(t, "") + "+電商").lstrip("+") for t in ecommerce_all})
+    theme.update({t: (theme.get(t, "") + "·小型").lstrip("+") for t in ECOMMERCE_SMALL})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),

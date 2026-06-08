@@ -78,7 +78,15 @@ def test_run_basecross_extra_tickers_and_themes():
 
 
 def test_run_basecross_ecommerce_list():
-    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
-              for t in BC.ECOMMERCE_AGENTIC}
+    names = BC.ECOMMERCE_AGENTIC + BC.ECOMMERCE_SMALL
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []} for t in names}
     title, rows = BC.run_basecross("ecommerce", fetch=_fetch(series))
-    assert "電商" in title and {r.ticker for r in rows} == set(BC.ECOMMERCE_AGENTIC)
+    assert "電商" in title and {r.ticker for r in rows} == set(names)
+
+
+def test_run_basecross_ecommerce_small_list():
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
+              for t in BC.ECOMMERCE_SMALL}
+    title, rows = BC.run_basecross("ecommerce_small", fetch=_fetch(series))
+    assert "小型" in title and {r.ticker for r in rows} == set(BC.ECOMMERCE_SMALL)
+    assert "JMIA" in {r.ticker for r in rows}        # 主理人點名的小型電商
