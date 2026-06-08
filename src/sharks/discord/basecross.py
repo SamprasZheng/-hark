@@ -74,6 +74,12 @@ DIVERSIFIED_TURNAROUND = [
     "SBUX", "DIS", "EL", "ALB", "MMM",            # 餐飲 / 媒體 / 美妝 / 材料 / 工業(轉機)
     "PYPL", "RKLB", "F", "WBD",                   # 金融 / 太空 / 汽車 / 媒體(高賠率)
 ]
+# 更多「中風險」轉機股:週期/公司轉機,有真營收/現金流(非殭屍、非 pre-profit),
+# 但轉機未證實。跨金融/醫療/工業/材料/通訊/汽車/能源,刻意分散不重押單一產業。
+MID_RISK_TURNAROUND = [
+    "C", "BIIB", "MDT", "DE", "LYB", "FCX",       # 金融 / 生技 / 醫材 / 農機 / 化工 / 銅
+    "CMCSA", "APTV", "GM", "SLB", "DPZ", "GPC",   # 通訊 / 車用零件 / 車廠 / 油服 / 餐飲 / 汽配
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -246,7 +252,8 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     ecommerce_all = ECOMMERCE_AGENTIC + ECOMMERCE_SMALL
     everything = sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE)
                         | set(ecommerce_all) | set(BROADENING_LAGGARDS)
-                        | set(SPACE_PUREPLAYS) | set(DIVERSIFIED_TURNAROUND))
+                        | set(SPACE_PUREPLAYS) | set(DIVERSIFIED_TURNAROUND)
+                        | set(MID_RISK_TURNAROUND))
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
@@ -255,6 +262,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
         "broadening": ("廣度輪動 · 錯殺民生/消費/醫療", BROADENING_LAGGARDS),
         "space": ("太空板塊 · SpaceX IPO 催化", SPACE_PUREPLAYS),
         "diversified": ("跨產業分散轉機股", DIVERSIFIED_TURNAROUND),
+        "midrisk": ("中風險轉機股(週期/公司轉機)", MID_RISK_TURNAROUND),
         "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
@@ -265,6 +273,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     theme.update({t: (theme.get(t, "") + "+廣度").lstrip("+") for t in BROADENING_LAGGARDS})
     theme.update({t: (theme.get(t, "") + "+太空").lstrip("+") for t in SPACE_PUREPLAYS})
     theme.update({t: (theme.get(t, "") + "+分散").lstrip("+") for t in DIVERSIFIED_TURNAROUND})
+    theme.update({t: (theme.get(t, "") + "+中風險").lstrip("+") for t in MID_RISK_TURNAROUND})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),

@@ -108,3 +108,11 @@ def test_run_basecross_diversified_list():
     assert "分散" in title and {r.ticker for r in rows} == set(BC.DIVERSIFIED_TURNAROUND)
     assert len(BC.DIVERSIFIED_TURNAROUND) == 15      # 15 檔跨產業
     assert "分散" in {r.ticker: r for r in rows}["KVUE"].theme
+
+
+def test_run_basecross_midrisk_list():
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
+              for t in BC.MID_RISK_TURNAROUND}
+    title, rows = BC.run_basecross("midrisk", fetch=_fetch(series))
+    assert "中風險" in title and {r.ticker for r in rows} == set(BC.MID_RISK_TURNAROUND)
+    assert "C" in {r.ticker for r in rows} and "中風險" in {r.ticker: r for r in rows}["DE"].theme

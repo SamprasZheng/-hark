@@ -197,6 +197,11 @@ BROADENING_LAGGARDS = [
 # ALB(鋰/材料)、MMM(工業)、F(汽車)、WBD(媒體)、PYPL(金融)。
 DIVERSIFIED_TURNAROUND = ["ALB", "MMM", "F", "WBD", "PYPL", "DIS"]
 
+# 更多中風險轉機股(週期/公司轉機,有真營收)— mirrored in
+# discord/basecross.MID_RISK_TURNAROUND. 金融/生技/醫材/農機/化工/銅/通訊/車/油服。
+MID_RISK_TURNAROUND = ["C", "BIIB", "MDT", "DE", "LYB", "FCX",
+                       "CMCSA", "APTV", "GM", "SLB", "DPZ", "GPC"]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -205,7 +210,8 @@ DEFAULT_UNIVERSE = sorted(set(
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
     SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
-    ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS + DIVERSIFIED_TURNAROUND
+    ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS +
+    DIVERSIFIED_TURNAROUND + MID_RISK_TURNAROUND
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───
