@@ -41,6 +41,7 @@ from sharks.discord.content import run_content_local
 from sharks.discord.council import CouncilResult, run_council_local
 from sharks.discord.feedback import FeedbackReport, compose_feedback
 from sharks.discord.dipbuy import DipCandidate, run_dipbuy
+from sharks.discord.basecross import BaseCrossCandidate, run_basecross
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -184,6 +185,32 @@ def dipbuy_to_embed(title: str, rows: list[DipCandidate]) -> discord.Embed:
     return e
 
 
+def basecross_to_embed(title: str, rows: list[BaseCrossCandidate]) -> discord.Embed:
+    """Render the 月線底部金叉 + 資金介入 screen (Boeing/Snowflake 大底形態)."""
+    e = discord.Embed(
+        title=f"📈 月線大底金叉 · {title}",
+        description="題材(2022殺/AI錯殺軟體)+ 月線底部金叉 + 資金介入。找 Boeing/Snowflake 那種大底翻揚。",
+        color=0x8E44AD,
+    )
+    green = [c for c in rows if c.verdict.startswith("🟢")]
+    yellow = [c for c in rows if c.verdict.startswith("🟡")]
+    blue = [c for c in rows if c.verdict.startswith("🔵")]
+    def line(c: BaseCrossCandidate) -> str:
+        if c.last is None:
+            return f"`{c.ticker}` — {c.note}"
+        th = f" [{c.theme}]" if c.theme else ""
+        vs = f" · 量×{c.vol_surge:.1f}" if c.vol_surge else ""
+        return f"`{c.ticker}`{th} 距高 {c.dist_ath_pct:.0f}%{vs}"
+    if green:
+        e.add_field(name="🟢 金叉+資金(主力候選)", value="\n".join(line(c) for c in green)[:1024], inline=False)
+    if yellow:
+        e.add_field(name="🟡 金叉或量能,待另一半確認", value="\n".join(line(c) for c in yellow)[:1024], inline=False)
+    if blue:
+        e.add_field(name="🔵 築底中 · 待金叉", value="\n".join(line(c) for c in blue[:12])[:1024], inline=False)
+    e.set_footer(text="recommend-only · 月線=日線重抽樣近似 · 距高/量能即時算,盈利 q 需 FOM 宇宙覆蓋")
+    return e
+
+
 class SharksBot(discord.Client):
     def __init__(self, settings: Settings, run_once: Optional[list[str]] = None):
         intents = discord.Intents.default()
@@ -306,7 +333,8 @@ class SharksBot(discord.Client):
             "`/picks` — 貼最近一次選股 / 訊號(不重跑,只貼快取)\n"
             "`/rescan [fom|signals|health|all]` — **重跑**選股/訊號/健檢掃描(本地)再貼最新\n"
             "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)\n"
-            "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)"), inline=False)
+            "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)\n"
+            "`/basecross [killed2022|ai_software|all] [tickers:CRWD,VST]` — 月線底部金叉+資金介入(Boeing/Snowflake 大底)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -590,6 +618,25 @@ class SharksBot(discord.Client):
             title, rows = await asyncio.to_thread(
                 run_dipbuy, which.value if which else "software", settings=settings)
             await interaction.followup.send(embed=dipbuy_to_embed(title, rows))
+
+        @tree.command(name="basecross",
+                      description="月線底部金叉+資金介入篩選(2022殺/AI錯殺軟體;可丟自訂 ticker)")
+        @app_commands.describe(which="killed2022 / ai_software / all(預設)",
+                               tickers="額外加篩的代號,逗號分隔(例:CRWD,VST,ADBE)")
+        @app_commands.choices(which=[
+            app_commands.Choice(name="2022 殺下來的大底", value="killed2022"),
+            app_commands.Choice(name="AI 錯殺軟體股", value="ai_software"),
+            app_commands.Choice(name="全名單", value="all"),
+        ])
+        async def basecross_cmd(interaction: discord.Interaction,
+                                which: Optional[app_commands.Choice[str]] = None,
+                                tickers: str = ""):
+            await interaction.response.defer(thinking=True)   # yfinance 5y fetch, ~slow
+            extra = [t.strip().upper() for t in tickers.replace(" ", ",").split(",") if t.strip()]
+            title, rows = await asyncio.to_thread(
+                run_basecross, which.value if which else "all",
+                settings=settings, extra_tickers=extra or None)
+            await interaction.followup.send(embed=basecross_to_embed(title, rows))
 
         @tree.command(name="rescan",
                       description="重跑選股/訊號/健檢掃描(本地;FOM 全宇宙掃描較久),完成後貼最新結果")

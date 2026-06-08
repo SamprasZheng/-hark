@@ -1,0 +1,223 @@
+"""月線底部金叉 + 資金介入 screener — the "Intel 領漲 → 補炒 2022 殺下來的票 + AI 錯殺
+軟體股" rotation thesis (2026-06).
+
+Principal thesis: Intel 的反彈打開了「**補炒 2022 被殺下來 + AI 錯殺軟體股**」的門。要找的
+形態 = **Boeing / Snowflake 那種多年大底翻揚**:
+  * 題材        — 屬於 2022 空頭重災 或 被「AI 會取代它」錯殺的軟體股(下面兩張清單)。
+  * 月線底部金叉 — 月線級別 MACD 在**低檔**由下往上交叉(底部金叉,不是高檔金叉)。
+  * 資金介入     — 近月成交量相對前段明顯放大(量價配合 = 主力進場的痕跡)。
+  * 大底形態     — 距歷史高有一段(深跌、長期築底),剛開始翻揚,不是貼著高點、也不是落刀。
+
+這是 dipbuy.py「距高+盈利+起漲」的姊妹篩(日線動能版);本檔是**月線結構版**,專門抓
+Boeing/Snowflake 那種「月線剛翻多」的大底。純函式 + fetch 可注入(離線可測);
+recommend-only — 只篩研究清單,永不下單,不捏造數字。
+
+月線是用日線重抽樣近似的(每 ~21 個交易日一根),所以不需要日期序列就能算「月線級別」
+MACD;fetch 給足 ~5 年日線即可。
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Optional
+
+from sharks.discord.config import Settings
+
+# ── 題材宇宙(候選池,不是部位)─────────────────────────────────────────────────
+# 2022 空頭殺下來、之後長期築底的「Boeing/Snowflake 形態」候選。
+KILLED_2022 = [
+    "INTC", "BA", "SNOW", "PYPL", "ADBE", "CRM", "NKE", "DIS", "ROKU", "TWLO",
+    "DDOG", "NET", "OKTA", "ZS", "MDB", "SHOP", "U", "PATH", "RBLX", "PINS",
+    "SE", "ABNB", "DOCU", "WDAY", "TEAM", "BILL", "CFLT", "GTLB", "ESTC", "DOCN",
+]
+# 被「AI 會取代它」恐慌錯殺的軟體股(SaaS / 應用層)。
+AI_OVERSOLD_SOFTWARE = [
+    "ADBE", "CRM", "NOW", "INTU", "WDAY", "HUBS", "DDOG", "MDB", "SNOW", "TEAM",
+    "DOCU", "ESTC", "TWLO", "ZI", "PATH", "AI", "S", "BRZE", "GTLB", "CHGG",
+]
+
+FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
+
+
+@dataclass
+class BaseCrossCandidate:
+    ticker: str
+    last: Optional[float] = None
+    dist_ath_pct: Optional[float] = None      # 距歷史高 %(築底深度)
+    golden_cross: bool = False                # 月線 MACD 由下往上交叉
+    bottom_zone: bool = False                 # 交叉發生在低檔(底部金叉,非高檔)
+    rising: bool = False                      # 月線剛翻揚(站上月均)
+    vol_surge: Optional[float] = None         # 近月量 / 前段量(資金介入)
+    inflow: bool = False                      # 資金介入確認
+    quality: Optional[float] = None           # 盈利支持(FOM quality,有就帶)
+    theme: str = ""                           # 2022殺 / AI錯殺
+    score: float = 0.0
+    verdict: str = ""
+    note: str = ""
+
+
+# ── 純數學:EMA / MACD / 月線重抽樣 ─────────────────────────────────────────────
+
+def _ema(xs: list[float], span: int) -> list[float]:
+    k = 2.0 / (span + 1)
+    e = xs[0]
+    out = [e]
+    for x in xs[1:]:
+        e = x * k + e * (1 - k)
+        out.append(e)
+    return out
+
+
+def _macd(closes: list[float], fast: int = 12, slow: int = 26, sig: int = 9
+          ) -> tuple[list[float], list[float]]:
+    ef, es = _ema(closes, fast), _ema(closes, slow)
+    macd = [a - b for a, b in zip(ef, es)]
+    signal = _ema(macd, sig)
+    return macd, signal
+
+
+def _to_monthly(daily: list[float], bucket: int = 21, agg: str = "last") -> list[float]:
+    """Resample a daily series to ~monthly. last close per bucket, or sum (volume)."""
+    out: list[float] = []
+    for i in range(0, len(daily), bucket):
+        chunk = daily[i:i + bucket]
+        if not chunk:
+            continue
+        out.append(chunk[-1] if agg == "last" else float(sum(chunk)))
+    return out
+
+
+# ── 評分 ───────────────────────────────────────────────────────────────────────
+
+def _classify(c: BaseCrossCandidate, *, beaten_min: float, beaten_max: float,
+              inflow_min: float) -> None:
+    d = c.dist_ath_pct or 0.0
+    gc = c.golden_cross and c.bottom_zone
+    if d < beaten_min:
+        c.verdict = "〽️ 近高/乖離(非大底)"
+        c.note = f"距高僅 {d:.0f}%,不是 2022 大底形態"
+    elif d > beaten_max:
+        c.verdict = "⚠️ 跌太深(落刀?)"
+        c.note = f"距高 {d:.0f}%,需查是否價值陷阱/退市風險"
+    elif gc and c.inflow:
+        c.verdict = "🟢 月線底部金叉 + 資金進場"
+        c.note = (f"距高 {d:.0f}% + 月線金叉(低檔)+ 量能放大 ×{c.vol_surge:.1f}"
+                  + (f" + 盈利 q={c.quality:.0f}" if c.quality is not None else " · 盈利TBD"))
+    elif gc:
+        c.verdict = "🟡 月線金叉 · 量能待確認"
+        c.note = f"距高 {d:.0f}% + 月線金叉,但資金未明顯介入(量 ×{(c.vol_surge or 0):.1f} < {inflow_min:.1f})"
+    elif c.inflow and c.rising:
+        c.verdict = "🟡 量先進場 · 金叉待確認"
+        c.note = f"距高 {d:.0f}% + 量放大 ×{c.vol_surge:.1f},月線金叉尚未成形"
+    else:
+        c.verdict = "🔵 築底中 · 待金叉"
+        c.note = f"距高 {d:.0f}% 大底已成,等月線金叉 + 資金介入"
+    # 排名:底部金叉最重、資金介入次之、距高甜蜜區(這類深跌名字 ~50% off 最典型)
+    sweet = max(0.0, 1 - abs(d - 50) / 50)
+    c.score = round(45 * (1 if gc else 0) + 25 * (1 if c.inflow else 0)
+                    + 20 * sweet + 10 * (1 if c.rising else 0) + 0.1 * (c.quality or 0), 1)
+
+
+def screen(tickers: list[str], *, fetch: FetchFn,
+           quality_by_ticker: Optional[dict[str, float]] = None,
+           theme_by_ticker: Optional[dict[str, str]] = None,
+           beaten_min: float = 20.0, beaten_max: float = 85.0,
+           inflow_min: float = 1.3, min_months: int = 30
+           ) -> list[BaseCrossCandidate]:
+    """Screen for 月線底部金叉 + 資金介入. ``fetch(tickers) -> {t: {close:[], volume:[]}}``
+    (≥ ~5y daily). Pure given ``fetch`` (tests inject a stub)."""
+    quality_by_ticker = quality_by_ticker or {}
+    theme_by_ticker = theme_by_ticker or {}
+    data = fetch(tickers)
+    out: list[BaseCrossCandidate] = []
+    for t in tickers:
+        c = BaseCrossCandidate(ticker=t, quality=quality_by_ticker.get(t),
+                               theme=theme_by_ticker.get(t, ""))
+        d = data.get(t) or {}
+        closes, vols = d.get("close") or [], d.get("volume") or []
+        mc = _to_monthly(closes, agg="last")
+        if len(mc) < min_months:
+            c.verdict, c.note = "資料不足", "月線樣本不足(需 ~5 年日線)"
+            out.append(c)
+            continue
+
+        last, ath = mc[-1], max(mc)
+        c.last = round(last, 2)
+        c.dist_ath_pct = round((ath - last) / ath * 100, 1) if ath else 0.0
+
+        macd, signal = _macd(mc)
+        c.golden_cross = (macd[-2] <= signal[-2]) and (macd[-1] > signal[-1])
+        recent = macd[-12:]
+        lo, hi = min(recent), max(recent)
+        mid = (lo + hi) / 2
+        c.bottom_zone = macd[-1] <= max(0.0, mid)     # 交叉在零軸下或近期低檔 = 底部金叉
+        sma6 = sum(mc[-6:]) / 6
+        c.rising = last > mc[-2] and last >= sma6
+
+        mv = _to_monthly(vols, agg="sum") if vols else []
+        if len(mv) >= 12:
+            base = sum(mv[-12:-2]) / 10 or 1.0
+            recent_v = sum(mv[-2:]) / 2
+            c.vol_surge = round(recent_v / base, 2) if base else None
+            c.inflow = (c.vol_surge or 0) >= inflow_min
+
+        _classify(c, beaten_min=beaten_min, beaten_max=beaten_max, inflow_min=inflow_min)
+        out.append(c)
+    out.sort(key=lambda x: x.score, reverse=True)
+    return out
+
+
+# ── yfinance fetch (close + volume, ~5y) ───────────────────────────────────────
+
+def default_fetch(tickers: list[str], period: str = "5y") -> dict[str, dict[str, list[float]]]:
+    import yfinance as yf
+    out: dict[str, dict[str, list[float]]] = {}
+    for t in tickers:
+        try:
+            h = yf.Ticker(t).history(period=period, auto_adjust=True)
+            cs = [float(x) for x in h["Close"].dropna().tolist()]
+            vs = [float(x) for x in h["Volume"].fillna(0).tolist()]
+            if len(cs) >= 30 * 21:
+                out[t] = {"close": cs, "volume": vs[:len(cs)]}
+        except Exception:
+            continue
+    return out
+
+
+def quality_from_fom(outputs_dir: Path) -> dict[str, float]:
+    """{ticker: FOM quality} from the latest fom-monthly scan (盈利支持, optional)."""
+    files = sorted(Path(outputs_dir).glob("fom-monthly-*.json"))
+    if not files:
+        return {}
+    try:
+        d = json.loads(files[-1].read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return {r["ticker"]: float(r["quality"]) for r in d.get("ranked_full", []) or []
+            if r.get("ticker") and r.get("quality") is not None}
+
+
+def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
+                  fetch: FetchFn = default_fetch,
+                  extra_tickers: Optional[list[str]] = None
+                  ) -> tuple[str, list[BaseCrossCandidate]]:
+    """Screen a thesis list. which ∈ {killed2022, ai_software, all}; ``extra_tickers``
+    lets you throw arbitrary names (e.g. straight from a Finviz/Pelosi screenshot)."""
+    settings = settings or Settings.load()
+    lists = {
+        "killed2022": ("2022 殺下來的大底", KILLED_2022),
+        "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
+        "all": ("月線大底金叉全名單", sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE))),
+    }
+    title, base = lists.get(which, lists["all"])
+    theme = {t: "2022殺" for t in KILLED_2022}
+    theme.update({t: (theme.get(t, "") + "+AI錯殺").lstrip("+") for t in AI_OVERSOLD_SOFTWARE})
+    tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
+    rows = screen(tickers, fetch=fetch,
+                  quality_by_ticker=quality_from_fom(settings.outputs_dir),
+                  theme_by_ticker=theme)
+    if extra_tickers:
+        title += f"(+{len(extra_tickers)} 自訂)"
+    return title, rows
