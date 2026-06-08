@@ -119,8 +119,15 @@ WIKI_16_THEMES = ["DNN", "CCJ", "BEAM", "NEM", "VAL", "AESI", "GLD"]
 SERENITY_SUPPLY_CHAIN = ["TSEM", "MRVL", "VPG", "VSH"]
 
 # ── 2026-05-30 expansion (user heatmap + theme directives) ──────────────────
-# Space / SpaceX-IPO + space-boom theme. RKLB already in R2K_AI; set() dedupes.
-SPACE = ["LUNR", "RDW", "ASTS", "PL", "RKLB"]
+# Space / SpaceX-IPO theme — sub-segmented along the value chain (2026-06-08).
+# Most are 2021-SPAC survivors crushed in 2022 → 錯殺大底 profile; the SpaceX IPO
+# is the narrative catalyst that can re-rate them. Double-edged: Starlink competes
+# with the satcom names, so 持續性 needs real contracts/revenue, not just hype.
+SPACE_LAUNCH = ["RKLB"]                          # 發射(SpaceX 最純的對標)
+SPACE_SATCOM = ["ASTS", "IRDM", "GSAT", "VSAT"]  # 衛星通訊 / direct-to-cell(Starlink 對標)
+SPACE_IMAGERY = ["PL", "BKSY", "SPIR"]           # 對地觀測 / 數據
+SPACE_INFRA = ["RDW", "LUNR"]                     # 製造 / 月球 / 政府合約
+SPACE = sorted(set(SPACE_LAUNCH + SPACE_SATCOM + SPACE_IMAGERY + SPACE_INFRA))
 
 # Agentic-AI software pure plays (distinct from the infra names already covered).
 AGENTIC_AI = ["AI", "BBAI", "SOUN", "PLTR"]

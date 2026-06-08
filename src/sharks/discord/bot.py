@@ -726,6 +726,8 @@ class SharksBot(discord.Client):
             app_commands.Choice(name="AI 錯殺軟體股", value="ai_software"),
             app_commands.Choice(name="電商 · agentic-commerce", value="ecommerce"),
             app_commands.Choice(name="小型電商(高賠率高風險)", value="ecommerce_small"),
+            app_commands.Choice(name="廣度錯殺(民生/消費/醫療)", value="broadening"),
+            app_commands.Choice(name="太空板塊(SpaceX IPO)", value="space"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def basecross_cmd(interaction: discord.Interaction,
@@ -747,6 +749,8 @@ class SharksBot(discord.Client):
             app_commands.Choice(name="AI 錯殺軟體股", value="ai_software"),
             app_commands.Choice(name="電商 · agentic-commerce", value="ecommerce"),
             app_commands.Choice(name="小型電商(高賠率高風險)", value="ecommerce_small"),
+            app_commands.Choice(name="廣度錯殺(民生/消費/醫療)", value="broadening"),
+            app_commands.Choice(name="太空板塊(SpaceX IPO)", value="space"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def rally_cmd(interaction: discord.Interaction,

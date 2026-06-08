@@ -90,3 +90,12 @@ def test_run_basecross_ecommerce_small_list():
     title, rows = BC.run_basecross("ecommerce_small", fetch=_fetch(series))
     assert "小型" in title and {r.ticker for r in rows} == set(BC.ECOMMERCE_SMALL)
     assert "JMIA" in {r.ticker for r in rows}        # 主理人點名的小型電商
+
+
+def test_run_basecross_space_list():
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
+              for t in BC.SPACE_PUREPLAYS}
+    title, rows = BC.run_basecross("space", fetch=_fetch(series))
+    assert "太空" in title and {r.ticker for r in rows} == set(BC.SPACE_PUREPLAYS)
+    by = {r.ticker: r for r in rows}
+    assert "RKLB" in by and "ASTS" in by and "太空" in by["RKLB"].theme

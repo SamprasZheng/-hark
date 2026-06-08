@@ -59,6 +59,14 @@ BROADENING_LAGGARDS = [
     # 醫療錯殺 healthcare beaten
     "PFE", "MRNA", "BMY", "CVS", "HUM", "GILD", "DXCM",
 ]
+# 太空板塊(SpaceX IPO 催化)— 沿價值鏈分層;多為 2021-SPAC 在 2022 被殺的倖存者
+# = 錯殺大底。Starlink 競爭使 satcom 名字是雙面刃,持續性看真合約/營收。
+SPACE_PUREPLAYS = [
+    "RKLB",                          # 發射(SpaceX 最純對標)
+    "ASTS", "IRDM", "GSAT", "VSAT",  # 衛星通訊 / direct-to-cell(Starlink 對標)
+    "PL", "BKSY", "SPIR",            # 對地觀測 / 數據
+    "RDW", "LUNR",                   # 製造 / 月球 / 政府合約
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -230,13 +238,14 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     settings = settings or Settings.load()
     ecommerce_all = ECOMMERCE_AGENTIC + ECOMMERCE_SMALL
     everything = sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE)
-                        | set(ecommerce_all) | set(BROADENING_LAGGARDS))
+                        | set(ecommerce_all) | set(BROADENING_LAGGARDS) | set(SPACE_PUREPLAYS))
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
         "ecommerce": ("電商 · agentic-commerce(含小型)", ecommerce_all),
         "ecommerce_small": ("小型電商(高賠率高風險)", ECOMMERCE_SMALL),
         "broadening": ("廣度輪動 · 錯殺民生/消費/醫療", BROADENING_LAGGARDS),
+        "space": ("太空板塊 · SpaceX IPO 催化", SPACE_PUREPLAYS),
         "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
@@ -245,6 +254,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     theme.update({t: (theme.get(t, "") + "+電商").lstrip("+") for t in ecommerce_all})
     theme.update({t: (theme.get(t, "") + "·小型").lstrip("+") for t in ECOMMERCE_SMALL})
     theme.update({t: (theme.get(t, "") + "+廣度").lstrip("+") for t in BROADENING_LAGGARDS})
+    theme.update({t: (theme.get(t, "") + "+太空").lstrip("+") for t in SPACE_PUREPLAYS})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),
