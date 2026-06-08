@@ -100,6 +100,20 @@ def test_build_signals_from_basecross_candidates_fallback_off():
     assert s.dims["fundamental"] is None
 
 
+def test_provisional_rank_blends_priors_and_folds_in_live_momentum():
+    names = ["VIPS", "JMIA", "SHOP"]
+    ranked = R.provisional_rank(names)
+    assert {r["ticker"] for r in ranked} == set(names)
+    assert all(r["momentum_pending"] for r in ranked)        # no live 動能 → TBD
+    # VIPS (high 基本面 + high 獲利空間) outranks SHOP (lower 獲利空間)
+    order = [r["ticker"] for r in ranked]
+    assert order.index("VIPS") < order.index("SHOP")
+    # folding in a hot momentum re-weights and clears the pending flag
+    live = R.provisional_rank(names, momentum_by_ticker={"SHOP": 95})
+    shop = next(r for r in live if r["ticker"] == "SHOP")
+    assert not shop["momentum_pending"] and shop["momentum"] == 95
+
+
 def test_rank_orders_buy_considers_first():
     items = [
         {"ticker": "LOW", "dims": {"technical": 30, "capital": 20}},

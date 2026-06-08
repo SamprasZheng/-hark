@@ -58,6 +58,12 @@ US/ADR 大中型(yfinance 直接抓):`AMZN, SHOP, SE, MELI, BABA, PDD, CPNG, ETS
 /council 電商 agentic-commerce 的持續性與盈利分層   # 多人格辯論 + 回寫 wiki 記憶
 ```
 
+## 綜合排名(獲利空間 × 基本面 × 炒作動能)
+`rally_signal.provisional_rank()` 把三軸合成排名:**基本面**(`QUALITY_PRIORS`)、
+**獲利空間**(`UPSIDE_PRIORS`,估值便宜+距高+利潤率跑道)、**炒作動能**(技術+資金,
+需 `/rally` 即時)。無即時價時動能標 TBD,綜合 = 基本面/獲利空間 各半;`/rally` 一跑,
+動能(30%)folds in 並重排。先驗皆**保守相對分級、非估值/財務預測**,被即時數據覆蓋。
+
 ## 紀律
 1. **題材 ≠ 全板塊買**。只追「有護城河 + 盈利(quality)+ 連續起漲」的,`/rally` 會把
    純敘事噴出、無盈利/護城河的打成「🚫 純炒作·無實證(墓園型)」。

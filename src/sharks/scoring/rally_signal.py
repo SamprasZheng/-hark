@@ -78,6 +78,51 @@ QUALITY_PRIORS: dict[str, float] = {
     "JMIA": 28, "RENT": 25,                          # 燒錢 / 高風險
 }
 
+# 獲利空間先驗(0..100,**保守相對分級,非估值預測**)— 「上檔空間」= 估值便宜 +
+# 距高有段 + 利潤率擴張的跑道。高分 = 還沒噴、便宜、有重評價空間;低分 = 已貴/近高。
+# 這是結構性起點;真正的距高/估值用 /basecross(月線距高)即時覆蓋。
+UPSIDE_PRIORS: dict[str, float] = {
+    # 電商大/中型
+    "BABA": 65, "JD": 62, "PDD": 58, "SE": 56, "ETSY": 55, "W": 58,
+    "EBAY": 48, "CPNG": 50, "CHWY": 45, "GLBE": 50, "BIGC": 55,
+    "AMZN": 45, "MELI": 40, "SHOP": 35,             # 強但已不便宜 → 空間較小
+    # 小型 / 長尾(深跌 → 帳面空間大,但風險也大)
+    "JMIA": 72, "RENT": 55, "SFIX": 58, "REAL": 60, "MYTE": 55,
+    "VIPS": 70, "RVLV": 55, "FIGS": 55, "CART": 50, "WRBY": 40,
+}
+
+
+def provisional_rank(tickers: list[str], *, quality_priors: Optional[dict] = None,
+                     upside_priors: Optional[dict] = None,
+                     momentum_by_ticker: Optional[dict] = None) -> list[dict]:
+    """綜合排名 over 基本面 / 獲利空間 / 炒作動能 from priors (+ live 動能 when given).
+
+    Without a live price feed, 炒作動能 is unknown → the composite is the 50/50 blend
+    of the 基本面 + 獲利空間 priors and momentum is flagged TBD; pass
+    ``momentum_by_ticker`` (e.g. from /rally's technical+capital) to fold the third
+    axis in at 30% and re-rank. Returns dicts sorted by composite desc."""
+    qp = QUALITY_PRIORS if quality_priors is None else quality_priors
+    up = UPSIDE_PRIORS if upside_priors is None else upside_priors
+    mom = momentum_by_ticker or {}
+    out = []
+    for t in tickers:
+        fund, upside, m = qp.get(t), up.get(t), mom.get(t)
+        if fund is None and upside is None and m is None:
+            continue
+        parts = {"fundamental": fund, "upside": upside, "momentum": m}
+        w = {"fundamental": 0.35, "upside": 0.35, "momentum": 0.30}
+        num = den = 0.0
+        for k, v in parts.items():
+            if v is not None:
+                num += w[k] * float(v); den += w[k]
+        out.append({
+            "ticker": t, "fundamental": fund, "upside": upside, "momentum": m,
+            "composite": round(num / den, 1) if den else 0.0,
+            "momentum_pending": m is None,
+        })
+    out.sort(key=lambda r: r["composite"], reverse=True)
+    return out
+
 
 @dataclass
 class RallySignal:
