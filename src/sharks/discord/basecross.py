@@ -49,6 +49,16 @@ ECOMMERCE_AGENTIC = [
 ECOMMERCE_SMALL = [
     "JMIA", "RVLV", "VIPS", "REAL", "SFIX", "WRBY", "MYTE", "CART", "FIGS", "RENT",
 ]
+# 廣度輪動 / 錯殺的非-AI 民生消費醫療股(行情若擴散、華爾街輪動的隱蔽吸籌池)。
+# 刻意放「大家還沒看到」的落後股,給 /stealth 找「資金先進、價未動」的吸籌指紋。
+BROADENING_LAGGARDS = [
+    # 民生必需 staples
+    "KHC", "CAG", "CL", "HSY", "GIS", "K", "KVUE", "CLX", "SJM", "BG",
+    # 消費非必需落後 discretionary laggards
+    "NKE", "SBUX", "LULU", "EL", "TGT", "DG", "DLTR", "FIVE", "MCD",
+    # 醫療錯殺 healthcare beaten
+    "PFE", "MRNA", "BMY", "CVS", "HUM", "GILD", "DXCM",
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -219,19 +229,22 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     lets you throw arbitrary names (e.g. straight from a Finviz/Pelosi screenshot)."""
     settings = settings or Settings.load()
     ecommerce_all = ECOMMERCE_AGENTIC + ECOMMERCE_SMALL
+    everything = sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE)
+                        | set(ecommerce_all) | set(BROADENING_LAGGARDS))
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
         "ecommerce": ("電商 · agentic-commerce(含小型)", ecommerce_all),
         "ecommerce_small": ("小型電商(高賠率高風險)", ECOMMERCE_SMALL),
-        "all": ("月線大底金叉全名單",
-                sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE) | set(ecommerce_all))),
+        "broadening": ("廣度輪動 · 錯殺民生/消費/醫療", BROADENING_LAGGARDS),
+        "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
     theme = {t: "2022殺" for t in KILLED_2022}
     theme.update({t: (theme.get(t, "") + "+AI錯殺").lstrip("+") for t in AI_OVERSOLD_SOFTWARE})
     theme.update({t: (theme.get(t, "") + "+電商").lstrip("+") for t in ecommerce_all})
     theme.update({t: (theme.get(t, "") + "·小型").lstrip("+") for t in ECOMMERCE_SMALL})
+    theme.update({t: (theme.get(t, "") + "+廣度").lstrip("+") for t in BROADENING_LAGGARDS})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),

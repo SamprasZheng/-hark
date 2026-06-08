@@ -175,6 +175,16 @@ ECOMMERCE_AGENTIC = [
     "JMIA", "RVLV", "VIPS", "REAL", "SFIX", "WRBY", "MYTE", "CART", "FIGS", "RENT",
 ]
 
+# ── 2026-06-08: 廣度輪動 / 錯殺非-AI 民生消費醫療(broadening 論點)─────────────
+# 若行情擴散,華爾街輪動到落後的民生/消費/醫療。納入宇宙讓 /stealth(隱蔽吸籌:
+# 資金先進、價未動)能在這些「大家還沒看到」的票上找指紋。mirrored in
+# discord/basecross.BROADENING_LAGGARDS.
+BROADENING_LAGGARDS = [
+    "KHC", "CAG", "CL", "HSY", "GIS", "K", "KVUE", "CLX", "SJM", "BG",
+    "NKE", "SBUX", "LULU", "EL", "TGT", "DG", "DLTR", "FIVE", "MCD",
+    "PFE", "MRNA", "BMY", "CVS", "HUM", "GILD", "DXCM",
+]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -183,7 +193,7 @@ DEFAULT_UNIVERSE = sorted(set(
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
     SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
-    ROTATION_2022_AI + ECOMMERCE_AGENTIC
+    ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───

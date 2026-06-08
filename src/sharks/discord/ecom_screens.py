@@ -1,16 +1,18 @@
-"""跑真的:電商三screen 一次出(/basecross + /rally + /ecomrank 的 CLI 版)。
+"""跑真的:電商/廣度 four-screen 一次出(/basecross + /rally + /ecomrank + /stealth 的 CLI 版)。
 
 WHY: 這支讓你**不必依賴 Discord bot**,在任何有網路的機器上一行就能跑出真數字:
 
     python -m sharks.discord.ecom_screens                 # 大+小電商
-    python -m sharks.discord.ecom_screens small           # 只小型
+    python -m sharks.discord.ecom_screens small           # 只小型電商
+    python -m sharks.discord.ecom_screens broadening      # 民生/消費/醫療(隱蔽吸籌池)
+    python -m sharks.discord.ecom_screens all             # 全部錯殺池
     python -m sharks.discord.ecom_screens 8454.TW 8044.TW # 額外加台股代號
 
-它複用 basecross(月線距高/金叉/量能)、rally_signal(5維+連續起漲)、ecommerce_rank
-(綜合排名,動能即時 fold-in)。需要 `yfinance`(pip install yfinance)。純列印,
-recommend-only,永不下單。
+它複用 basecross(月線距高/金叉/量能)、rally_signal(5維+連續起漲+綜合排名)、
+stealth_signal(隱蔽吸籌:資金先進價未動)。需要 `yfinance`(pip install yfinance)。
+純列印,recommend-only,永不下單。
 
-``render(candidates, ...)`` 是純函式(吃已抓好的 candidates),所以可離線單元測試;
+``render(candidates, ...)`` 是純函式(吃已抓好的 candidates),離線可單元測試;
 ``main`` 才用 yfinance 真抓。
 """
 
@@ -21,11 +23,20 @@ import sys
 from sharks.discord import basecross as BC
 from sharks.discord.config import Settings
 from sharks.scoring import rally_signal as RS
+from sharks.scoring import stealth_signal as ST
 
 
 def _ecom_universe(scope: str) -> tuple[str, list[str]]:
     if scope in ("small", "ecommerce_small"):
         return "小型電商", list(BC.ECOMMERCE_SMALL)
+    if scope in ("broadening", "stealth"):
+        return "廣度錯殺(民生/消費/醫療)", list(BC.BROADENING_LAGGARDS)
+    if scope == "killed2022":
+        return "2022 殺下來", list(BC.KILLED_2022)
+    if scope in ("all", "everything"):
+        return "全部錯殺池", sorted(set(BC.KILLED_2022) | set(BC.AI_OVERSOLD_SOFTWARE)
+                                     | set(BC.ECOMMERCE_AGENTIC) | set(BC.ECOMMERCE_SMALL)
+                                     | set(BC.BROADENING_LAGGARDS))
     return "大+小電商", BC.ECOMMERCE_AGENTIC + BC.ECOMMERCE_SMALL
 
 
@@ -53,7 +64,15 @@ def render(candidates: list, *, quality_by_ticker=None, prior_streaks=None) -> s
     for s in sigs:
         out.append(f"  {s.ticker:<7} C{s.composite:>4.0f} 連{s.streak} · {s.conviction}")
 
-    # 3) 月線大底金叉 + 資金介入
+    # 3) 隱蔽吸籌 (資金先進、價未動 = 收貨指紋,抓還沒炒上去的)
+    stealth = ST.stealth_rank(candidates)
+    out.append("\n═══ 隱蔽吸籌 (資金先進、價未動;🕵️=最值得盯) ═══")
+    for r in stealth:
+        if r.stealth or r.verdict.startswith(("🟡", "🔵")):
+            cap = f"{r.capital:.0f}" if r.capital is not None else "–"
+            out.append(f"  {r.ticker:<7} 吸籌{r.score:>4.0f} 資金{cap:>4} · {r.verdict}")
+
+    # 4) 月線大底金叉 + 資金介入
     out.append("\n═══ 月線大底金叉 + 資金介入 (basecross) ═══")
     for c in candidates:
         if c.last is None:
@@ -66,11 +85,13 @@ def render(candidates: list, *, quality_by_ticker=None, prior_streaks=None) -> s
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
-    scope = "all"
+    _scopes = {"small", "ecommerce_small", "broadening", "stealth",
+               "killed2022", "all", "everything", "ecommerce"}
+    scope = "ecommerce"
     extra: list[str] = []
     for a in argv:
-        if a.lower() in ("small", "ecommerce_small"):
-            scope = "small"
+        if a.lower() in _scopes:
+            scope = a.lower()
         else:
             extra.append(a.upper())
     label, base = _ecom_universe(scope)

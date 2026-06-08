@@ -26,4 +26,7 @@ def test_render_has_three_sections_and_ranks():
 
 def test_universe_scopes():
     assert ES._ecom_universe("small")[1] == list(BC.ECOMMERCE_SMALL)
-    assert set(ES._ecom_universe("all")[1]) == set(BC.ECOMMERCE_AGENTIC) | set(BC.ECOMMERCE_SMALL)
+    assert ES._ecom_universe("broadening")[1] == list(BC.BROADENING_LAGGARDS)
+    assert set(ES._ecom_universe("ecommerce")[1]) == set(BC.ECOMMERCE_AGENTIC) | set(BC.ECOMMERCE_SMALL)
+    # "all" spans every 錯殺池 incl. broadening laggards
+    assert set(BC.BROADENING_LAGGARDS) <= set(ES._ecom_universe("all")[1])

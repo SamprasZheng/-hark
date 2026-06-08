@@ -44,6 +44,7 @@ from sharks.discord.dipbuy import DipCandidate, run_dipbuy
 from sharks.discord.basecross import BaseCrossCandidate, run_basecross
 from sharks.discord import basecross as _basecross
 from sharks.scoring import rally_signal as _rally
+from sharks.scoring import stealth_signal as _stealth
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -248,6 +249,34 @@ def rally_to_embed(title: str, signals: list) -> discord.Embed:
     return e
 
 
+def stealth_to_embed(title: str, rows: list) -> discord.Embed:
+    """Render the 隱蔽吸籌 screen (資金先進、價未動 = 收貨指紋)."""
+    e = discord.Embed(
+        title=f"🕵️ 隱蔽吸籌偵測 · {title}",
+        description="找『資金先進、價格還沒動』的吸籌指紋 — 抓華爾街想炒、但還沒炒上去的。"
+                    "刻意 reward 低動能(已噴=不隱蔽)。recommend-only。",
+        color=0x34495E,
+    )
+    stealth = [r for r in rows if r.stealth]
+    started = [r for r in rows if r.verdict.startswith("🟡")]
+    watch = [r for r in rows if r.verdict.startswith("🔵")]
+    def line(r) -> str:
+        cap = f"{r.capital:.0f}" if r.capital is not None else "–"
+        d = f"{r.dist_ath_pct:.0f}%" if r.dist_ath_pct is not None else "–"
+        return f"`{r.ticker:<5}` 吸籌{r.score:.0f} · 資金{cap}/距高{d}"
+    if stealth:
+        e.add_field(name="🕵️ 隱蔽吸籌(量進價未動 — 最值得盯)",
+                    value="\n".join(line(r) for r in stealth[:14])[:1024], inline=False)
+    if started:
+        e.add_field(name="🟡 已啟動(量已表態,非隱蔽)",
+                    value="\n".join(line(r) for r in started[:10])[:1024], inline=False)
+    if watch:
+        e.add_field(name="🔵 疑似吸籌(續觀察)",
+                    value="\n".join(line(r) for r in watch[:8])[:1024], inline=False)
+    e.set_footer(text="資金=量能放大 · 隱蔽=月線還沒突破 · regime-conditional:資金面翻STRESS小股先死 · 非建議")
+    return e
+
+
 def ecomrank_to_embed(rows: list, small_set: set) -> discord.Embed:
     """Render the 電商綜合排名 (獲利空間 × 基本面 × 炒作動能)."""
     e = discord.Embed(
@@ -402,7 +431,8 @@ class SharksBot(discord.Client):
             "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)\n"
             "`/basecross [killed2022|ai_software|all] [tickers:CRWD,VST]` — 月線底部金叉+資金介入(Boeing/Snowflake 大底)\n"
             "`/rally [killed2022|ai_software|ecommerce|all] [tickers:SHOP,SE]` — 起漲訊號追蹤(5維融合;連續起漲才可考慮買入)\n"
-            "`/ecomrank [scope] [tickers:8454.TW]` — 電商綜合排名(獲利空間×基本面×炒作動能)"), inline=False)
+            "`/ecomrank [scope] [tickers:8454.TW]` — 電商綜合排名(獲利空間×基本面×炒作動能)\n"
+            "`/stealth [broadening|all|killed2022] [tickers:…]` — 隱蔽吸籌偵測(資金先進、價未動;抓還沒炒上去的錯殺股)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -748,6 +778,20 @@ class SharksBot(discord.Client):
             ranked = _rally.ecommerce_rank(rows, quality_by_ticker=quality)
             small = set(_basecross.ECOMMERCE_SMALL)
             await interaction.followup.send(embed=ecomrank_to_embed(ranked, small))
+
+        @tree.command(name="stealth",
+                      description="隱蔽吸籌偵測(資金先進、價未動 = 收貨指紋;抓還沒炒上去的錯殺股)")
+        @app_commands.describe(scope="broadening(民生/消費/醫療,預設)/ all / killed2022 / ecommerce",
+                               tickers="額外加入的代號,逗號分隔")
+        async def stealth_cmd(interaction: discord.Interaction,
+                              scope: str = "broadening", tickers: str = ""):
+            await interaction.response.defer(thinking=True)   # yfinance 5y fetch
+            scope = scope.strip().lower() or "broadening"
+            extra = [t.strip().upper() for t in tickers.replace(" ", ",").split(",") if t.strip()]
+            title, rows = await asyncio.to_thread(
+                run_basecross, scope, settings=settings, extra_tickers=extra or None)
+            ranked = _stealth.stealth_rank(rows)
+            await interaction.followup.send(embed=stealth_to_embed(title, ranked))
 
         @tree.command(name="rescan",
                       description="重跑選股/訊號/健檢掃描(本地;FOM 全宇宙掃描較久),完成後貼最新結果")
