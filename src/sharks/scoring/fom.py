@@ -119,8 +119,15 @@ WIKI_16_THEMES = ["DNN", "CCJ", "BEAM", "NEM", "VAL", "AESI", "GLD"]
 SERENITY_SUPPLY_CHAIN = ["TSEM", "MRVL", "VPG", "VSH"]
 
 # ── 2026-05-30 expansion (user heatmap + theme directives) ──────────────────
-# Space / SpaceX-IPO + space-boom theme. RKLB already in R2K_AI; set() dedupes.
-SPACE = ["LUNR", "RDW", "ASTS", "PL", "RKLB"]
+# Space / SpaceX-IPO theme — sub-segmented along the value chain (2026-06-08).
+# Most are 2021-SPAC survivors crushed in 2022 → 錯殺大底 profile; the SpaceX IPO
+# is the narrative catalyst that can re-rate them. Double-edged: Starlink competes
+# with the satcom names, so 持續性 needs real contracts/revenue, not just hype.
+SPACE_LAUNCH = ["RKLB"]                          # 發射(SpaceX 最純的對標)
+SPACE_SATCOM = ["ASTS", "IRDM", "GSAT", "VSAT"]  # 衛星通訊 / direct-to-cell(Starlink 對標)
+SPACE_IMAGERY = ["PL", "BKSY", "SPIR"]           # 對地觀測 / 數據
+SPACE_INFRA = ["RDW", "LUNR"]                     # 製造 / 月球 / 政府合約
+SPACE = sorted(set(SPACE_LAUNCH + SPACE_SATCOM + SPACE_IMAGERY + SPACE_INFRA))
 
 # Agentic-AI software pure plays (distinct from the infra names already covered).
 AGENTIC_AI = ["AI", "BBAI", "SOUN", "PLTR"]
@@ -149,6 +156,64 @@ TECH_DD_NODES = [
     "RXRX", "SDGR",          # AI-drug-discovery (太早→結構 option)
 ]
 
+# ── 2026-06-08: "Intel 領漲 → 補炒 2022 殺下來 + AI 錯殺軟體股" 輪動論點 ──────────
+# Multi-year-base names (Boeing/Snowflake 形態) the principal wants in the FOM
+# universe so /basecross gets a 盈利(quality) dimension and the 起漲 tracker can
+# fuse fundamentals. Mirrors KILLED_2022 + AI_OVERSOLD_SOFTWARE in
+# src/sharks/discord/basecross.py + watchlist/thesis_basecross.yaml. Names already
+# covered above (CRM/NOW/NFLX/INTU/ADBE/INTC/MU/AI/PLTR/RIVN…) dedupe via set().
+ROTATION_2022_AI = [
+    "BA", "SNOW", "PYPL", "NKE", "DIS", "ROKU", "TWLO", "DDOG", "NET", "OKTA",
+    "ZS", "MDB", "SHOP", "U", "PATH", "RBLX", "PINS", "SE", "ABNB", "DOCU",
+    "WDAY", "TEAM", "BILL", "CFLT", "GTLB", "ESTC", "DOCN", "HUBS", "ZI", "S",
+    "BRZE", "CHGG",
+]
+
+# ── 2026-06-08: 電商 / agentic-commerce 題材 ─────────────────────────────────────
+# AI 代理(自動比價/下單,如 agentic checkout)利好「agent-readable」的電商平台 +
+# 金流/物流基建。富邦媒(8454.TW)Momo 大漲是端倪;台股(8454/8044.TW)需 Phase-2
+# suffix,放 watchlist/thesis_ecommerce_agentic.md。這裡為 US/ADR(AMZN/SHOP/SE 已在
+# 別群,set() 去重)。注意:agentic 比價是**雙面刃**——基建/規模平台受惠,subscale
+# 純比價平台反而被商品化,所以仍靠 FOM quality(盈利)維度過濾。
+ECOMMERCE_AGENTIC = [
+    "MELI", "BABA", "PDD", "CPNG", "ETSY", "EBAY", "W", "CHWY", "GLBE", "BIGC", "JD",
+    # 小型 / 長尾(主理人點名 Jumia/Wayfair/Etsy + 同型小型電商)— 高賠率高風險,
+    # 仍靠盈利(quality)維度過濾。mirrored in discord/basecross.ECOMMERCE_SMALL.
+    "JMIA", "RVLV", "VIPS", "REAL", "SFIX", "WRBY", "MYTE", "CART", "FIGS", "RENT",
+]
+
+# ── 2026-06-08: 廣度輪動 / 錯殺非-AI 民生消費醫療(broadening 論點)─────────────
+# 若行情擴散,華爾街輪動到落後的民生/消費/醫療。納入宇宙讓 /stealth(隱蔽吸籌:
+# 資金先進、價未動)能在這些「大家還沒看到」的票上找指紋。mirrored in
+# discord/basecross.BROADENING_LAGGARDS.
+BROADENING_LAGGARDS = [
+    "KHC", "CAG", "CL", "HSY", "GIS", "K", "KVUE", "CLX", "SJM", "BG",
+    "NKE", "SBUX", "LULU", "EL", "TGT", "DG", "DLTR", "FIVE", "MCD",
+    "PFE", "MRNA", "BMY", "CVS", "HUM", "GILD", "DXCM",
+]
+
+# 跨產業分散轉機股(非-科技為主)— 補進宇宙讓 /basecross diversified 有盈利維度。
+# mirrored in discord/basecross.DIVERSIFIED_TURNAROUND. 多數已在他群,新增的:
+# ALB(鋰/材料)、MMM(工業)、F(汽車)、WBD(媒體)、PYPL(金融)。
+DIVERSIFIED_TURNAROUND = ["ALB", "MMM", "F", "WBD", "PYPL", "DIS"]
+
+# 更多中風險轉機股(週期/公司轉機,有真營收)— mirrored in
+# discord/basecross.MID_RISK_TURNAROUND. 金融/生技/醫材/農機/化工/銅/通訊/車/油服。
+MID_RISK_TURNAROUND = ["C", "BIIB", "MDT", "DE", "LYB", "FCX",
+                       "CMCSA", "APTV", "GM", "SLB", "DPZ", "GPC"]
+
+# 2026 IPO 超級年的上市代理/受惠者 — mirrored in discord/basecross.IPO_PROXIES.
+# 新增的(其餘已在他群):FI/GPN/XYZ(金流)、SOFI/NU(neobank)。
+IPO_PROXIES = ["FI", "GPN", "XYZ", "SOFI", "NU"]
+
+# Agentic 支付題材 — mirrored in discord/basecross.AGENTIC_PAYMENTS.
+# 新增的:V/MA/AXP(卡組織)、FOUR(收單)、CRCL(Circle/USDC 穩定幣)。
+AGENTIC_PAYMENTS = ["V", "MA", "AXP", "FOUR", "CRCL"]
+
+# Web3/加密週期高 beta — mirrored in discord/basecross.WEB3_CRYPTO(去掉 ETF IBIT)。
+# 礦工 + BTC 代理;後段循環、看 BTC 四年週期。新增:CLSK/MARA/RIOT/HUT/WULF/CIFR/BITF。
+WEB3_CRYPTO = ["CLSK", "MARA", "RIOT", "HUT", "WULF", "CIFR", "BITF"]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -156,7 +221,10 @@ DEFAULT_UNIVERSE = sorted(set(
     BETA_ANCHORS + R2K_AI +
     HARDWARE_OEM + SPECULATIVE_NARRATIVE + QUANTUM +
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
-    SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES
+    SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
+    ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS +
+    DIVERSIFIED_TURNAROUND + MID_RISK_TURNAROUND + IPO_PROXIES + AGENTIC_PAYMENTS +
+    WEB3_CRYPTO
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───

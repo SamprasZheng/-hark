@@ -1,0 +1,5 @@
+# wiki/council/
+
+Machine-generated 議會結論 land here (see src/sharks/discord/council_memory.py).
+The `*.md` notes and `_history.jsonl` are gitignored — regenerated each debate.
+This `.gitkeep` keeps the directory so the bot can write without a first-run mkdir race.

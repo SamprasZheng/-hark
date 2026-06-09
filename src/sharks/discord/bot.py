@@ -41,6 +41,10 @@ from sharks.discord.content import run_content_local
 from sharks.discord.council import CouncilResult, run_council_local
 from sharks.discord.feedback import FeedbackReport, compose_feedback
 from sharks.discord.dipbuy import DipCandidate, run_dipbuy
+from sharks.discord.basecross import BaseCrossCandidate, run_basecross
+from sharks.discord import basecross as _basecross
+from sharks.scoring import rally_signal as _rally
+from sharks.scoring import stealth_signal as _stealth
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -59,6 +63,19 @@ _COLORS = {
     "weekly": 0x9B59B6, "status": 0x95A5A6, "council": 0xE67E22,
 }
 _VOTE_EMOJI = {"多": "🟢", "空": "🔴", "中性": "⚪"}
+
+# /rescan job sets — (label, `python -m` args, timeout_s). Run in project_root so
+# each module writes outputs/<…>-<date>.json that /picks then reposts. FOM is the
+# real 選股 (full-universe scan, can be slow); health = 持倉 + 姿態 refresh.
+_SCAN_SETS: dict[str, list[tuple[str, list[str], int]]] = {
+    "fom": [("選股 · FOM 全宇宙掃描", ["sharks.scoring.fom"], 600)],
+    "signals": [("籌碼 FSM 掃描 (state)", ["sharks.scoring.chip_flow_fsm"], 300),
+                ("每日 10-訊號編譯 (picks)", ["sharks.daily_picks"], 120)],
+    "health": [("持倉健檢 (portfolio audit)", ["sharks.backtest.portfolio_audit"], 240),
+               ("姿態健檢 (regime + posture)", ["sharks.cli", "health-check"], 180)],
+}
+# all = 選股 + 每日訊號 + 健檢 (signals must follow its own FSM step, so order matters)
+_SCAN_SETS["all"] = _SCAN_SETS["fom"] + _SCAN_SETS["signals"] + _SCAN_SETS["health"]
 
 
 def _chunks(text: str, size: int = 1990) -> list[str]:
@@ -110,7 +127,8 @@ def council_to_embed(r: CouncilResult) -> discord.Embed:
     if lines:
         e.add_field(name="各人投票(模型)", value="\n".join(lines)[:1024], inline=False)
     models_used = ", ".join(sorted({v.model for v in r.votes if v.model}))
-    e.set_footer(text=f"本地多模型議會 · {models_used} · 僅研究非建議,永不下單"[:2048])
+    e.set_footer(text=f"本地多模型議會(立場→交叉質詢→投票)· {models_used} · "
+                      f"結論回寫 wiki 記憶 · 僅研究非建議,永不下單"[:2048])
     return e
 
 
@@ -170,6 +188,128 @@ def dipbuy_to_embed(title: str, rows: list[DipCandidate]) -> discord.Embed:
     return e
 
 
+def basecross_to_embed(title: str, rows: list[BaseCrossCandidate]) -> discord.Embed:
+    """Render the 月線底部金叉 + 資金介入 screen (Boeing/Snowflake 大底形態)."""
+    e = discord.Embed(
+        title=f"📈 月線大底金叉 · {title}",
+        description="題材(2022殺/AI錯殺軟體)+ 月線底部金叉 + 資金介入。找 Boeing/Snowflake 那種大底翻揚。",
+        color=0x8E44AD,
+    )
+    green = [c for c in rows if c.verdict.startswith("🟢")]
+    yellow = [c for c in rows if c.verdict.startswith("🟡")]
+    blue = [c for c in rows if c.verdict.startswith("🔵")]
+    def line(c: BaseCrossCandidate) -> str:
+        if c.last is None:
+            return f"`{c.ticker}` — {c.note}"
+        th = f" [{c.theme}]" if c.theme else ""
+        vs = f" · 量×{c.vol_surge:.1f}" if c.vol_surge else ""
+        return f"`{c.ticker}`{th} 距高 {c.dist_ath_pct:.0f}%{vs}"
+    if green:
+        e.add_field(name="🟢 金叉+資金(主力候選)", value="\n".join(line(c) for c in green)[:1024], inline=False)
+    if yellow:
+        e.add_field(name="🟡 金叉或量能,待另一半確認", value="\n".join(line(c) for c in yellow)[:1024], inline=False)
+    if blue:
+        e.add_field(name="🔵 築底中 · 待金叉", value="\n".join(line(c) for c in blue[:12])[:1024], inline=False)
+    e.set_footer(text="recommend-only · 月線=日線重抽樣近似 · 距高/量能即時算,盈利 q 需 FOM 宇宙覆蓋")
+    return e
+
+
+def rally_to_embed(title: str, signals: list) -> discord.Embed:
+    """Render the 起漲訊號 tracker (5維融合 + 連續起漲 → 可考慮買入)."""
+    e = discord.Embed(
+        title=f"🚀 起漲訊號追蹤 · {title}",
+        description="融合 資金/技術/消息/供應鏈/基本面;**連續起漲**才『可考慮買入』。"
+                    "對齊 2020–26 暴漲股 DNA(INTC/MU/NVDA/TSLA…)。",
+        color=0xE74C3C,
+    )
+    def dimstr(s) -> str:
+        return " ".join(f"{_rally.DIM_ZH[d]}{int(s.dims[d])}" if s.dims.get(d) is not None
+                        else f"{_rally.DIM_ZH[d]}–" for d in _rally.DIMENSIONS)
+    def line(s) -> str:
+        return (f"`{s.ticker}` C{s.composite:.0f}/DNA{s.dna_match:.0f} 連{s.streak} · "
+                f"{dimstr(s)}")
+    buy = [s for s in signals if s.buy_consider]
+    rising = [s for s in signals if s.is_rallying and not s.buy_consider and not s.warning]
+    grave = [s for s in signals if s.conviction.startswith("🚫")]
+    nofuel = [s for s in signals if s.conviction.startswith("🪨")]
+    coil = [s for s in signals if not s.is_rallying and not s.warning and s.composite >= 45]
+    if buy:
+        e.add_field(name="🟢 連續起漲 · 可考慮買入(分批/小倉)",
+                    value="\n".join(line(s) for s in buy)[:1024], inline=False)
+    if rising:
+        e.add_field(name="🟡 起漲中(觀察,未達連續門檻)",
+                    value="\n".join(line(s) for s in rising[:10])[:1024], inline=False)
+    if coil:
+        e.add_field(name="🔵 蓄勢(尚未起漲)",
+                    value="\n".join(line(s) for s in coil[:8])[:1024], inline=False)
+    if nofuel:
+        e.add_field(name="🪨 缺燃料·反彈非大浪(此 regime 撐不起 — 不追)",
+                    value="\n".join(line(s) for s in nofuel[:8])[:1024], inline=False)
+    if grave:
+        e.add_field(name="🚫 純炒作·無實證(墓園型 — 不追)",
+                    value="\n".join(f"`{s.ticker}` {s.warning[:60]}" for s in grave[:6])[:1024],
+                    inline=False)
+    e.set_footer(text="recommend-only · 非2021瘋牛:要真盈利/真題材才成大浪 · 墓園/缺燃料不追 · 配 regime 健檢")
+    return e
+
+
+def stealth_to_embed(title: str, rows: list) -> discord.Embed:
+    """Render the 隱蔽吸籌 screen (資金先進、價未動 = 收貨指紋)."""
+    e = discord.Embed(
+        title=f"🕵️ 隱蔽吸籌偵測 · {title}",
+        description="找『資金先進、價格還沒動』的吸籌指紋 — 抓華爾街想炒、但還沒炒上去的。"
+                    "刻意 reward 低動能(已噴=不隱蔽)。recommend-only。",
+        color=0x34495E,
+    )
+    stealth = [r for r in rows if r.stealth]
+    started = [r for r in rows if r.verdict.startswith("🟡")]
+    watch = [r for r in rows if r.verdict.startswith("🔵")]
+    def line(r) -> str:
+        cap = f"{r.capital:.0f}" if r.capital is not None else "–"
+        d = f"{r.dist_ath_pct:.0f}%" if r.dist_ath_pct is not None else "–"
+        return f"`{r.ticker:<5}` 吸籌{r.score:.0f} · 資金{cap}/距高{d}"
+    if stealth:
+        e.add_field(name="🕵️ 隱蔽吸籌(量進價未動 — 最值得盯)",
+                    value="\n".join(line(r) for r in stealth[:14])[:1024], inline=False)
+    if started:
+        e.add_field(name="🟡 已啟動(量已表態,非隱蔽)",
+                    value="\n".join(line(r) for r in started[:10])[:1024], inline=False)
+    if watch:
+        e.add_field(name="🔵 疑似吸籌(續觀察)",
+                    value="\n".join(line(r) for r in watch[:8])[:1024], inline=False)
+    e.set_footer(text="資金=量能放大 · 隱蔽=月線還沒突破 · regime-conditional:資金面翻STRESS小股先死 · 非建議")
+    return e
+
+
+def ecomrank_to_embed(rows: list, small_set: set) -> discord.Embed:
+    """Render the 電商綜合排名 (獲利空間 × 基本面 × 炒作動能)."""
+    e = discord.Embed(
+        title="🏆 電商綜合排名 · 獲利空間 × 基本面 × 炒作動能",
+        description="基本面(FOM/先驗)35% + 獲利空間(估值+距高先驗)35% + 炒作動能"
+                    "(技術+資金即時)30%。先驗會被即時數據覆蓋。recommend-only。",
+        color=0xF1C40F,
+    )
+    def fmt(v) -> str:
+        return f"{v:.0f}" if isinstance(v, (int, float)) else "–"
+    lines = []
+    for i, r in enumerate(rows[:24], 1):
+        sz = "小" if r["ticker"] in small_set else "大"
+        mom = "待" if r.get("momentum_pending") else fmt(r.get("momentum"))
+        lines.append(f"{i:>2} `{r['ticker']:<5}` 綜{r['composite']:>4.0f} · "
+                     f"基{fmt(r.get('fundamental'))}/空{fmt(r.get('upside'))}/動{mom} [{sz}]")
+    # split into <=1024-char fields
+    chunk, n = [], 0
+    for ln in lines:
+        if n + len(ln) + 1 > 1000 and chunk:
+            e.add_field(name="排名", value="\n".join(chunk), inline=False)
+            chunk, n = [], 0
+        chunk.append(ln); n += len(ln) + 1
+    if chunk:
+        e.add_field(name="排名(續)" if e.fields else "排名", value="\n".join(chunk), inline=False)
+    e.set_footer(text="基本面/獲利空間=保守相對先驗(被 FOM/即時距高覆蓋)· 動能=basecross 即時 · 非個人化建議")
+    return e
+
+
 class SharksBot(discord.Client):
     def __init__(self, settings: Settings, run_once: Optional[list[str]] = None):
         intents = discord.Intents.default()
@@ -188,13 +328,32 @@ class SharksBot(discord.Client):
         if self.run_once:
             return  # one-shot: skip command sync + scheduler
         self._register_commands()
-        guild = self._guild()
-        if guild:
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)   # instant in one guild
-        else:
-            await self.tree.sync()
-        self.scheduler.start()
+        # NOTE: do NOT sync here — setup_hook runs before the gateway connects, so
+        # self.guilds is empty and a guild sync silently degrades to a *global*
+        # sync (up to ~1h to show new commands). We sync in on_ready instead, where
+        # the guild is known → instant. Wrapped so a sync hiccup can't crash startup.
+        try:
+            self.scheduler.start()
+        except Exception as exc:  # never let the scheduler take the bot down
+            log.exception("scheduler failed to start: %s", exc)
+
+    async def _sync_commands(self) -> None:
+        """Sync the slash-command tree once, to the guild (instant) if known."""
+        if getattr(self, "_synced", False):
+            return
+        try:
+            guild = self._guild()
+            if guild:
+                self.tree.copy_global_to(guild=guild)
+                synced = await self.tree.sync(guild=guild)   # instant in one guild
+                log.info("synced %d slash commands to guild %s", len(synced), guild.id)
+            else:
+                synced = await self.tree.sync()              # global: ~1h to propagate
+                log.warning("no guild in cache — synced %d commands GLOBALLY "
+                            "(can take ~1h to appear)", len(synced))
+            self._synced = True
+        except Exception as exc:  # a sync failure must not break the live bot
+            log.exception("slash-command sync failed: %s", exc)
 
     async def on_ready(self) -> None:
         log.info("logged in as %s (guilds=%d)", self.user, len(self.guilds))
@@ -206,6 +365,7 @@ class SharksBot(discord.Client):
                     log.exception("run_once meeting %s failed: %s", kind, exc)
             await self.close()
             return
+        await self._sync_commands()      # now that the guild is in cache → instant
         ch = self._channel(C.CH_STATUS)
         if ch:
             await ch.send(embed=self._status_embed("✅ 上線"))
@@ -234,13 +394,17 @@ class SharksBot(discord.Client):
                     value=f"{s.morning_hhmm} / {s.noon_hhmm} / {s.evening_hhmm} TPE", inline=True)
         e.add_field(name="議會",
                     value=(f"{'on' if s.council_enabled else 'off'} · "
-                           f"{s.effective_council_model()} · {'/'.join(s.council_personas)}"),
+                           f"{s.effective_council_model()} · {'/'.join(s.council_personas)}\n"
+                           f"交叉質詢 {'on' if s.council_cross_exam else 'off'} · "
+                           f"記憶 {'on' if s.council_memory_enabled else 'off'} · "
+                           f"回寫wiki {'on' if s.council_writeback else 'off'}"),
                     inline=False)
         e.add_field(name="雜談",
                     value=(f"{'on' if s.chatter_enabled else 'off'} · 每小時速解讀 → #{C.CH_GENERAL} · "
                            f"council 每 {s.chatter_council_every} 次"), inline=False)
         e.add_field(name="人格", value=", ".join(sorted(self.personas)) or "—", inline=False)
-        e.set_footer(text="recommend-only · 永不下單 · /ask 唯讀 · 議會/雜談跑本地")
+        ncmds = len(self.tree.get_commands())
+        e.set_footer(text=f"code {self._git_rev()} · {ncmds} 指令 · recommend-only · 永不下單 · 議會/雜談跑本地")
         return e
 
     def _help_embed(self) -> discord.Embed:
@@ -261,13 +425,18 @@ class SharksBot(discord.Client):
             "在 **#分析師議會** 打 `huang: 你的問題`(預設 sharks)\n"
             "`/personas` — 列出全部人格"), inline=False)
         e.add_field(name="🗳️ 議會 / 會議", value=(
-            "`/council <主題>` — 6 人質疑→投票→結論(本地)\n"
+            "`/council <主題>` — 多人格 立場→交叉質詢→投票→結論(本地;結論回寫 wiki 記憶)\n"
             "例:`/council 今晚美股該偏多還偏空`\n"
             "`/meeting <morning|noon|evening|weekly>` — 手動開會\n"
             "`/chatter [council:1]` — 立刻產一則 #雜談 速解讀(免費新聞→本地;每小時自動)\n"
-            "`/picks` — 最近一次選股 / 訊號\n"
+            "`/picks` — 貼最近一次選股 / 訊號(不重跑,只貼快取)\n"
+            "`/rescan [fom|signals|health|all]` — **重跑**選股/訊號/健檢掃描(本地)再貼最新\n"
             "`/feedback [perf]` — 換股節流(績效強不換股+深挖支撐;真反轉才換)\n"
-            "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)"), inline=False)
+            "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)\n"
+            "`/basecross [killed2022|ai_software|all] [tickers:CRWD,VST]` — 月線底部金叉+資金介入(Boeing/Snowflake 大底)\n"
+            "`/rally [killed2022|ai_software|ecommerce|all] [tickers:SHOP,SE]` — 起漲訊號追蹤(5維融合;連續起漲才可考慮買入)\n"
+            "`/ecomrank [scope] [tickers:8454.TW]` — 電商綜合排名(獲利空間×基本面×炒作動能)\n"
+            "`/stealth [broadening|all|killed2022] [tickers:…]` — 隱蔽吸籌偵測(資金先進、價未動;抓還沒炒上去的錯殺股)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
             "`/content <x|blog|youtube|all> [主題]` — 產草稿到 #自媒體(不代發)\n"
             "例:`/content all 今日半導體` · `/content x AI 泡沫`"), inline=False)
@@ -275,8 +444,113 @@ class SharksBot(discord.Client):
             "`/notebook <問題>` — 用本地 qwen 讀整個 $hark 回答(附出處);或在 **#筆記本** 直接打字\n"
             "`/ingest <文字或網址> [標題]` — 把知識灌進 $hark;或在 **#知識注入** 直接貼(手機也行)\n"
             "`/wikisearch <關鍵字>` 直接找片段 · `/recent` 看最近灌入"), inline=False)
-        e.add_field(name="⚙️ 其他", value="`/status` · `!cmd` / `!help` 這張表", inline=False)
+        e.add_field(name="⚙️ 其他", value=(
+            "`/status` 看狀態(含 code 版本)· `/cmd` 教學範例 · `!cmd` / `!help` 這張表\n"
+            "`!sync` 重新同步斜線指令並列出本機實際擁有的指令(找不到新指令時用這個查)"), inline=False)
         e.set_footer(text="只建議不下單 · 議會/人格跑本地 · /ask 唯讀")
+        return e
+
+    def _tutorial_embed(self) -> discord.Embed:
+        """A worked, step-by-step 教學範例 (distinct from the flat /help table).
+
+        Each field is a 情境 → 指令 → 會發生什麼 walkthrough, headlined by the
+        council closed loop so a new user can see the memory build up across runs."""
+        e = discord.Embed(
+            title="🎓 PolkaSharks 指令教學範例",
+            description=("一步步帶你走一輪。每格是「**情境 → 指令 → 會發生什麼**」。\n"
+                         "斜線指令直接打 `/`;前提:本地 Ollama 已啟動(`/models` 可驗)。"),
+            color=_COLORS["council"],
+        )
+        e.add_field(name="① 召開議會(主打:一個指令跑完閉環)", value=(
+            "**情境**:想知道今晚美股偏多偏空。\n"
+            "**指令**:`/council 今晚美股該偏多還偏空`\n"
+            "**會發生**:多人格 `立場 → 交叉質詢 → 投票 → 主席結論`,結果貼出投票統計+結論,"
+            "並**自動回寫** `wiki/council/`。你什麼都不用多做。"), inline=False)
+        e.add_field(name="② 再開一次 → 看「記憶」生效", value=(
+            "**情境**:隔天同主題再問。\n"
+            "**指令**:`/council 今晚美股該偏多還偏空`\n"
+            "**會發生**:主席會說這次是**延續**還是**反轉**上次;每個人格被提醒「你上次投什麼」,"
+            "要嘛延續、要嘛認錯修正 → 越開越有效率(記憶會累積,第一次跑是空白起步)。"), inline=False)
+        e.add_field(name="③ 餵知識 → 讓議會更聰明", value=(
+            "**情境**:看到一篇關鍵新聞/研究。\n"
+            "**指令**:在 **#知識注入** 直接貼網址,或 `/ingest https://… CoWoS 產能`\n"
+            "**會發生**:存進 `wiki/inbox/` 並立刻可被搜尋。**下一次 `/council`** 的主題 RAG 會把它"
+            "(連同 `philosophy/` 底層邏輯)一起讀進去 → 本機+網路文檔一起推理。"), inline=False)
+        e.add_field(name="④ 重跑一次選股", value=(
+            "**情境**:想要最新一輪選股,而不是看上次快取。\n"
+            "**指令**:`/rescan`(預設 `fom`)· `/rescan signals`(每日 10-訊號)· "
+            "`/rescan all`(選股+訊號+健檢,較久)\n"
+            "**會發生**:本地重跑掃描 → 寫進 `outputs/` → 直接貼出更新後的結果。"
+            "FOM 全宇宙較久,跑完才會回貼;只想看上次就用 `/picks`(不重跑)。"), inline=False)
+        e.add_field(name="⑤ 回讀結論 / 找片段", value=(
+            "**指令**:`/notebook 最近議會對半導體的結論是什麼`(本地 qwen 讀整個 $hark,附出處)\n"
+            "或 `/wikisearch 議會 半導體` 直接撈片段 · `/recent` 看最近灌入了什麼。"), inline=False)
+        e.add_field(name="⑥ 單獨問一個人格", value=(
+            "**指令**:`/persona huang CoWoS 還能追嗎`,或在 **#分析師議會** 打 `serenity: 總經怎麼看`。\n"
+            "`/personas` 列出全部(議會預設席位:quant 四人 + huang/serenity/sam/yupupin/bear/momentum)。"), inline=False)
+        e.add_field(name="想關掉某層?", value=(
+            "全在 `.env`:`SHARKS_DISCORD_COUNCIL_CROSSEXAM=0`(關交叉質詢,改快速版)、"
+            "`…_MEMORY=0`(不讀記憶)、`…_WRITEBACK=0`(不回寫)。`/status` 看目前開關。"), inline=False)
+        e.set_footer(text="閉環:結論 → wiki → RAG → 下一場記憶 → 新結論 · 只建議不下單,永不下單")
+        return e
+
+    def _guide_embed(self) -> discord.Embed:
+        """導覽:事件→流程的 7 關管線 + 模組/指令索引(像 ERP/MES 的工單流)。"""
+        e = discord.Embed(
+            title="🧭 PolkaSharks 操作導覽(事件 → 流程)",
+            description="把專案當生產線:**你只負責進料(提題材)+ 執行(下單);中間系統跑。**"
+                        "完整手冊:`docs/OPERATING_MANUAL.md`。recommend-only,永不下單。",
+            color=0x16A085,
+        )
+        e.add_field(name="事件出現後的 7 關管線", value=(
+            "**0 進料** `/ingest` → wiki\n"
+            "**1 研究分類** `/council <主題>`(拆價值鏈/找代理/回寫記憶)\n"
+            "**2 篩選(生產線)** `/stealth` → `/basecross` → `/rally`(+Finviz API)\n"
+            "**3 品管閘** 燃料閘+regime+墓園(內建於 /rally;`/feedback`)\n"
+            "**4 排程決策** `weekly_plan` + 分層定量(留彈藥)\n"
+            "**5 執行** 你分批下單、設認賠(系統不下單)\n"
+            "**6 記錄閉環** 議會回寫 wiki + 連續起漲存檔 → 餵回 1、2\n"
+            "**7 反饋維護** `/feedback`、`/rescan fom`、更新論點"), inline=False)
+        e.add_field(name="篩選 scope(題材池)", value=(
+            "`space` `ipo` `payments` `crypto` `ecommerce[_small]` `ai_software` "
+            "`broadening` `diversified` `midrisk` `killed2022` `all` · 或 `tickers:AAPL,NVDA`"), inline=False)
+        e.add_field(name="導覽指令", value=(
+            "`/guide` 本流程 · `/playbook` 市場儀表板 · `/cmd` 教學 · `/status` 版本 · `!sync` 同步\n"
+            "無 bot:`python -m sharks.discord.ecom_screens <scope>` · `python -m sharks.data.finviz_elite <preset>`"),
+            inline=False)
+        e.set_footer(text="閉環:結論→wiki→記憶→下一輪 · 安全:token 只在 .env · docs/OPERATING_MANUAL.md")
+        return e
+
+    def _playbook_embed(self) -> discord.Embed:
+        """作戰儀表板:把各題材論點 + 時間軸 + 對應指令整合成一頁(/playbook)。"""
+        e = discord.Embed(
+            title="🗺️ PolkaSharks 作戰儀表板(2026 H2)",
+            description="把所有題材論點 + **時間軸操作** + 對應篩選指令整合成一頁。"
+                        "底層紀律:**非2021、廣度小 → 只買有燃料(真賺錢/真題材)+ 連續起漲**。",
+            color=0x1ABC9C,
+        )
+        e.add_field(name="🧭 主軸(頂底互換 + 分批)", value=(
+            "賣 NVDA 強勢(頂)→ 買錯殺底(太空/軟體/IPO代理/支付)。"
+            "Jun/Aug/Sep 三段彈藥,**信號驅動、留到九月變盤**。"), inline=False)
+        e.add_field(name="🗓️ 時間軸 × 操作", value=(
+            "**現在→7月(埋伏)**:只動 30–40%,`/stealth` 找資金先進、價未動的。\n"
+            "**8月(確認加碼)**:加碼已 `/rally` 連續起漲+有燃料的;砍沒跟上的。\n"
+            "**9月(變盤決勝)**:牛確認→打滿領頭;熊/盤整→收手留現金。\n"
+            "**Q3–Q4**:SpaceX IPO → 太空代理;Databricks/Stripe IPO → SNOW/支付。\n"
+            "**明年初(2027 H1)**:**N1x/RTX/DGX Spark 上市 → AI-PC 換機潮才引爆**(現在只佈局、別追)。"),
+            inline=False)
+        e.add_field(name="🎯 題材 → 篩選指令", value=(
+            "`/basecross space` 太空(SpaceX)· `/basecross ipo` IPO 超級年代理\n"
+            "`/basecross payments` Agentic 支付(V/MA/PYPL/COIN)· `/basecross ecommerce` 電商\n"
+            "`/basecross ai_software` AI 錯殺軟體 · `/stealth broadening` 廣度隱蔽吸籌\n"
+            "`/rally <題材>` 連續起漲+燃料閘 · `/ecomrank` 綜合排名"), inline=False)
+        e.add_field(name="🛡️ 風控閘(每次出手前)", value=(
+            "① 有燃料?(真賺錢/真題材,否則 🪨缺燃料不追)② 連續起漲?③ 資金面沒 STRESS?"
+            "④ 分層:核心(有營收)大、投機(pre-profit)小。"), inline=False)
+        e.add_field(name="⏳ 晚期警戒(2026末–2027)", value=(
+            "IPO 洪峰 + BTC 後段循環 + 窄廣度 = **多個晚期訊號匯聚**。吃最後一段、用燃料閘挑質、"
+            "**留現金**;把『2027 級回檔』當基準情境。每週表見 `weekly_plan_q3_2026.md`。"), inline=False)
+        e.set_footer(text="論點全文見 watchlist/*.md · recommend-only · 永不下單")
         return e
 
     async def _persona_say(self, channel: discord.abc.Messageable,
@@ -418,6 +692,24 @@ class SharksBot(discord.Client):
             await interaction.response.send_message(embed=self._status_embed("狀態"),
                                                     ephemeral=True)
 
+        @tree.command(name="cmd",
+                      description="指令教學範例(情境→指令→會發生什麼;主打議會閉環)")
+        async def cmd_cmd(interaction: discord.Interaction):
+            await interaction.response.send_message(embed=self._tutorial_embed(),
+                                                    ephemeral=True)
+
+        @tree.command(name="playbook",
+                      description="作戰儀表板:題材 + 時間軸操作 + 對應篩選指令一頁總表")
+        async def playbook_cmd(interaction: discord.Interaction):
+            await interaction.response.send_message(embed=self._playbook_embed(),
+                                                    ephemeral=True)
+
+        @tree.command(name="guide",
+                      description="操作導覽:事件→流程的 7 關管線 + 指令/題材索引(ERP/MES 工單流)")
+        async def guide_cmd(interaction: discord.Interaction):
+            await interaction.response.send_message(embed=self._guide_embed(),
+                                                    ephemeral=True)
+
         @tree.command(name="chatter",
                       description="立刻產一則 #雜談 速解讀(免費新聞→本地 LLM 因果鏈);council:1 同時開議會")
         @app_commands.describe(council="是否同時召開議會辯論(預設否)")
@@ -500,6 +792,122 @@ class SharksBot(discord.Client):
                 run_dipbuy, which.value if which else "software", settings=settings)
             await interaction.followup.send(embed=dipbuy_to_embed(title, rows))
 
+        @tree.command(name="basecross",
+                      description="月線底部金叉+資金介入篩選(2022殺/AI錯殺軟體;可丟自訂 ticker)")
+        @app_commands.describe(which="killed2022 / ai_software / ecommerce / all(預設)",
+                               tickers="額外加篩的代號,逗號分隔(例:CRWD,VST,8454.TW)")
+        @app_commands.choices(which=[
+            app_commands.Choice(name="2022 殺下來的大底", value="killed2022"),
+            app_commands.Choice(name="AI 錯殺軟體股", value="ai_software"),
+            app_commands.Choice(name="電商 · agentic-commerce", value="ecommerce"),
+            app_commands.Choice(name="小型電商(高賠率高風險)", value="ecommerce_small"),
+            app_commands.Choice(name="廣度錯殺(民生/消費/醫療)", value="broadening"),
+            app_commands.Choice(name="太空板塊(SpaceX IPO)", value="space"),
+            app_commands.Choice(name="跨產業分散轉機股", value="diversified"),
+            app_commands.Choice(name="中風險轉機股(週期/轉機)", value="midrisk"),
+            app_commands.Choice(name="2026 IPO 超級年代理", value="ipo"),
+            app_commands.Choice(name="Agentic 支付/金融科技", value="payments"),
+            app_commands.Choice(name="Web3/加密週期", value="crypto"),
+            app_commands.Choice(name="全名單", value="all"),
+        ])
+        async def basecross_cmd(interaction: discord.Interaction,
+                                which: Optional[app_commands.Choice[str]] = None,
+                                tickers: str = ""):
+            await interaction.response.defer(thinking=True)   # yfinance 5y fetch, ~slow
+            extra = [t.strip().upper() for t in tickers.replace(" ", ",").split(",") if t.strip()]
+            title, rows = await asyncio.to_thread(
+                run_basecross, which.value if which else "all",
+                settings=settings, extra_tickers=extra or None)
+            await interaction.followup.send(embed=basecross_to_embed(title, rows))
+
+        @tree.command(name="rally",
+                      description="起漲訊號追蹤(融合資金/技術/消息/供應鏈/基本面;連續起漲才可考慮買入)")
+        @app_commands.describe(which="killed2022 / ai_software / ecommerce / all(預設)",
+                               tickers="額外加入的代號,逗號分隔(例:SHOP,SE,MELI,8454.TW)")
+        @app_commands.choices(which=[
+            app_commands.Choice(name="2022 殺下來的大底", value="killed2022"),
+            app_commands.Choice(name="AI 錯殺軟體股", value="ai_software"),
+            app_commands.Choice(name="電商 · agentic-commerce", value="ecommerce"),
+            app_commands.Choice(name="小型電商(高賠率高風險)", value="ecommerce_small"),
+            app_commands.Choice(name="廣度錯殺(民生/消費/醫療)", value="broadening"),
+            app_commands.Choice(name="太空板塊(SpaceX IPO)", value="space"),
+            app_commands.Choice(name="跨產業分散轉機股", value="diversified"),
+            app_commands.Choice(name="中風險轉機股(週期/轉機)", value="midrisk"),
+            app_commands.Choice(name="2026 IPO 超級年代理", value="ipo"),
+            app_commands.Choice(name="Agentic 支付/金融科技", value="payments"),
+            app_commands.Choice(name="Web3/加密週期", value="crypto"),
+            app_commands.Choice(name="全名單", value="all"),
+        ])
+        async def rally_cmd(interaction: discord.Interaction,
+                            which: Optional[app_commands.Choice[str]] = None,
+                            tickers: str = ""):
+            await interaction.response.defer(thinking=True)   # yfinance 5y fetch, ~slow
+            extra = [t.strip().upper() for t in tickers.replace(" ", ",").split(",") if t.strip()]
+            title, rows = await asyncio.to_thread(
+                run_basecross, which.value if which else "all",
+                settings=settings, extra_tickers=extra or None)
+            quality = await asyncio.to_thread(_basecross.quality_from_fom, settings.outputs_dir)
+            prior = await asyncio.to_thread(_rally.load_prior_streaks, settings.outputs_dir)
+            signals = _rally.build_signals(rows, quality_by_ticker=quality, prior_streaks=prior)
+            await asyncio.to_thread(_rally.write_state, settings.outputs_dir, signals)
+            await interaction.followup.send(embed=rally_to_embed(title, signals))
+
+        @tree.command(name="ecomrank",
+                      description="電商綜合排名(獲利空間×基本面×炒作動能;動能即時 fold-in)")
+        @app_commands.describe(scope="ecommerce(大+小,預設)/ ecommerce_small / all",
+                               tickers="額外加入的代號(例:8454.TW,8044.TW)")
+        async def ecomrank_cmd(interaction: discord.Interaction,
+                               scope: str = "ecommerce", tickers: str = ""):
+            await interaction.response.defer(thinking=True)   # yfinance 5y fetch
+            scope = scope.strip().lower() or "ecommerce"
+            extra = [t.strip().upper() for t in tickers.replace(" ", ",").split(",") if t.strip()]
+            title, rows = await asyncio.to_thread(
+                run_basecross, scope, settings=settings, extra_tickers=extra or None)
+            quality = await asyncio.to_thread(_basecross.quality_from_fom, settings.outputs_dir)
+            ranked = _rally.ecommerce_rank(rows, quality_by_ticker=quality)
+            small = set(_basecross.ECOMMERCE_SMALL)
+            await interaction.followup.send(embed=ecomrank_to_embed(ranked, small))
+
+        @tree.command(name="stealth",
+                      description="隱蔽吸籌偵測(資金先進、價未動 = 收貨指紋;抓還沒炒上去的錯殺股)")
+        @app_commands.describe(scope="broadening(民生/消費/醫療,預設)/ all / killed2022 / ecommerce",
+                               tickers="額外加入的代號,逗號分隔")
+        async def stealth_cmd(interaction: discord.Interaction,
+                              scope: str = "broadening", tickers: str = ""):
+            await interaction.response.defer(thinking=True)   # yfinance 5y fetch
+            scope = scope.strip().lower() or "broadening"
+            extra = [t.strip().upper() for t in tickers.replace(" ", ",").split(",") if t.strip()]
+            title, rows = await asyncio.to_thread(
+                run_basecross, scope, settings=settings, extra_tickers=extra or None)
+            ranked = _stealth.stealth_rank(rows)
+            await interaction.followup.send(embed=stealth_to_embed(title, ranked))
+
+        @tree.command(name="rescan",
+                      description="重跑選股/訊號/健檢掃描(本地;FOM 全宇宙掃描較久),完成後貼最新結果")
+        @app_commands.describe(scope="fom=選股(預設)· signals=每日10訊號 · health=持倉+姿態 · all=全部")
+        @app_commands.choices(scope=[
+            app_commands.Choice(name="選股(FOM 全宇宙掃描)", value="fom"),
+            app_commands.Choice(name="每日 10-訊號(籌碼 FSM → picks)", value="signals"),
+            app_commands.Choice(name="持倉 + 姿態健檢", value="health"),
+            app_commands.Choice(name="全部(選股+訊號+健檢,較久)", value="all"),
+        ])
+        async def rescan_cmd(interaction: discord.Interaction,
+                             scope: Optional[app_commands.Choice[str]] = None):
+            key = scope.value if scope else "fom"
+            jobs = _SCAN_SETS.get(key, _SCAN_SETS["fom"])
+            await interaction.response.defer(thinking=True)   # scans run locally, can be slow
+            results = []
+            for label, modargs, timeout in jobs:
+                ok, tail = await self._run_scan_module(modargs, timeout)
+                results.append((label, ok, tail))
+            status = "\n".join(
+                f"{'✅' if ok else '⚠️'} {label}" + (f" — {tail}" if (tail and not ok) else "")
+                for label, ok, tail in results)
+            digest = compose_evening(settings, datetime.now(TPE))
+            await interaction.followup.send(
+                content=f"🔄 重跑完成({key}):\n{status}\n\n下面是更新後的最新結果:",
+                embeds=digest_to_embeds(digest))
+
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
         await interaction.followup.send(parts[0])
@@ -518,6 +926,44 @@ class SharksBot(discord.Client):
         # !cmd / !help — cheat-sheet, works in ANY channel.
         if content.lower() in ("!cmd", "!cmds", "!help", "!commands", "!指令"):
             await message.channel.send(embed=self._help_embed())
+            return
+
+        # !教學 / !tutorial — worked step-by-step examples (the /cmd tutorial).
+        if content.lower() in ("!教學", "!tutorial", "!範例", "!example", "!教學範例"):
+            await message.channel.send(embed=self._tutorial_embed())
+            return
+
+        # !作戰 / !playbook — the one-page master dashboard (theme × timeline × cmd).
+        if content.lower() in ("!作戰", "!playbook", "!儀表板", "!總表", "!dashboard"):
+            await message.channel.send(embed=self._playbook_embed())
+            return
+
+        # !導覽 / !guide — the event→pipeline operating guide (ERP/MES flow).
+        if content.lower() in ("!導覽", "!guide", "!流程", "!manual", "!sop"):
+            await message.channel.send(embed=self._guide_embed())
+            return
+
+        # !sync / !ver — force re-sync slash commands AND report what THIS running
+        # process actually has. If `rescan` is missing from the list, the bot is on
+        # OLD code (git pull + restart needed); if it's listed but not in Discord's
+        # menu, this re-sync fixes it. Either way you can tell which it is.
+        if content.lower() in ("!sync", "!resync", "!同步", "!ver", "!version", "!版本"):
+            rev = await asyncio.to_thread(self._git_rev)
+            have = sorted(c.name for c in self.tree.get_commands())
+            note = "" if "rescan" in have else "\n⚠️ 這個 process 沒有 `rescan` → 跑的是舊程式碼,請 git pull + 重啟。"
+            try:
+                g = self._guild()
+                if g:
+                    self.tree.copy_global_to(guild=g)
+                    synced = await self.tree.sync(guild=g)
+                else:
+                    synced = await self.tree.sync()
+                await message.channel.send(
+                    f"✅ 已重新同步 {len(synced)} 個斜線指令(code `{rev}`):\n"
+                    f"{', '.join(sorted(c.name for c in synced))}{note}")
+            except Exception as exc:
+                await message.channel.send(
+                    f"⚠️ 同步失敗(code `{rev}`):{exc}\n本 process 現有指令:{', '.join(have)}{note}")
             return
 
         if ch_name == C.CH_COUNCIL:
@@ -663,17 +1109,37 @@ class SharksBot(discord.Client):
         for e in embeds:
             await channel.send(embed=e)
 
+    def _git_rev(self) -> str:
+        """Short commit the bot's code is running, for 'is it on new code?' checks."""
+        try:
+            p = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                               cwd=str(self.settings.project_root),
+                               capture_output=True, text=True, timeout=10)
+            return (p.stdout or "").strip() or "?"
+        except Exception:
+            return "?"
+
+    async def _run_scan_module(self, args: list[str], timeout: int) -> tuple[bool, str]:
+        """Run `python -m <args>` in project_root → (ok, last_output_line). Never raises."""
+        try:
+            proc = await asyncio.to_thread(
+                subprocess.run,
+                [sys.executable, "-m", *args],
+                cwd=str(self.settings.project_root),
+                capture_output=True, text=True, timeout=timeout,
+            )
+            out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+            tail = out.splitlines()[-1] if out else ""
+            return proc.returncode == 0, tail[:300]
+        except subprocess.TimeoutExpired:
+            return False, f"逾時(>{timeout}s) — 全宇宙掃描較久,可稍後再看 /picks"
+        except Exception as exc:  # never let a scan failure crash the handler
+            log.warning("scan %s failed: %s", args, exc)
+            return False, str(exc)[:300]
+
     async def _refresh_outputs(self) -> None:
         """Run `sharks health-check` to refresh outputs/ before a meeting."""
-        try:
-            await asyncio.to_thread(
-                subprocess.run,
-                [sys.executable, "-m", "sharks.cli", "health-check"],
-                cwd=str(self.settings.project_root),
-                capture_output=True, text=True, timeout=180,
-            )
-        except Exception as exc:  # never let a refresh failure block the meeting
-            log.warning("health-check refresh failed: %s", exc)
+        await self._run_scan_module(["sharks.cli", "health-check"], 180)
 
     # ── hourly #雜談 chatter ──────────────────────────────────────────────────
     async def post_chatter(self, run_council: bool = False) -> None:

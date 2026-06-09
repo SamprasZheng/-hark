@@ -1,0 +1,34 @@
+# 月線底部金叉 + 資金介入 watchlist — "Intel 領漲 → 補炒 2022 殺下來 + AI 錯殺軟體股"
+# Principal thesis 2026-06. recommend-only research watchlist (NOT positions).
+# Canonical lists mirrored in src/sharks/discord/basecross.py (the screener reads those).
+schema_version: 1
+as_of: 2026-06-08
+thesis: |
+  Intel 的反彈打開了「補炒落後 + 錯殺」的門:資金接著很可能去炒 (a) 2022 空頭殺下來、
+  之後長期築底的票,和 (b) 被「AI 會取代它」恐慌錯殺的軟體股。要的形態 = Boeing /
+  Snowflake 那種「多年大底 + 月線剛翻多」。
+criteria:
+  theme:          屬於 2022 重災 或 AI 錯殺軟體(下面兩張清單)
+  monthly_golden_cross: 月線級別 MACD 在低檔由下往上交叉(底部金叉,非高檔金叉)
+  capital_inflow: 近月成交量相對前段明顯放大(量價配合 = 主力進場痕跡)
+  big_base:       距歷史高有一段(深跌長期築底),剛開始翻揚,非貼高、非落刀
+killed_2022: [INTC, BA, SNOW, PYPL, ADBE, CRM, NKE, DIS, ROKU, TWLO,
+              DDOG, NET, OKTA, ZS, MDB, SHOP, U, PATH, RBLX, PINS,
+              SE, ABNB, DOCU, WDAY, TEAM, BILL, CFLT, GTLB, ESTC, DOCN]
+ai_oversold_software: [ADBE, CRM, NOW, INTU, WDAY, HUBS, DDOG, MDB, SNOW, TEAM,
+                       DOCU, ESTC, TWLO, ZI, PATH, AI, S, BRZE, GTLB, CHGG]
+verdicts:
+  green:  "🟢 月線底部金叉 + 資金進場 — 主力候選"
+  yellow: "🟡 金叉或量能,只到位一半 — 待另一半確認"
+  blue:   "🔵 大底已成 · 等月線金叉 + 資金介入"
+  reject: "〽️ 近高/乖離(非大底)· ⚠️ 跌太深(落刀?)"
+how_to_run: |
+  Discord:  /basecross all            (或 killed2022 / ai_software)
+            /basecross all tickers:CRWD,VST,LHX   (丟自訂代號,例如截圖持股)
+  月線是日線重抽樣近似(每 ~21 交易日一根),fetch 取 ~5 年日線。
+pairs_with: |
+  dipbuy.py 是日線動能版(距高+盈利+起漲);本檔是月線結構版(大底金叉+資金)。
+  兩者互補:dipbuy 抓「短線剛起漲」,basecross 抓「月線剛翻多的大底」。
+caveat: |
+  盈利維度(FOM quality)只有當該票在 fom.py DEFAULT_UNIVERSE 才有,否則標 TBD。
+  月線金叉是結構訊號、非擇時計時器;進場仍需配合 regime / 資金面健檢(recommend-only)。

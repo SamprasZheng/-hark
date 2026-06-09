@@ -47,7 +47,15 @@ logs/
 # Trading-system specific
 outputs/*.json
 outputs/*.csv
+outputs/*.jsonl
 !outputs/.gitkeep
+
+# Council debate conclusions — machine-generated dynamic state (like outputs/);
+# regenerated each debate and may reference live views/positions. Keep the dir,
+# not the notes (the human can curate/commit specific ones if wanted).
+wiki/council/*.md
+wiki/council/_history.jsonl
+!wiki/council/.gitkeep
 
 # Crypto tracker daily snapshots — immutable raw, regenerated each run (like outputs/).
 # watchlist.yaml, watchlist_history/, and analysis/*.md stay tracked (point-in-time integrity).

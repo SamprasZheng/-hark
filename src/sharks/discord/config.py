@@ -131,16 +131,24 @@ class Settings:
     # Council debate (multi-persona 質疑→投票→結論, runs on the LOCAL model).
     council_enabled: bool = True
     council_model: str = ""            # "" → use local_model
-    # A diverse bench so the vote actually splits: supply-chain bull, patient
-    # contrarian, value, macro, risk-first bear, momentum trader.
-    # Balanced bench: 4 objective quant voices (FOM / Bayesian / valuation /
-    # regime) + 3 subjective (supply-chain bull, risk-first bear, momentum).
+    # Expanded bench so the vote splits across真正不同的腦:
+    #   4 objective quant voices — FOM / Bayesian / valuation / regime
+    #   + KOL/subjective voices — 供應鏈(huang)、總經狙擊(serenity)、長線(sam)、
+    #     底層邏輯(yupupin)、空方風控(bear)、動能(momentum).
+    # buffet / crypto can be added via SHARKS_DISCORD_COUNCIL_PERSONAS.
     council_personas: tuple[str, ...] = (
-        "fomquant", "bayes", "valuation", "regimequant", "huang", "bear", "momentum")
+        "fomquant", "bayes", "valuation", "regimequant",
+        "huang", "serenity", "sam", "yupupin", "bear", "momentum")
     council_chair: str = "sharks"
     # Per-seat models, round-robin. Only qwen2.5:7b + llama3.1:8b — both fit in
     # 12 GB together so they stay resident (no load churn = fast), per principal.
     council_models: tuple[str, ...] = ("qwen2.5:7b", "llama3.1:8b")
+    # 交叉質詢 layer: stance → 交叉質詢 → 投票 → 主席 (off → faster 質疑+投票 round).
+    council_cross_exam: bool = True
+    # Closed loop: read recent 結論 + per-persona memory + topic RAG into the
+    # debate, and write each conclusion back to wiki/council/ (RAG-searchable).
+    council_memory_enabled: bool = True
+    council_writeback: bool = True
 
     # ── 雜談 chatter (#雜談): hourly news → 速解讀 (local LLM); periodic council ──
     chatter_enabled: bool = True
@@ -192,7 +200,8 @@ class Settings:
             council_personas=tuple(
                 p.strip().lower() for p in
                 _env("SHARKS_DISCORD_COUNCIL_PERSONAS",
-                     "fomquant,bayes,valuation,regimequant,huang,bear,momentum").split(",")
+                     "fomquant,bayes,valuation,regimequant,"
+                     "huang,serenity,sam,yupupin,bear,momentum").split(",")
                 if p.strip()
             ),
             council_chair=_env("SHARKS_DISCORD_COUNCIL_CHAIR", "sharks").lower(),
@@ -201,6 +210,9 @@ class Settings:
                 _env("SHARKS_DISCORD_COUNCIL_MODELS", "qwen2.5:7b,llama3.1:8b").split(",")
                 if m.strip()
             ),
+            council_cross_exam=_env("SHARKS_DISCORD_COUNCIL_CROSSEXAM", "1") != "0",
+            council_memory_enabled=_env("SHARKS_DISCORD_COUNCIL_MEMORY", "1") != "0",
+            council_writeback=_env("SHARKS_DISCORD_COUNCIL_WRITEBACK", "1") != "0",
             chatter_enabled=_env("SHARKS_DISCORD_CHATTER", "1") != "0",
             chatter_council_every=_env_int("SHARKS_DISCORD_CHATTER_COUNCIL_EVERY", 4),
             chatter_news_n=_env_int("SHARKS_DISCORD_CHATTER_NEWS_N", 8),
