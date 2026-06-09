@@ -45,6 +45,7 @@ from sharks.discord.basecross import BaseCrossCandidate, run_basecross
 from sharks.discord import basecross as _basecross
 from sharks.scoring import rally_signal as _rally
 from sharks.scoring import stealth_signal as _stealth
+from sharks.data import finviz_elite as _finviz
 from sharks.discord.meetings import (
     MeetingDigest,
     compose_evening,
@@ -435,6 +436,7 @@ class SharksBot(discord.Client):
             "`/dipbuy [software|crypto|all]` — 抄底起漲篩選(距高+盈利+起漲)\n"
             "`/basecross [killed2022|ai_software|all] [tickers:CRWD,VST]` — 月線底部金叉+資金介入(Boeing/Snowflake 大底)\n"
             "`/rally [killed2022|ai_software|ecommerce|all] [tickers:SHOP,SE]` — 起漲訊號追蹤(5維融合;連續起漲才可考慮買入)\n"
+            "`/finviz [preset|f=] [cols:]` — Finviz API 掃描 → 9維 → rally 排名(資金/技術/基本面更精準)\n"
             "`/ecomrank [scope] [tickers:8454.TW]` — 電商綜合排名(獲利空間×基本面×炒作動能)\n"
             "`/stealth [broadening|all|killed2022] [tickers:…]` — 隱蔽吸籌偵測(資金先進、價未動;抓還沒炒上去的錯殺股)"), inline=False)
         e.add_field(name="📣 自媒體", value=(
@@ -851,6 +853,34 @@ class SharksBot(discord.Client):
             signals = _rally.build_signals(rows, quality_by_ticker=quality, prior_streaks=prior)
             await asyncio.to_thread(_rally.write_state, settings.outputs_dir, signals)
             await interaction.followup.send(embed=rally_to_embed(title, signals))
+
+        @tree.command(name="finviz",
+                      description="Finviz API 掃描 → 9維 → rally 排名(資金/技術/基本面更精準)")
+        @app_commands.describe(filters="preset 或 Finviz f= 過濾字串(預設 dipbuy)",
+                               cols="可選:從你的 Finviz Custom view URL 複製的 c= 欄位字串")
+        async def finviz_cmd(interaction: discord.Interaction,
+                             filters: str = "dipbuy", cols: str = ""):
+            await interaction.response.defer(thinking=True)
+            try:
+                rows = await asyncio.to_thread(
+                    _finviz.fetch_screen, filters,
+                    view=_finviz.DIMENSION_VIEW, columns=(cols or _finviz.DIMENSION_COLUMNS))
+            except Exception as exc:                       # token already redacted in exc
+                await interaction.followup.send(f"⚠️ Finviz 掃描失敗:{exc}"[:1900])
+                return
+            prior = await asyncio.to_thread(_rally.load_prior_streaks, settings.outputs_dir)
+            signals = _finviz.signals_from_finviz(rows, prior_streaks=prior)
+            await asyncio.to_thread(_rally.write_state, settings.outputs_dir, signals)
+            # dims coverage (so you can tell if the export missed columns)
+            dims = [_finviz.finviz_row_to_dims(r) for r in rows]
+            n = len(rows) or 1
+            cov = ", ".join(f"{k}{sum(1 for d in dims if d.get(k) is not None)}/{n}"
+                            for k in ("technical", "capital", "fundamental"))
+            e = rally_to_embed(f"Finviz · {filters}({len(rows)}檔)", signals)
+            e.add_field(name="維度覆蓋(Finviz 欄位)",
+                        value=f"{cov} — 若多為 0/{n},用 `cols:` 貼你 Custom view 的 c= 字串",
+                        inline=False)
+            await interaction.followup.send(embed=e)
 
         @tree.command(name="ecomrank",
                       description="電商綜合排名(獲利空間×基本面×炒作動能;動能即時 fold-in)")
