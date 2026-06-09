@@ -50,11 +50,15 @@ PRESETS: dict[str, str] = {
     # 2022 錯殺反轉:深跌離高(≥30%)+ 月線翻揚 + 量能進場 + 有營收/盈利支撐
     "mis_killed_2022": ("ta_highlow52w_b30h,ta_sma50_pa,sh_relvol_o1.5,sh_avgvol_o500,"
                         "sh_price_o5,fa_sales5years_pos,fa_grossmargin_pos"),
-    # 月線三連陽級別:多頭排列(站上 50/200 線)+ 季線級別上漲(全市場掃,擴大範圍)
-    "uptrend_3mo": ("ta_sma50_pa,ta_sma200_pa,ta_perf_13wup,sh_avgvol_o500,sh_price_o5"),
-    # supercycle 候選:多頭排列 + 半年級別上漲 + 高成長 + 有盈利(找下一個 NVDA/MU)
-    "supercycle": ("ta_sma50_pa,ta_sma200_pa,ta_perf_26wup,fa_sales5years_o15,"
-                   "fa_grossmargin_pos,sh_avgvol_o1000,sh_price_o5"),
+}
+
+# 趨勢階段過濾(LOCAL,不靠 Finviz screener 碼)— 抓精選池 → 用 trend_stage 在本地篩。
+# Finviz 的 f= 過濾碼格式易錯(錯碼會被忽略、回傳整個市場),所以這類「型態」一律本地過濾。
+STAGE_FILTERS: dict[str, tuple[str, ...]] = {
+    "supercycle": ("🌊",),              # 只要 supercycle候選(站上50&200+月/季/半年漲+年漲≥30%)
+    "uptrend_3mo": ("🌊", "📈"),        # 月線三連陽級別(多頭排列+持續)
+    "monthly3": ("🌊", "📈"),
+    "rally_stage": ("🌊", "📈", "🚀"),  # 含起漲
 }
 
 _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
@@ -311,6 +315,8 @@ def resolve_target(arg: str) -> tuple[str, Optional[str], Optional[str]]:
         pass
     if arg in ("universe", "fom", "fomuniverse", "全宇宙"):
         return "universe", None, None
+    if arg in STAGE_FILTERS:
+        return "stage", arg, None            # local trend-stage filter over the universe
     return "filters", resolve_filters(arg), None
 
 
@@ -428,6 +434,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     if not pos:
         print("用法(全程 Finviz,不用 yfinance):\n"
               "  python -m sharks.data.finviz_elite rally universe   # 重掃 FOM 全宇宙→9維→排名+推薦JSON\n"
+              "  python -m sharks.data.finviz_elite rally supercycle # 全宇宙→本地篩 🌊supercycle候選\n"
+              "  python -m sharks.data.finviz_elite rally uptrend_3mo# 全宇宙→本地篩 月線三連陽(多頭排列)\n"
               "  python -m sharks.data.finviz_elite rally space      # 題材池→Finviz t= 抓→9維→rally\n"
               "  python -m sharks.data.finviz_elite rally dipbuy      # preset(f= 過濾)\n"
               "  python -m sharks.data.finviz_elite '<scope|preset|f=>'   # 只驗證+代號清單\n"
@@ -443,10 +451,14 @@ def main(argv: Optional[list[str]] = None) -> int:
         columns = cols_override or DIMENSION_COLUMNS
         kind, flt, tks = resolve_target(arg)
         try:
-            if kind == "universe":
+            if kind in ("universe", "stage"):
                 uni = fom_universe()
-                print(f"全宇宙掃描:{len(uni)} 檔(Finviz 批次拉取,無 yfinance)…", file=sys.stderr)
+                label = "全宇宙" if kind == "universe" else f"{arg}(本地型態過濾)"
+                print(f"{label} 掃描:{len(uni)} 檔(Finviz 批次拉取,無 yfinance)…", file=sys.stderr)
                 rows = fetch_universe(uni, view=view, columns=columns)
+                if kind == "stage":                      # keep only rows in the target stage(s)
+                    keep = STAGE_FILTERS[arg]
+                    rows = [r for r in rows if trend_stage(r).startswith(keep)]
             else:
                 rows = fetch_screen(flt or "", view=view, columns=columns, tickers=tks)
         except Exception as exc:

@@ -92,6 +92,15 @@ def test_resolve_target_universe():
     assert FE.resolve_target("fom")[0] == "universe"
 
 
+def test_resolve_target_stage_filters_local_not_finviz_codes():
+    # supercycle/uptrend are LOCAL stage filters (not Finviz f= codes that could 11k)
+    kind, flt, tks = FE.resolve_target("supercycle")
+    assert kind == "stage" and flt == "supercycle" and tks is None
+    assert FE.STAGE_FILTERS["supercycle"] == ("🌊",)
+    assert "supercycle" not in FE.PRESETS          # removed the broken f= preset
+    assert "🚀" in FE.STAGE_FILTERS["rally_stage"]
+
+
 def test_write_scan_recommendation(tmp_path):
     from sharks.scoring import rally_signal as RS
     sigs = [RS.assess("AAA", {"technical": 70, "capital": 65, "fundamental": 75}, prior_streak=3),
