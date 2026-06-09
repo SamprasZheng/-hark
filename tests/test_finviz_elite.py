@@ -73,6 +73,33 @@ def test_num_parses_suffixes_and_pct():
     assert FE._num({"a": "-"}, "a") is None
 
 
+def test_build_url_custom_view_and_columns():
+    url = FE.build_export_url("f1", token="T", view=FE.DIMENSION_VIEW, columns=FE.DIMENSION_COLUMNS)
+    assert "v=152" in url and "&c=" in url and "auth=T" in url
+
+
+def test_signals_from_finviz_fuel_gate():
+    rows = [
+        # 有燃料(高 ROE/毛利/成長)+ 起漲 + 連續 → 可考慮買入
+        {"Ticker": "GOOD", "Perf Month": "12%", "SMA50": "5%", "SMA200": "15%", "RSI": "62",
+         "Rel Volume": "1.8", "Inst Trans": "4%", "ROE": "40%", "Gross Margin": "60%",
+         "Sales past 5Y": "30%", "Profit Margin": "25%", "52W High": "-30%"},
+        # 熱價無基本面(墓園型)
+        {"Ticker": "HYPE", "Perf Month": "40%", "SMA50": "20%", "SMA200": "30%", "RSI": "75",
+         "Rel Volume": "5", "ROE": "-20%", "Gross Margin": "10%", "Profit Margin": "-15%",
+         "52W High": "-10%"},
+    ]
+    sigs = FE.signals_from_finviz(rows, prior_streaks={"GOOD": 3})
+    by = {s.ticker: s for s in sigs}
+    assert by["GOOD"].has_fuel and by["GOOD"].buy_consider          # fueled + 連續 → buy
+    assert by["HYPE"].conviction.startswith("🚫")                   # hot, no fuel → 墓園
+    assert sigs[0].ticker == "GOOD"                                  # ranked first
+
+
+def test_signals_from_finviz_skips_blank_ticker():
+    assert FE.signals_from_finviz([{"Company": "x"}]) == []
+
+
 def test_no_hardcoded_token_in_source():
     # guard: no UUID-style API token literal may be committed in the client
     import pathlib

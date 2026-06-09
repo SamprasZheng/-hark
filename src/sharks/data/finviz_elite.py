@@ -16,7 +16,12 @@ the 301 redirect automatically, so no ``curl -L`` needed). recommend-only.
 
 Validate on a networked machine:
     FINVIZ_ELITE_API_KEY=... python -m sharks.data.finviz_elite "ta_alltime_b30h,sh_price_o5"
-(or a preset name; prints ticker count + first rows, never the token).
+    FINVIZ_ELITE_API_KEY=... python -m sharks.data.finviz_elite rally dipbuy   # 端到端 9維→rally
+(prints ticker count / a ranked rally table; never the token).
+
+The ``rally`` mode powers rally_signal directly from Finviz's own columns (a daily
+snapshot → 連續起漲 persisted in outputs/rally-state-*.jsonl). Finviz does NOT give the
+monthly price history that basecross (月線金叉) / stealth need — those stay on yfinance.
 """
 
 from __future__ import annotations
@@ -42,6 +47,20 @@ PRESETS: dict[str, str] = {
 }
 
 _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
+
+# To get the 9 dimensions, the export must include the technical/fundamental/ownership
+# columns — the default Overview view (111) does NOT. Use the Custom view (152) with a
+# column-id set. Finviz column ids follow a (fairly stable) canonical order; this is a
+# best-effort set covering valuation/growth/ownership/fundamentals/technical/risk.
+# ⚠️ ids can vary by account — finviz_row_to_dims matches by HEADER NAME, so any
+# superset works. If the rally dims come back mostly None, open your Finviz Custom
+# view, pick those columns, and pass the URL's v=/c= via `view=`/`cols=` overrides.
+DIMENSION_VIEW = "152"
+DIMENSION_COLUMNS = ("1,2,3,7,9,10,18,21,22,23,27,29,30,33,35,38,39,41,"
+                     "43,44,48,50,53,54,57,59,62,63,64,65")
+# The 9 evaluation dims finviz_row_to_dims produces (for coverage reporting).
+DIMS9 = ("technical", "capital", "fundamental", "valuation", "growth",
+         "risk", "analyst", "dist_ath_pct", "news")
 
 
 def _token(explicit: Optional[str] = None) -> str:
@@ -147,7 +166,8 @@ def finviz_row_to_dims(row: dict) -> dict:
     # 基本面:ROE / 毛利 / 營收成長 / 獲利率(quality 代理)
     roe = _num(row, "ROE", "Return on Equity")
     gm = _num(row, "Gross Margin")
-    sales = _num(row, "Sales growth past 5 years", "Sales Q/Q", "Sales growth quarter over quarter")
+    sales = _num(row, "Sales growth past 5 years", "Sales past 5Y", "Sales Q/Q",
+                 "Sales growth quarter over quarter")
     pm = _num(row, "Profit Margin", "Net Profit Margin")
     fund = None
     if any(v is not None for v in (roe, gm, sales, pm)):
@@ -181,7 +201,7 @@ def finviz_row_to_dims(row: dict) -> dict:
         valuation = _clamp(v)
 
     eps_next = _num(row, "EPS growth next year", "EPS next Y", "EPS Q/Q")
-    sales_g = _num(row, "Sales growth past 5 years", "Sales Q/Q")
+    sales_g = _num(row, "Sales growth past 5 years", "Sales past 5Y", "Sales Q/Q")
     growth = None                                      # 高分 = 成長強
     if eps_next is not None or sales_g is not None:
         g = 50.0 + min(30, (eps_next or 0) * 0.4) + min(20, (sales_g or 0) * 0.4)
@@ -234,23 +254,96 @@ def fetch_tickers(filters_or_preset: str, **kw) -> list[str]:
     return tickers_from_rows(fetch_screen(filters_or_preset, **kw))
 
 
+def signals_from_finviz(rows: list[dict], *, prior_streaks: Optional[dict] = None,
+                        tight_regime: bool = True) -> list:
+    """End-to-end: Finviz rows → 9-dim mapping → rally_signal.assess → ranked signals.
+
+    Uses Finviz's OWN columns for 資金/技術/基本面 (no price history needed for the
+    snapshot); 連續起漲 accumulates across daily runs via ``prior_streaks``. Pure given
+    its inputs (tests inject rows). ``rally_signal`` imported lazily to keep data→scoring
+    layering clean and the import optional for the plain ticker-list mode."""
+    from sharks.scoring import rally_signal as RS
+    prior_streaks = prior_streaks or {}
+    out = []
+    for r in rows:
+        t = (r.get("Ticker") or r.get("ticker") or "").strip().upper()
+        if not t:
+            continue
+        dims = finviz_row_to_dims(r)
+        out.append(RS.assess(t, dims, prior_streak=prior_streaks.get(t, 0),
+                             tight_regime=tight_regime))
+    out.sort(key=lambda s: (s.buy_consider, s.composite, s.dna_match), reverse=True)
+    return out
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     import sys
     argv = list(sys.argv[1:] if argv is None else argv)
-    if not argv:
-        print("用法: python -m sharks.data.finviz_elite '<f=過濾字串或preset>'\n"
+    # optional overrides: view=152  cols=1,2,3,...  (paste from your Finviz Custom URL)
+    view_override = cols_override = None
+    pos: list[str] = []
+    for a in argv:
+        if a.startswith("view="):
+            view_override = a.split("=", 1)[1]
+        elif a.startswith(("cols=", "columns=")):
+            cols_override = a.split("=", 1)[1]
+        else:
+            pos.append(a)
+    mode = "tickers"
+    if pos and pos[0] == "rally":
+        mode, pos = "rally", pos[1:]
+    if not pos:
+        print("用法:\n"
+              "  python -m sharks.data.finviz_elite '<f=過濾或preset>'            # 驗證+代號清單\n"
+              "  python -m sharks.data.finviz_elite rally '<f=過濾或preset>'      # 端到端 9維→rally 排名\n"
+              "  (可加 view=152 cols=1,2,3,... 從你的 Finviz Custom URL 覆蓋欄位)\n"
               f"presets: {', '.join(PRESETS)}", file=sys.stderr)
         return 2
-    arg = argv[0]
+    arg = pos[0]
+
+    if mode == "rally":
+        view = view_override or DIMENSION_VIEW
+        columns = cols_override or DIMENSION_COLUMNS
+        try:
+            rows = fetch_screen(arg, view=view, columns=columns)
+        except Exception as exc:
+            print(f"驗證失敗:{exc}", file=sys.stderr)
+            return 1
+        from sharks.scoring import rally_signal as RS
+        from sharks.discord.config import Settings
+        outdir = Settings.load().outputs_dir
+        prior = RS.load_prior_streaks(outdir)
+        sigs = signals_from_finviz(rows, prior_streaks=prior)
+        # dims coverage — so you can tell if the export is missing columns
+        dims_list = [finviz_row_to_dims(r) for r in rows]
+        n = len(rows) or 1
+        cov = {k: sum(1 for d in dims_list if d.get(k) is not None) for k in DIMS9}
+        RS.write_state(outdir, sigs)
+        print(f"✅ Finviz→rally — {len(sigs)} 檔(filters={resolve_filters(arg)}, view={view})")
+        print("維度覆蓋:", " ".join(f"{k}={cov[k]}/{n}" for k in DIMS9))
+        if cov["technical"] == 0 and cov["fundamental"] == 0:
+            print("⚠️ 技術/基本面欄位全空 → 此 view 沒帶到欄位;用 view=/cols= 從你的 "
+                  "Finviz Custom URL 覆蓋(見 docs/finviz_screening_recipe.md)。")
+        for s in sigs[:30]:
+            d = s.dims
+            dstr = " ".join(f"{lbl}{int(d[k])}" if d.get(k) is not None else f"{lbl}–"
+                            for k, lbl in (("technical", "技"), ("capital", "資"),
+                                           ("fundamental", "基")))
+            print(f"  {s.ticker:<6} C{s.composite:>4.0f} 連{s.streak} {dstr} · {s.conviction}")
+        print("recommend-only · 連續起漲跨日累計(rally-state)· 永不下單")
+        return 0
+
+    # default: validate + ticker list (fast Overview view)
     try:
-        rows = fetch_screen(arg)
+        rows = fetch_screen(arg, view=view_override or "111", columns=cols_override)
     except Exception as exc:
         print(f"驗證失敗:{exc}", file=sys.stderr)   # token already redacted
         return 1
     tickers = tickers_from_rows(rows)
     print(f"✅ Finviz API OK — {len(tickers)} 檔(filters={resolve_filters(arg)})")
     print("前 30 檔:", ", ".join(tickers[:30]))
-    print("→ 餵進系統:python -m sharks.discord.ecom_screens " + " ".join(tickers[:20]))
+    print("→ 端到端評分:python -m sharks.data.finviz_elite rally " + arg)
+    print("→ 或餵價量screens:python -m sharks.discord.ecom_screens " + " ".join(tickers[:20]))
     return 0
 
 
