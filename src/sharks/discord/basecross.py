@@ -268,13 +268,9 @@ def quality_from_fom(outputs_dir: Path) -> dict[str, float]:
             if r.get("ticker") and r.get("quality") is not None}
 
 
-def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
-                  fetch: FetchFn = default_fetch,
-                  extra_tickers: Optional[list[str]] = None
-                  ) -> tuple[str, list[BaseCrossCandidate]]:
-    """Screen a thesis list. which ∈ {killed2022, ai_software, all}; ``extra_tickers``
-    lets you throw arbitrary names (e.g. straight from a Finviz/Pelosi screenshot)."""
-    settings = settings or Settings.load()
+def scope_universe(which: str = "all") -> tuple[str, list[str]]:
+    """Resolve a theme scope name → (title, ticker list). Shared by run_basecross
+    and the Finviz-native path (finviz_elite) so the theme pools work without yfinance."""
     ecommerce_all = ECOMMERCE_AGENTIC + ECOMMERCE_SMALL
     everything = sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE)
                         | set(ecommerce_all) | set(BROADENING_LAGGARDS)
@@ -296,6 +292,23 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
         "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
+    return title, list(base)
+
+
+# Set of valid scope names (for callers that need to tell scope from a raw filter str).
+SCOPES = ("killed2022", "ai_software", "ecommerce", "ecommerce_small", "broadening",
+          "space", "diversified", "midrisk", "ipo", "payments", "crypto", "all")
+
+
+def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
+                  fetch: FetchFn = default_fetch,
+                  extra_tickers: Optional[list[str]] = None
+                  ) -> tuple[str, list[BaseCrossCandidate]]:
+    """Screen a thesis list. which ∈ {killed2022, ai_software, all}; ``extra_tickers``
+    lets you throw arbitrary names (e.g. straight from a Finviz/Pelosi screenshot)."""
+    settings = settings or Settings.load()
+    ecommerce_all = ECOMMERCE_AGENTIC + ECOMMERCE_SMALL
+    title, base = scope_universe(which)
     theme = {t: "2022殺" for t in KILLED_2022}
     theme.update({t: (theme.get(t, "") + "+AI錯殺").lstrip("+") for t in AI_OVERSOLD_SOFTWARE})
     theme.update({t: (theme.get(t, "") + "+電商").lstrip("+") for t in ecommerce_all})

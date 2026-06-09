@@ -73,6 +73,20 @@ def test_num_parses_suffixes_and_pct():
     assert FE._num({"a": "-"}, "a") is None
 
 
+def test_build_url_with_tickers_uses_t_param():
+    url = FE.build_export_url(token="T", view="152", tickers="RKLB,IRDM", columns="1,2")
+    assert "&t=RKLB,IRDM" in url and "&f=" not in url and "auth=T" in url
+
+
+def test_resolve_target_scope_vs_filters():
+    kind, flt, tks = FE.resolve_target("space")           # a basecross theme scope
+    assert kind == "scope" and flt is None and "RKLB" in tks
+    kind, flt, tks = FE.resolve_target("dipbuy")          # a preset
+    assert kind == "filters" and tks is None and flt == FE.PRESETS["dipbuy"]
+    kind, flt, tks = FE.resolve_target("ta_alltime_b30h") # raw f=
+    assert kind == "filters" and flt == "ta_alltime_b30h"
+
+
 def test_build_url_custom_view_and_columns():
     url = FE.build_export_url("f1", token="T", view=FE.DIMENSION_VIEW, columns=FE.DIMENSION_COLUMNS)
     assert "v=152" in url and "&c=" in url and "auth=T" in url

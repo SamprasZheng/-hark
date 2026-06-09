@@ -221,15 +221,17 @@ def register(tree, settings) -> None:
         ranked = _rally.ecommerce_rank(rows, quality_by_ticker=quality)
         await interaction.followup.send(embed=ecomrank_to_embed(ranked, set(_basecross.ECOMMERCE_SMALL)))
 
-    @tree.command(name="finviz", description="Finviz API 掃描 → 9維 → rally 排名(資金/技術/基本面更精準)")
-    @app_commands.describe(filters="preset 或 Finviz f= 過濾字串(預設 dipbuy)",
+    @tree.command(name="finviz", description="Finviz API 掃描 → 9維 → rally 排名(全程 Finviz,不用 yfinance)")
+    @app_commands.describe(filters="題材池(space/ipo/payments/crypto…)或 preset 或 Finviz f= 字串",
                            cols="可選:Finviz Custom view 的 c= 欄位字串")
     async def finviz_cmd(interaction: discord.Interaction, filters: str = "dipbuy", cols: str = ""):
         await interaction.response.defer(thinking=True)
+        _, flt, tks = _finviz.resolve_target(filters)
         try:
             rows = await asyncio.to_thread(
-                _finviz.fetch_screen, filters,
-                view=_finviz.DIMENSION_VIEW, columns=(cols or _finviz.DIMENSION_COLUMNS))
+                _finviz.fetch_screen, flt or "",
+                view=_finviz.DIMENSION_VIEW, columns=(cols or _finviz.DIMENSION_COLUMNS),
+                tickers=tks)
         except Exception as exc:
             await interaction.followup.send(f"⚠️ Finviz 掃描失敗:{exc}"[:1900])
             return

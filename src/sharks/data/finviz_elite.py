@@ -77,11 +77,16 @@ def redact(url: str) -> str:
     return re.sub(r"(auth=)[^&]+", r"\1***", url)
 
 
-def build_export_url(filters: str, *, token: str, view: str = "111",
-                     columns: Optional[str] = None) -> str:
-    """Build the export URL. ``filters`` = the Finviz ``f=`` string;
+def build_export_url(filters: str = "", *, token: str, view: str = "111",
+                     columns: Optional[str] = None, tickers: Optional[str] = None) -> str:
+    """Build the export URL. ``filters`` = the Finviz ``f=`` string; ``tickers`` = a
+    comma list for the ``t=`` param (fetch specific names — used for theme scopes).
     ``columns`` = optional ``c=`` column ids."""
-    query = f"v={view}&f={filters}"
+    query = f"v={view}"
+    if tickers:
+        query += f"&t={tickers}"
+    if filters:
+        query += f"&f={filters}"
     if columns:
         query += f"&c={columns}"
     return f"{EXPORT_BASE}?{query}&auth={token}"
@@ -230,13 +235,32 @@ def finviz_row_to_dims(row: dict) -> dict:
             "valuation": valuation, "growth": growth, "risk": risk, "analyst": analyst}
 
 
-def fetch_screen(filters_or_preset: str, *, token: Optional[str] = None,
+def resolve_target(arg: str) -> tuple[str, Optional[str], Optional[str]]:
+    """Decide what ``arg`` means → (kind, filters, tickers).
+
+    - a basecross theme scope (space/ipo/payments/…) → fetch those tickers via ``t=``
+      (Finviz-native, no yfinance);
+    - a PRESETS name or a raw ``f=`` filter string → fetch via ``f=``.
+    """
+    try:
+        from sharks.discord import basecross as _bc
+        if arg in _bc.SCOPES:
+            _, tickers = _bc.scope_universe(arg)
+            return "scope", None, ",".join(tickers)
+    except Exception:
+        pass
+    return "filters", resolve_filters(arg), None
+
+
+def fetch_screen(filters_or_preset: str = "", *, token: Optional[str] = None,
                  view: str = "111", columns: Optional[str] = None,
-                 timeout: int = 30) -> list[dict]:
+                 tickers: Optional[str] = None, timeout: int = 30) -> list[dict]:
     """Fetch a screen's CSV export → row dicts. Network; token from env. Errors are
-    redacted so the token never leaks into a traceback/log."""
-    filters = resolve_filters(filters_or_preset)
-    url = build_export_url(filters, token=_token(token), view=view, columns=columns)
+    redacted so the token never leaks into a traceback/log. Pass ``tickers`` to fetch
+    specific names (t=) instead of a filter (f=)."""
+    filters = "" if tickers else resolve_filters(filters_or_preset)
+    url = build_export_url(filters, token=_token(token), view=view,
+                           columns=columns, tickers=tickers)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 PolkaSharks"})
         with urllib.request.urlopen(req, timeout=timeout) as resp:   # follows 301
@@ -300,19 +324,23 @@ def main(argv: Optional[list[str]] = None) -> int:
     if pos and pos[0] == "rally":
         mode, pos = "rally", pos[1:]
     if not pos:
-        print("用法:\n"
-              "  python -m sharks.data.finviz_elite '<f=過濾或preset>'            # 驗證+代號清單\n"
-              "  python -m sharks.data.finviz_elite rally '<f=過濾或preset>'      # 端到端 9維→rally 排名\n"
-              "  (可加 view=152 cols=1,2,3,... 從你的 Finviz Custom URL 覆蓋欄位)\n"
-              f"presets: {', '.join(PRESETS)}", file=sys.stderr)
+        print("用法(全程 Finviz,不用 yfinance):\n"
+              "  python -m sharks.data.finviz_elite rally space      # 題材池→Finviz t= 抓→9維→rally\n"
+              "  python -m sharks.data.finviz_elite rally dipbuy      # preset(f= 過濾)\n"
+              "  python -m sharks.data.finviz_elite '<scope|preset|f=>'   # 只驗證+代號清單\n"
+              "  (可加 view=152 cols=1,2,... 從你的 Finviz Custom URL 覆蓋欄位)\n"
+              "  scope: space ipo payments crypto ecommerce ai_software broadening "
+              "diversified midrisk killed2022 all\n"
+              f"  presets: {', '.join(PRESETS)}", file=sys.stderr)
         return 2
     arg = pos[0]
 
     if mode == "rally":
         view = view_override or DIMENSION_VIEW
         columns = cols_override or DIMENSION_COLUMNS
+        _, flt, tks = resolve_target(arg)
         try:
-            rows = fetch_screen(arg, view=view, columns=columns)
+            rows = fetch_screen(flt or "", view=view, columns=columns, tickers=tks)
         except Exception as exc:
             print(f"驗證失敗:{exc}", file=sys.stderr)
             return 1
@@ -341,8 +369,10 @@ def main(argv: Optional[list[str]] = None) -> int:
         return 0
 
     # default: validate + ticker list (fast Overview view)
+    _, flt, tks = resolve_target(arg)
     try:
-        rows = fetch_screen(arg, view=view_override or "111", columns=cols_override)
+        rows = fetch_screen(flt or "", view=view_override or "111",
+                            columns=cols_override, tickers=tks)
     except Exception as exc:
         print(f"驗證失敗:{exc}", file=sys.stderr)   # token already redacted
         return 1
