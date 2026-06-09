@@ -329,9 +329,22 @@ def fetch_universe(tickers: list[str], *, token: Optional[str] = None,
 
 
 def fom_universe() -> list[str]:
-    """The full FOM scan universe (lazy import — fom pulls numpy/pandas/yfinance)."""
-    from sharks.scoring import fom
-    return list(fom.DEFAULT_UNIVERSE)
+    """Full scan universe = all theme pools (pure-Python) + the FOM core (only if it
+    imports). Deliberately does NOT hard-depend on fom.py (pandas/numpy/yfinance), so
+    the Finviz path stays lightweight and keeps working even when those deps are
+    broken/missing. Drops indices (^…) and crypto pairs (…-USD) Finviz won't price."""
+    tickers: set[str] = set()
+    try:
+        from sharks.discord import basecross as _bc
+        tickers.update(_bc.scope_universe("all")[1])   # 錯殺/payments/ecommerce/crypto/space…
+    except Exception:
+        pass
+    try:
+        from sharks.scoring import fom                  # core FOM names (skip if pandas/numpy broken)
+        tickers.update(fom.DEFAULT_UNIVERSE)
+    except Exception:
+        pass
+    return sorted(t for t in tickers if t and not t.startswith("^") and "-USD" not in t)
 
 
 def signals_from_finviz(rows: list[dict], *, prior_streaks: Optional[dict] = None,
