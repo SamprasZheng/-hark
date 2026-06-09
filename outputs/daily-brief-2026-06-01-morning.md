@@ -1,0 +1,80 @@
+# 🌅 早晨財經速解讀 — 2026-06-01 早報
+> 仿游庭澔《早晨財經速解讀》結構。**研究/教育用途,非投資建議。**　_(edition: morning)_
+
+## 1️⃣ 開盤速覽
+
+| 指標 | 收盤 | 日 | 週 | 月 |
+|---|--:|--:|--:|--:|
+| 道瓊 | 51032.46 | 🔺+0.72% | 🔺+1.49% | 🔺+4.44% |
+| S&P 500 | 7580.06 | 🔺+0.22% | 🔺+1.80% | 🔺+6.22% |
+| Nasdaq | 26972.62 | 🔺+0.20% | 🔺+2.58% | 🔺+9.32% |
+| 費半 SOX | 12829.38 | ▪️0.00% | 🔺+7.23% | 🔺+24.91% |
+| VIX 恐慌 | 15.32 | 🔻-2.67% | 🔻-8.26% | 🔻-9.30% |
+| 美10Y殖利率 | 4.45 | 🔻-0.04% | 🔻-2.90% | 🔺+0.79% |
+| 美元 DXY | 98.91 | 🔻-0.11% | 🔻-0.28% | 🔻-0.01% |
+| 西德州原油 | 87.36 | 🔻-1.73% | 🔻-9.33% | 🔻-18.26% |
+| 黃金 | 4593.0 | 🔺+2.08% | 🔺+1.17% | 🔺+1.05% |
+| 比特幣 | 73348.85 | 🔻-0.55% | 🔻-3.27% | 🔻-10.70% |
+
+## 📰 隔夜頭條
+
+- Why Trump reversed course to fast-track psychedelic drugs for mental healthcare — CNBC
+- U.S. and Iran still without deal to end war after Trump says he's not in a 'hurry' — CNBC
+- Former Barclays CEO Jes Staley agrees to July 23 interview about Jeffrey Epstein by Oversight panel — CNBC
+- Disney is poised to ramp its already booming advertising business. Rita Ferro is behind the push — CNBC
+- Two months, $2.6 billion: How NASA ETF turned SpaceX IPO access into a hot retail trade — CNBC-Finance
+- Fed Governor Michelle Bowman warns against hiking interest rates because of inflation spike — CNBC-Finance
+
+## 2️⃣ 速解讀(為什麼)
+
+- **風險偏好回升**:S&P +0.2%、VIX -2.7% → risk-on,買盤願意進場。
+- 黃金 +2.1% → 避險/實質利率下行訊號。
+- 油價急跌 -1.7% → 通膨壓力緩、運輸消費受惠。
+- **龍頭 NVDA -1.4%** — 全產業風向球;capex 🟢BULL · ASIC 🔴BEAR-WATCH(~27.8%近門檻) · HBM/人才/毛利 🟢。
+
+## 3️⃣ 類股與資金流
+
+**資金流入** → 科技 XLK · 金融 XLF · 半導體 SOXX　|　**資金流出** → 醫療 XLV · 能源 XLE · 必需 XLP
+
+| 類股 | 日% |
+|---|--:|
+| 科技 XLK | 🔺+2.23% |
+| 金融 XLF | 🔺+0.60% |
+| 半導體 SOXX | 🔻-0.07% |
+| 工業 XLI | 🔻-0.39% |
+| 原物料 XLB | 🔻-0.41% |
+| 公用 XLU | 🔻-0.47% |
+| 通訊 XLC | 🔻-0.84% |
+| 醫療 XLV | 🔻-0.93% |
+| 能源 XLE | 🔻-1.16% |
+| 必需 XLP | 🔻-1.80% |
+
+## 4️⃣ 台股連結
+
+費半 +0.0% 持平 → 台股 AI 鏈中性,看台積電個別表現與台幣匯率。
+
+## 5️⃣ 個股觀察(風向球)
+
+| 股 | 價 | 日 | 週 | 月 |
+|---|--:|--:|--:|--:|
+| NVDA | 211.14 | 🔻-1.45% | 🔻-3.81% | 🔺+0.90% |
+| 台積電ADR TSM | 418.45 | 🔻-1.51% | 🔺+2.78% | 🔺+6.25% |
+| AVGO | 446.77 | 🔺+4.73% | 🔺+7.77% | 🔺+10.19% |
+| MSFT | 450.24 | 🔺+5.45% | 🔺+7.43% | 🔺+6.30% |
+| AMD | 516.1 | 🔻-0.38% | 🔺+14.79% | 🔺+53.10% |
+
+- **NVDA 追蹤頁**:capex 🟢BULL · ASIC 🔴BEAR-WATCH(~27.8%近門檻) · HBM/人才/毛利 🟢(`tech/nvda-bull-bear-tracker.md`)
+
+## 📅 數據行事曆
+
+| 日期 | 事件 | 衝擊 |
+|---|---|---|
+| 2026-06-05 | 非農就業 NFP + 失業率 | 🔴 高 |
+
+## 📌 觀察重點 + 紀律
+
+- **環境(regime)**:寬鬆 (late_bull)
+- **紀律**:NVDA 是風向球也是你 ~89% 曝險;此報研究非加碼訊號。RSU 照排程賣到 50%,BEAR 觸發看雲廠 capex / ASIC 推論佔比。
+
+---
+*研究/教育用途 — 非買賣建議。資料 yfinance(grade C);解讀為規則化邏輯。*

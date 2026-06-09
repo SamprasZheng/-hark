@@ -26,6 +26,7 @@ from sharks.scoring.leveraged_etf import (
     audit_leveraged_holdings, bear_hedge_menu, is_leveraged_etf,
     score_leveraged_etf,
 )
+from sharks.decision import position_review as pr
 
 # ─── User's actual portfolios (2026-05-30) ───
 # Format: ticker -> {percent_of_account, decoded_name, pct_account}
@@ -226,6 +227,22 @@ def fom_verdict(closes, ticker, as_of):
     return ("HOLD", f"neutral FOM {base:.1f}", breakdown)
 
 
+def _recent_return(closes, ticker, months: int = 3):
+    """Trailing return over the last `months` of monthly closes (a fraction),
+    or None when there isn't enough history. The reversal gate's price signal —
+    price action leads the (lagging) FOM momentum score."""
+    try:
+        s = closes[ticker].dropna()
+    except Exception:
+        return None
+    if len(s) < months + 1:
+        return None
+    try:
+        return round(float(s.iloc[-1] / s.iloc[-1 - months] - 1.0), 4)
+    except Exception:
+        return None
+
+
 def main():
     out_dir = Path("outputs")
     today = pd.Timestamp("2026-05-30")
@@ -240,19 +257,14 @@ def main():
     for t, d in PORTFOLIO_1.items():
         if d.get("leveraged_of"):
             pull_set.add(d["leveraged_of"])
-    pull_set.discard("QSU")  # likely no data
-    pull_set.discard("QUBX")  # likely no data
-    pull_set.discard("LULG")  # likely no data
-    pull_set.discard("NOWL")
-    pull_set.discard("ORCX")
-    pull_set.discard("AAPB")
-    pull_set.discard("OKLL")
-    pull_set.discard("SMCL")
-    pull_set.discard("QBTX")
-    pull_set.discard("TARK")
-    pull_set.discard("RBLU")
-    pull_set.discard("SBIT")
-    pull_set.discard("LABU")
+    pull_set.discard("QSU")   # unverified ticker — likely no data
+    pull_set.discard("QUBX")  # unverified ticker — likely no data
+    pull_set.discard("LULG")  # unverified ticker — likely no data
+    # NOTE: the real leveraged ETFs (NOWL/ORCX/AAPB/OKLL/SMCL/QBTX/TARK/RBLU/SBIT/LABU)
+    # are intentionally KEPT in the pull so the hold/rotate review can judge a
+    # leveraged winner by its OWN price action (owner choice 2026-06-01), not only
+    # by the underlying. They still take the forced-SELL base verdict; the review
+    # decides hold-trail vs sell from the trend.
 
     closes = fetch_monthly(list(pull_set), "2019-12-01", "2026-05-30")
     print(f"  pulled data for {len(closes.columns)} tickers", file=sys.stderr)
@@ -296,11 +308,13 @@ def main():
     p1_holdings_pct = {t: (d.get("pct") or 0.0) for t, d in PORTFOLIO_1.items()}
     underlyings = {d["leveraged_of"] for d in PORTFOLIO_1.values() if d.get("leveraged_of")}
     underlying_foms: dict[str, float] = {}
+    underlying_breakdowns: dict[str, dict] = {}
     for u in underlyings:
         if u in closes.columns:
             _, _, ubd = fom_verdict(closes, u, today)
             if ubd and ubd.get("final_fom") is not None:
                 underlying_foms[u] = ubd["final_fom"]
+                underlying_breakdowns[u] = ubd
     p1_leveraged_audit = audit_leveraged_holdings(
         p1_holdings_pct, underlying_foms=underlying_foms
     )
@@ -316,11 +330,65 @@ def main():
                 "decay_verdict": lev["verdict"],
             }
 
-    # Categorize verdicts
-    def categorize(results):
+    # ─── Reversal-gated hold/rotate feedback loop (decision/position_review) ───
+    # Re-label EXIT/TRIM verdicts to hold-and-trail for strong-trending winners
+    # whose support is intact; keep SELL only on a real reversal. Leverage is
+    # de-risked via a trailing/staged exit (mode below), never silently removed.
+    # Recommend-only; never changes a cap. See philosophy/03-long-short-taxonomy
+    # + 08-risk-and-position. (owner ask 2026-06-01: 績效好就觀察不換股, 真反轉才換)
+    cash_foms = [r["fom_breakdown"]["final_fom"] for r in p1_results
+                 if r.get("category") == "cash_equity" and r.get("fom_breakdown")
+                 and r["fom_breakdown"].get("final_fom") is not None]
+    perf_gate = pr.sleeve_performance(cash_foms)
+    leveraged_exit_mode = "trailing"   # owner-confirmable; "immediate" = strict no-leverage dump
+    leveraged_trend_source = "own"     # owner choice 2026-06-01: judge a leveraged ETF by its
+                                       # OWN price action ("underlying" = conservative fallback)
+    held_winners: list = []
+    for r in p1_results:
+        cat = r.get("category")
+        if cat == "cash_equity":
+            rev = pr.review_position(
+                ticker=r["ticker"], base_verdict=r["verdict"], category=cat,
+                fom_breakdown=r.get("fom_breakdown"),
+                recent_return=_recent_return(closes, r["ticker"]), perf_gate=perf_gate)
+        elif cat == "leveraged_etf":
+            u = PORTFOLIO_1.get(r["ticker"], {}).get("leveraged_of")
+            ubd = underlying_breakdowns.get(u, {})
+            # judge by the ETF's OWN price (owner choice), falling back to the
+            # underlying when the ETF has no usable history.
+            own_mom = own_bub = own_rr = None
+            if leveraged_trend_source == "own" and r["ticker"] in closes.columns:
+                _, _, ebd = fom_verdict(closes, r["ticker"], today)
+                own_rr = _recent_return(closes, r["ticker"])
+                if ebd:
+                    own_mom, own_bub = ebd.get("momentum"), ebd.get("bubble_guard")
+            mom = own_mom if own_mom is not None else ubd.get("momentum")
+            bub = own_bub if own_bub is not None else ubd.get("bubble_guard")
+            rr = own_rr if own_rr is not None else (_recent_return(closes, u) if u else None)
+            rev = pr.review_position(
+                ticker=r["ticker"], base_verdict=r["verdict"], category=cat,
+                trend_momentum=mom, trend_bubble=bub, recent_return=rr,
+                leveraged_of=u, perf_gate=perf_gate, leveraged_exit_mode=leveraged_exit_mode)
+        else:
+            continue  # speculative / data-gap: no winner override; base verdict stands
+        r["reviewed_verdict"] = rev.reviewed_verdict
+        r["review"] = {"trend": rev.trend, "changed": rev.changed,
+                       "trailing_stop_pct": rev.trailing_stop_pct,
+                       "flips_to_sell_when": rev.flips_to_sell_when,
+                       "why": rev.why, "support": rev.support}
+        if rev.reviewed_verdict in (pr.V_HOLD_TRAIL, pr.V_TRIM_TRAIL):
+            held_winners.append({
+                "ticker": r["ticker"], "name": r["name"],
+                "base_verdict": r["verdict"], "reviewed_verdict": rev.reviewed_verdict,
+                "trailing_stop_pct": rev.trailing_stop_pct,
+                "why": rev.why, "flips_to_sell_when": rev.flips_to_sell_when,
+                "support": rev.support})
+
+    # Categorize verdicts (on the REVIEWED verdict; base kept for transparency)
+    def _bucket(results, key):
         cats = {"SELL": [], "TRIM": [], "HOLD": [], "ADD": []}
         for r in results:
-            v = r["verdict"]
+            v = (r.get(key) or r["verdict"]).upper()
             if v.startswith("SELL"):
                 cats["SELL"].append(r["ticker"])
             elif "TRIM" in v:
@@ -331,6 +399,9 @@ def main():
                 cats["HOLD"].append(r["ticker"])
         return cats
 
+    def categorize(results):
+        return _bucket(results, "reviewed_verdict")
+
     report = {
         "as_of": datetime.now(timezone.utc).isoformat(),
         "schema_version": 3,
@@ -338,6 +409,11 @@ def main():
         "portfolio_1_audit": p1_results,
         "portfolio_2_audit": p2_results,
         "p1_summary": categorize(p1_results),
+        "p1_summary_base": _bucket(p1_results, "verdict"),
+        "p1_held_winners": held_winners,
+        "sleeve_performance": perf_gate,
+        "leveraged_exit_mode": leveraged_exit_mode,
+        "leveraged_trend_source": leveraged_trend_source,
         "p2_summary": categorize(p2_results),
         "p1_leveraged_audit": p1_leveraged_audit,
         "leveraged_underlying_foms": {k: round(v, 1) for k, v in underlying_foms.items()},

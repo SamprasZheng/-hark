@@ -1,0 +1,5 @@
+2026-06-03 18:14:19,950 WARNING discord.client: PyNaCl is not installed, voice will NOT be supported
+2026-06-03 18:14:19,951 WARNING discord.client: davey is not installed, voice will NOT be supported
+2026-06-03 18:14:19,954 INFO discord.client: logging in using static token
+2026-06-03 18:14:21,724 INFO discord.gateway: Shard ID None has connected to Gateway (Session ID: 01a4f8d51305fc9c2ba3c7d30eaa9069).
+2026-06-03 18:14:23,740 INFO sharks.discord: logged in as PolkaSharks#9853 (guilds=1)

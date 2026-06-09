@@ -156,8 +156,30 @@ def load_picks(out_dir: Path) -> dict:
         "potential": [p for p in potential if p["ticker"]],
         "exit": {"P1_SELL": p1.get("SELL", []), "P1_TRIM": p1.get("TRIM", []), "P2_SELL": p2.get("SELL", [])},
         "enter": {"P2_ADD": p2.get("ADD", [])},
+        "held_winners": audit.get("p1_held_winners", []),
         "have_fom": bool(fom), "have_audit": bool(audit),
     }
+
+
+def load_igv(out_dir: Path):
+    """Latest IGV software screen (錯殺軟體 + NVIDIA 合作), or None."""
+    igv = _latest(out_dir, "igv-software")
+    if not igv:
+        return None
+    return {
+        "screen_date": igv.get("screen_date"), "igv_as_of": igv.get("igv_as_of"),
+        "universe_size": igv.get("universe_size"),
+        "oversold": (igv.get("oversold") or [])[:6],
+        "nvidia_partners": igv.get("nvidia_partners") or [],
+    }
+
+
+def _num(v, fmt="{:.0f}"):
+    return fmt.format(v) if isinstance(v, (int, float)) else "—"
+
+
+def _pct(v):
+    return f"{v:+.0%}" if isinstance(v, (int, float)) else "—"
 
 
 def load_news(out_dir: Path, date: str) -> list[str]:
@@ -238,8 +260,19 @@ def render_md(ctx: dict) -> str:
     if pk:
         L += ["", "## 🎯 個人進出場建議(紀律疊加)", "",
               f"- **出場/減碼**:P1 賣出 → {', '.join(pk['exit']['P1_SELL']) or '—'};P1 減碼 → {', '.join(pk['exit']['P1_TRIM']) or '—'}",
-              f"- **進場/加碼候選**:{', '.join(pk['enter']['P2_ADD']) or '—'}",
-              "- **NVDA 紀律**:照 `finance/05` 排程賣到 50%(機器動作,不看盤);槓桿 ETF 優先出清。",
+              f"- **進場/加碼候選**:{', '.join(pk['enter']['P2_ADD']) or '—'}"]
+        hw = pk.get("held_winners") or []
+        if hw:
+            L.append("- **🛡️ 抱住的贏家(反饋機制:強勢+支撐完好 → 不換股,改掛移動停利)**:")
+            for h in hw:
+                ts = h.get("trailing_stop_pct")
+                ts_txt = f"{ts:.0%}移動停利" if isinstance(ts, (int, float)) else "移動停利"
+                s = h.get("support") or {}
+                rr = s.get("recent_return")
+                rr_txt = f"{rr:+.0%}" if isinstance(rr, (int, float)) else "n/a"
+                L.append(f"    - **{h['ticker']}** → {h.get('reviewed_verdict')}({ts_txt});"
+                         f"近3月 {rr_txt}、動能 {s.get('momentum')};翻賣條件:{h.get('flips_to_sell_when')}")
+        L += ["- **NVDA 紀律**:照 `finance/05` 排程賣到 50%(機器動作,不看盤);槓桿 ETF 優先出清。",
               "", "## 💡 推薦潛力股(FOM 篩選)", ""]
         def _n(v):
             return f"{v:.0f}" if isinstance(v, (int, float)) else "—"
@@ -250,6 +283,26 @@ def render_md(ctx: dict) -> str:
             L += ["", "_讀法:逆勢高=抄底型、動能高=趨勢型、泡沫防護低=估值偏貴需留意;非進場價,僅篩選。_"]
         else:
             L.append("- (尚無 fom-alpha 輸出;先跑 FOM 引擎)")
+    igv = ctx.get("igv")
+    if igv and (igv.get("oversold") or igv.get("nvidia_partners")):
+        L += ["", "## 🧬 IGV 軟體 — 錯殺抄底 + NVIDIA 合作",
+              f"_全 IGV {igv.get('universe_size')} 檔(成分 {igv.get('igv_as_of')})· 引擎篩選,非建議_"]
+        if igv.get("oversold"):
+            L += ["", "**錯殺型(逆勢高+護城河完好)**:",
+                  "| 標的 | 逆勢 | 動能 | 護城河 | 近3月 | fPE | 分析師升 | NV |",
+                  "|---|--:|--:|--:|--:|--:|--:|---|"]
+            for r in igv["oversold"]:
+                fu = r.get("fundamentals") or {}
+                nv = (r.get("nvidia") or {}).get("tier", "")
+                L.append(f"| {r['ticker']} | {_num(r.get('contrarian'))} | {_num(r.get('momentum'))} | "
+                         f"{_num(r.get('ip_defensibility'))} | {_pct(r.get('ret_3m'))} | "
+                         f"{_num(fu.get('fwd_pe'))} | {_pct(fu.get('analyst_upside'))} | {nv} |")
+        if igv.get("nvidia_partners"):
+            L += ["", "**NVIDIA 合作夥伴(波動催化;tier equity>headline>medium>integration)**:"]
+            for r in igv["nvidia_partners"]:
+                nv = r.get("nvidia") or {}
+                L.append(f"    - **{r['ticker']}** [{nv.get('tier')}] {nv.get('type')} — "
+                         f"逆勢{_num(r.get('contrarian'))}/動能{_num(r.get('momentum'))}/近3月{_pct(r.get('ret_3m'))}")
     L += ["", "## 📅 數據行事曆", "", "| 日期 | 事件 | 衝擊 |", "|---|---|---|"]
     L += [f"| {dt} | {e} | {imp} |" for dt, e, imp in ctx["calendar"]]
     L += ["", "## 📌 觀察重點 + 紀律", "",
@@ -363,6 +416,7 @@ def generate(edition: str = "morning", out_dir: str = "outputs") -> dict:
         "tw": tw_implication(moves), "regime": regime,
         "calendar": econ_calendar(date), "news": load_news(od, date),
         "picks": load_picks(od) if edition in ("midday", "evening") else None,
+        "igv": load_igv(od) if edition in ("midday", "evening") else None,
     }
     md, html, disc = render_md(ctx), render_html(ctx), render_discord(ctx)
     base = f"daily-brief-{date}-{edition}"

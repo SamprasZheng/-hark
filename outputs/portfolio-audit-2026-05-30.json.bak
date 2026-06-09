@@ -1,0 +1,1352 @@
+{
+  "as_of": "2026-05-30T16:02:38.042791+00:00",
+  "schema_version": 3,
+  "concentration_context": {
+    "note": "NVDA RSU/ESPP is NOT in portfolio_1_audit / portfolio_2_audit by design (those are the actively managed brokerage books). It dominates true exposure, so read the audit verdicts as applying to the ~10% active sleeve, not the whole book. The concentration lever is the RSU vest/sale schedule, not active-book rebalancing.",
+    "exposure_usd": {
+      "nvda_rsu_espp": 130000,
+      "us_broker_p1": 11374,
+      "taiwan_9a92_etf": 1320,
+      "complementary_p2": 3000
+    },
+    "exposure_share_pct": {
+      "nvda_rsu_espp": 89.2,
+      "us_broker_p1": 7.8,
+      "taiwan_9a92_etf": 0.9,
+      "complementary_p2": 2.1
+    },
+    "total_liquidish_usd": 145694,
+    "see": "wiki/12_employee_concentration.md",
+    "as_of_basis": "raw/principal/2026-05-29-snapshot-p1.md + wiki/12_employee_concentration.md",
+    "figures_are_estimates": true
+  },
+  "portfolio_1_audit": [
+    {
+      "ticker": "TARK",
+      "name": "Tradr 2X Long ARKK",
+      "pct": 13.04,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: ARKK | ARKK \u96c6\u5408\u90fd\u5728 bubble breakdown \u908a\u7de3",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 35.6,
+        "decay_verdict": "TRIM"
+      }
+    },
+    {
+      "ticker": "LABU",
+      "name": "Direxion 3X Biotech Bull",
+      "pct": 5.05,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: XBI | XBI 6-10 \u6708\u6b77\u53f2\u6700\u5f31\u5b63 \u2014 leverage \u52a0\u500d decay",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 3,
+        "annual_decay_pct": 60.8,
+        "decay_adjusted_score": 12.9,
+        "decay_verdict": "SELL"
+      }
+    },
+    {
+      "ticker": "ORCX",
+      "name": "GraniteShares 2x ORCL Daily",
+      "pct": 4.53,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: ORCL | \ud83d\udea8 ORCL \u5df2\u88ab principal \u65d7\u70ba\u7834\u7d55 \u2014 \u6301\u6709\u5176 2x \u7248\u672c\u81ea\u76f8\u77db\u76fe",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 49.1,
+        "decay_verdict": "TACTICAL-OK"
+      }
+    },
+    {
+      "ticker": "CRSR",
+      "name": "Corsair Gaming",
+      "pct": 4.46,
+      "verdict": "TRIM-30%",
+      "rationale": "low FOM 39.0",
+      "fom_breakdown": {
+        "momentum": 48.5,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 14.2,
+        "bubble_guard": -10.0,
+        "buffett_3m": 40,
+        "final_fom": 39.0
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "SBIT",
+      "name": "ProShares Short BTC -1x",
+      "pct": 4.11,
+      "verdict": "HOLD",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: BTC-USD | BTC \u53cd\u5411 -1x: \u7cfb\u7d71\u8aaa BTC 2026 Q4-2027 Q1 \u624d\u898b\u5e95 \u2192 SBIT \u9084\u6709\u7a7a\u9593,**\u9019\u652f\u53ef\u4ee5\u4fdd\u7559**",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": -1,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 35.0,
+        "decay_verdict": "INVERSE-HEDGE"
+      }
+    },
+    {
+      "ticker": "RGTX",
+      "name": "Rigetti Computing (quantum)",
+      "pct": 3.63,
+      "verdict": "SELL",
+      "rationale": "\u91cf\u5b50\u8a08\u7b97 IBM/Google/D-Wave roadmap \u898f\u6a21\u5316 < 2030 | \u7d14\u6558\u4e8b + 0 \u71df\u6536 = \u8ddf 1999 dot-com \u540c\u6a21\u5f0f | Buffett \u80fd\u529b\u5708\u5916 | principal \u81ea\u627f\u300c\u56e0\u70ba\u706b\u7d05\u8cb7\u300d= farmer mindset",
+      "fom_breakdown": null,
+      "category": "speculative",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": null,
+        "decay_verdict": "TACTICAL-OK"
+      }
+    },
+    {
+      "ticker": "AAPB",
+      "name": "GraniteShares 2x AAPL Daily",
+      "pct": 3.54,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: AAPL | AAPL \u662f Buffett-tier \u2014 \u4f46\u6301\u69d3\u687f\u7248\u6703\u88ab decay \u5403\u5149",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 40.8,
+        "decay_verdict": "TACTICAL-OK"
+      }
+    },
+    {
+      "ticker": "NOWL",
+      "name": "Tradr 2x NOW Daily",
+      "pct": 3.23,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: NOW | NOW \u662f Buffett-tier \u2014 \u4f46\u6301\u69d3\u687f\u7248\u6703\u88ab decay \u5403\u5149",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 40.1,
+        "decay_verdict": "TACTICAL-OK"
+      }
+    },
+    {
+      "ticker": "DDD",
+      "name": "3D Systems",
+      "pct": 3.11,
+      "verdict": "TRIM-30%",
+      "rationale": "low FOM 37.9",
+      "fom_breakdown": {
+        "momentum": 59.9,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 7.0,
+        "bubble_guard": -25.0,
+        "buffett_3m": 30,
+        "final_fom": 37.9
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "ENPH",
+      "name": "Enphase Energy",
+      "pct": 3.06,
+      "verdict": "TRIM-30%",
+      "rationale": "low FOM 39.0",
+      "fom_breakdown": {
+        "momentum": 49.0,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 10.6,
+        "bubble_guard": -25.0,
+        "buffett_3m": 50,
+        "final_fom": 39.0
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "SMCL",
+      "name": "Direxion 2x SMCI Daily Bull",
+      "pct": 3.02,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: SMCI | \ud83d\udea8 SMCI \u5df2\u88ab principal \u65d7\u70ba\u7834\u7d55 \u2014 \u6301\u6709\u5176 2x \u7248\u672c\u81ea\u76f8\u77db\u76fe",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 37.1,
+        "decay_verdict": "TRIM"
+      }
+    },
+    {
+      "ticker": "LULG",
+      "name": "GraniteShares 2x LULU Daily",
+      "pct": 2.95,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: LULU | LULU \u9ad8 vol + \u69d3\u687f = \u52a0\u901f\u71d2\u9322",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 28.9,
+        "decay_verdict": "TRIM"
+      }
+    },
+    {
+      "ticker": "VSCO",
+      "name": "Victoria's Secret",
+      "pct": 2.58,
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 50.2",
+      "fom_breakdown": {
+        "momentum": 50.9,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 66.0,
+        "bubble_guard": 0.0,
+        "buffett_3m": 35,
+        "final_fom": 50.2
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "ARRY",
+      "name": "Array Technologies",
+      "pct": 2.46,
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 47.9",
+      "fom_breakdown": {
+        "momentum": 31.3,
+        "contrarian": 71.0,
+        "cyclic": 51.5,
+        "quality": 11.0,
+        "bubble_guard": 50.0,
+        "buffett_3m": 40,
+        "final_fom": 47.9
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "QBTX",
+      "name": "Defiance 2x Quantum Daily",
+      "pct": 2.22,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: QTUM | \u91cf\u5b50\u8a08\u7b97\u5546\u696d\u71df\u6536 < 2030 \u4e0d\u6703\u6709\u898f\u6a21;\u6558\u4e8b + \u69d3\u687f = 1999 dot-com \u91cd\u6f14",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 36.5,
+        "decay_verdict": "TRIM"
+      }
+    },
+    {
+      "ticker": "NOW",
+      "name": "ServiceNow (cash)",
+      "pct": 1.91,
+      "verdict": "HOLD-Buffett-tier",
+      "rationale": "Buffett-tier moat,\u96d6\u7136 FOM \u4e2d\u7b49",
+      "fom_breakdown": {
+        "momentum": 17.4,
+        "contrarian": 78.0,
+        "cyclic": 51.5,
+        "quality": 37.7,
+        "bubble_guard": 15.0,
+        "buffett_3m": 74,
+        "final_fom": 52.3
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "QSU",
+      "name": "Quantum-related (unverified)",
+      "pct": 1.89,
+      "verdict": "SELL",
+      "rationale": "\u91cf\u5b50\u6558\u4e8b + Compiler \u7121\u6cd5\u9a57\u8b49 ticker \u2192 farmer-mindset \u6301\u5009",
+      "fom_breakdown": null,
+      "category": "speculative"
+    },
+    {
+      "ticker": "AMPX",
+      "name": "Amprius Technologies",
+      "pct": 1.87,
+      "verdict": "TRIM-25%",
+      "rationale": "\u9ad8 momentum \u4f46 bubble guard -40.0 \u8b66\u793a",
+      "fom_breakdown": {
+        "momentum": 70.4,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 55.4,
+        "bubble_guard": -40.0,
+        "buffett_3m": 30,
+        "final_fom": 45.4
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "RBLU",
+      "name": "GraniteShares 2x ROBL Daily",
+      "pct": 1.85,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: RBLX | RBLX \u9ad8 vol + \u69d3\u687f = \u52a0\u901f\u71d2\u9322",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 23.4,
+        "decay_verdict": "TRIM"
+      }
+    },
+    {
+      "ticker": "NKE",
+      "name": "Nike",
+      "pct": 1.85,
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 44.8",
+      "fom_breakdown": {
+        "momentum": 13.0,
+        "contrarian": 62.0,
+        "cyclic": 51.5,
+        "quality": 25.8,
+        "bubble_guard": 0.0,
+        "buffett_3m": 72,
+        "final_fom": 44.8
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "LULU",
+      "name": "Lululemon (cash)",
+      "pct": 1.84,
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 41.0",
+      "fom_breakdown": {
+        "momentum": 6.1,
+        "contrarian": 62.0,
+        "cyclic": 51.5,
+        "quality": 22.0,
+        "bubble_guard": 0.0,
+        "buffett_3m": 60,
+        "final_fom": 41.0
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "TSLA",
+      "name": "Tesla (cash)",
+      "pct": 1.83,
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 44.2",
+      "fom_breakdown": {
+        "momentum": 27.3,
+        "contrarian": 40.0,
+        "cyclic": 51.5,
+        "quality": 59.2,
+        "bubble_guard": 0.0,
+        "buffett_3m": 50,
+        "final_fom": 44.2
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "STZ",
+      "name": "Constellation Brands",
+      "pct": 1.82,
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 44.3",
+      "fom_breakdown": {
+        "momentum": 13.8,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 31.7,
+        "bubble_guard": 20.0,
+        "buffett_3m": 70,
+        "final_fom": 44.3
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "CRCT",
+      "name": "Cricut Inc",
+      "pct": 1.82,
+      "verdict": "TRIM-30%",
+      "rationale": "low FOM 39.5",
+      "fom_breakdown": {
+        "momentum": 15.1,
+        "contrarian": 62.0,
+        "cyclic": 51.5,
+        "quality": 23.5,
+        "bubble_guard": 0.0,
+        "buffett_3m": 35,
+        "final_fom": 39.5
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "APA",
+      "name": "APA Corp (oil)",
+      "pct": 1.82,
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 49.0",
+      "fom_breakdown": {
+        "momentum": 46.3,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 41.4,
+        "bubble_guard": 0.0,
+        "buffett_3m": 55,
+        "final_fom": 49.0
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "SWKS",
+      "name": "Skyworks Solutions",
+      "pct": 1.8,
+      "verdict": "TRIM-30%",
+      "rationale": "low FOM 40.0",
+      "fom_breakdown": {
+        "momentum": 28.7,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 32.2,
+        "bubble_guard": 0.0,
+        "buffett_3m": 55,
+        "final_fom": 40.0
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "PG",
+      "name": "Procter & Gamble",
+      "pct": 1.76,
+      "verdict": "HOLD-Buffett-tier",
+      "rationale": "Buffett-tier moat,\u96d6\u7136 FOM \u4e2d\u7b49",
+      "fom_breakdown": {
+        "momentum": 15.6,
+        "contrarian": 64.0,
+        "cyclic": 51.5,
+        "quality": 46.2,
+        "bubble_guard": 15.0,
+        "buffett_3m": 73,
+        "final_fom": 49.8
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "PEP",
+      "name": "PepsiCo",
+      "pct": 1.74,
+      "verdict": "HOLD-Buffett-tier",
+      "rationale": "Buffett-tier moat,\u96d6\u7136 FOM \u4e2d\u7b49",
+      "fom_breakdown": {
+        "momentum": 20.4,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 41.3,
+        "bubble_guard": 0.0,
+        "buffett_3m": 75,
+        "final_fom": 46.3
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "CRM",
+      "name": "Salesforce",
+      "pct": 1.73,
+      "verdict": "HOLD-Buffett-tier",
+      "rationale": "Buffett-tier moat,\u96d6\u7136 FOM \u4e2d\u7b49",
+      "fom_breakdown": {
+        "momentum": 15.0,
+        "contrarian": 86.2,
+        "cyclic": 51.5,
+        "quality": 36.4,
+        "bubble_guard": 15.0,
+        "buffett_3m": 77,
+        "final_fom": 53.9
+      },
+      "category": "cash_equity"
+    },
+    {
+      "ticker": "QUBX",
+      "name": "Quantum-related (speculative)",
+      "pct": 1.7,
+      "verdict": "SELL",
+      "rationale": "\u91cf\u5b50\u6558\u4e8b + Compiler \u7121\u6cd5\u9a57\u8b49 ticker \u2192 farmer-mindset \u6301\u5009",
+      "fom_breakdown": null,
+      "category": "speculative",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": null,
+        "decay_verdict": "TACTICAL-OK"
+      }
+    },
+    {
+      "ticker": "OKLL",
+      "name": "GraniteShares 2x OKLO Daily",
+      "pct": 1.64,
+      "verdict": "SELL",
+      "rationale": "\u69d3\u687f ETF \u7d50\u69cb\u6027 decay 15-50%/\u5e74 | \u6a19\u7684: OKLO | \ud83d\udea8 OKLO \u5df2\u88ab principal \u65d7\u70ba\u7834\u7d55 \u2014 \u6301\u6709\u5176 2x \u7248\u672c\u81ea\u76f8\u77db\u76fe",
+      "fom_breakdown": null,
+      "category": "leveraged_etf",
+      "leveraged_scorer": {
+        "factor": 2,
+        "annual_decay_pct": 20.2,
+        "decay_adjusted_score": 31.1,
+        "decay_verdict": "TRIM"
+      }
+    },
+    {
+      "ticker": "VFC",
+      "name": "VF Corp",
+      "pct": 1.6,
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 40.4",
+      "fom_breakdown": {
+        "momentum": 26.2,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 32.2,
+        "bubble_guard": 0.0,
+        "buffett_3m": 35,
+        "final_fom": 40.4
+      },
+      "category": "cash_equity"
+    }
+  ],
+  "portfolio_2_audit": [
+    {
+      "ticker": "ZM",
+      "name": "Zoom",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 42.1",
+      "fom_breakdown": {
+        "momentum": 29.9,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 52.2,
+        "bubble_guard": 0.0,
+        "buffett_3m": 50,
+        "final_fom": 42.1
+      }
+    },
+    {
+      "ticker": "PEP",
+      "name": "PepsiCo",
+      "verdict": "HOLD-Buffett-tier",
+      "rationale": "Buffett-tier moat,\u96d6\u7136 FOM \u4e2d\u7b49",
+      "fom_breakdown": {
+        "momentum": 20.4,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 41.3,
+        "bubble_guard": 0.0,
+        "buffett_3m": 75,
+        "final_fom": 46.3
+      }
+    },
+    {
+      "ticker": "DIS",
+      "name": "Disney",
+      "verdict": "HOLD-Buffett-tier",
+      "rationale": "Buffett-tier moat,\u96d6\u7136 FOM \u4e2d\u7b49",
+      "fom_breakdown": {
+        "momentum": 17.6,
+        "contrarian": 71.0,
+        "cyclic": 51.5,
+        "quality": 44.5,
+        "bubble_guard": 30.0,
+        "buffett_3m": 70,
+        "final_fom": 52.2
+      }
+    },
+    {
+      "ticker": "LUNR",
+      "name": "Intuitive Machines",
+      "verdict": "TRIM-25%",
+      "rationale": "bubble guard -80.0 \u6975\u7aef \u2014 late-cycle \u904e\u71b1",
+      "fom_breakdown": {
+        "momentum": 85.7,
+        "contrarian": 28.0,
+        "cyclic": 51.5,
+        "quality": 60.0,
+        "bubble_guard": -80.0,
+        "buffett_3m": 35,
+        "final_fom": 46.3
+      }
+    },
+    {
+      "ticker": "UPS",
+      "name": "United Parcel",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 46.1",
+      "fom_breakdown": {
+        "momentum": 23.1,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 35.3,
+        "bubble_guard": 20.0,
+        "buffett_3m": 65,
+        "final_fom": 46.1
+      }
+    },
+    {
+      "ticker": "DOCN",
+      "name": "DigitalOcean",
+      "verdict": "TRIM-25%",
+      "rationale": "bubble guard -95.0 \u6975\u7aef \u2014 late-cycle \u904e\u71b1",
+      "fom_breakdown": {
+        "momentum": 86.3,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 77.8,
+        "bubble_guard": -95.0,
+        "buffett_3m": 50,
+        "final_fom": 50.7
+      }
+    },
+    {
+      "ticker": "SHAK",
+      "name": "Shake Shack",
+      "verdict": "TRIM-30%",
+      "rationale": "low FOM 35.1",
+      "fom_breakdown": {
+        "momentum": 3.1,
+        "contrarian": 44.0,
+        "cyclic": 51.5,
+        "quality": 28.9,
+        "bubble_guard": 0.0,
+        "buffett_3m": 45,
+        "final_fom": 35.1
+      }
+    },
+    {
+      "ticker": "ARRY",
+      "name": "Array Tech",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 47.9",
+      "fom_breakdown": {
+        "momentum": 31.3,
+        "contrarian": 71.0,
+        "cyclic": 51.5,
+        "quality": 11.0,
+        "bubble_guard": 50.0,
+        "buffett_3m": 40,
+        "final_fom": 47.9
+      }
+    },
+    {
+      "ticker": "RRX",
+      "name": "Regal Rexnord",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 47.0",
+      "fom_breakdown": {
+        "momentum": 29.0,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 49.2,
+        "bubble_guard": 0.0,
+        "buffett_3m": 60,
+        "final_fom": 47.0
+      }
+    },
+    {
+      "ticker": "IP",
+      "name": "International Paper",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 47.1",
+      "fom_breakdown": {
+        "momentum": 13.2,
+        "contrarian": 71.0,
+        "cyclic": 51.5,
+        "quality": 47.3,
+        "bubble_guard": 0.0,
+        "buffett_3m": 55,
+        "final_fom": 47.1
+      }
+    },
+    {
+      "ticker": "DELL",
+      "name": "Dell Technologies",
+      "verdict": "TRIM-25%",
+      "rationale": "bubble guard -65.0 \u6975\u7aef \u2014 late-cycle \u904e\u71b1",
+      "fom_breakdown": {
+        "momentum": 90.4,
+        "contrarian": 34.0,
+        "cyclic": 51.5,
+        "quality": 74.1,
+        "bubble_guard": -65.0,
+        "buffett_3m": 60,
+        "final_fom": 55.3
+      }
+    },
+    {
+      "ticker": "ORCL",
+      "name": "Oracle Corp",
+      "verdict": "HOLD-or-ADD",
+      "rationale": "FOM 61.3 + healthy bubble guard",
+      "fom_breakdown": {
+        "momentum": 37.5,
+        "contrarian": 81.0,
+        "cyclic": 51.5,
+        "quality": 59.9,
+        "bubble_guard": 50.0,
+        "buffett_3m": 63,
+        "final_fom": 61.3
+      }
+    },
+    {
+      "ticker": "UEC",
+      "name": "Uranium Energy",
+      "verdict": "HOLD-or-ADD",
+      "rationale": "FOM 55.3 + healthy bubble guard",
+      "fom_breakdown": {
+        "momentum": 44.6,
+        "contrarian": 65.0,
+        "cyclic": 51.5,
+        "quality": 76.1,
+        "bubble_guard": 15.0,
+        "buffett_3m": 40,
+        "final_fom": 55.3
+      }
+    },
+    {
+      "ticker": "TAC",
+      "name": "Transalta",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 52.7",
+      "fom_breakdown": {
+        "momentum": 31.1,
+        "contrarian": 71.0,
+        "cyclic": 51.5,
+        "quality": 48.1,
+        "bubble_guard": 30.0,
+        "buffett_3m": 50,
+        "final_fom": 52.7
+      }
+    },
+    {
+      "ticker": "GFS",
+      "name": "GlobalFoundries",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 45.0",
+      "fom_breakdown": {
+        "momentum": 54.8,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 44.2,
+        "bubble_guard": -40.0,
+        "buffett_3m": 60,
+        "final_fom": 45.0
+      }
+    },
+    {
+      "ticker": "AAPL",
+      "name": "Apple Inc",
+      "verdict": "HOLD-Buffett-tier",
+      "rationale": "Buffett-tier moat,\u96d6\u7136 FOM \u4e2d\u7b49",
+      "fom_breakdown": {
+        "momentum": 34.6,
+        "contrarian": 48.0,
+        "cyclic": 51.5,
+        "quality": 62.7,
+        "bubble_guard": 15.0,
+        "buffett_3m": 75,
+        "final_fom": 52.9
+      }
+    },
+    {
+      "ticker": "BIRK",
+      "name": "Birkenstock",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 44.5",
+      "fom_breakdown": {
+        "momentum": 19.1,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 41.5,
+        "bubble_guard": 20.0,
+        "buffett_3m": 55,
+        "final_fom": 44.5
+      }
+    },
+    {
+      "ticker": "PG",
+      "name": "Procter & Gamble",
+      "verdict": "HOLD-Buffett-tier",
+      "rationale": "Buffett-tier moat,\u96d6\u7136 FOM \u4e2d\u7b49",
+      "fom_breakdown": {
+        "momentum": 15.6,
+        "contrarian": 64.0,
+        "cyclic": 51.5,
+        "quality": 46.2,
+        "bubble_guard": 15.0,
+        "buffett_3m": 73,
+        "final_fom": 49.8
+      }
+    },
+    {
+      "ticker": "ALGM",
+      "name": "Allegro Microsystems",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 43.6",
+      "fom_breakdown": {
+        "momentum": 41.4,
+        "contrarian": 38.0,
+        "cyclic": 51.5,
+        "quality": 33.8,
+        "bubble_guard": -10.0,
+        "buffett_3m": 55,
+        "final_fom": 43.6
+      }
+    },
+    {
+      "ticker": "SKYT",
+      "name": "SkyWater Technology",
+      "verdict": "TRIM-25%",
+      "rationale": "\u9ad8 momentum \u4f46 bubble guard -40.0 \u8b66\u793a",
+      "fom_breakdown": {
+        "momentum": 65.7,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 67.8,
+        "bubble_guard": -40.0,
+        "buffett_3m": 55,
+        "final_fom": 49.7
+      }
+    },
+    {
+      "ticker": "RELY",
+      "name": "Remitly Global",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 41.8",
+      "fom_breakdown": {
+        "momentum": 20.4,
+        "contrarian": 50.0,
+        "cyclic": 51.5,
+        "quality": 35.5,
+        "bubble_guard": 0.0,
+        "buffett_3m": 50,
+        "final_fom": 41.8
+      }
+    },
+    {
+      "ticker": "PATH",
+      "name": "UiPath",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 45.1",
+      "fom_breakdown": {
+        "momentum": 19.8,
+        "contrarian": 71.0,
+        "cyclic": 51.5,
+        "quality": 26.0,
+        "bubble_guard": 0.0,
+        "buffett_3m": 50,
+        "final_fom": 45.1
+      }
+    },
+    {
+      "ticker": "APPN",
+      "name": "Appian Corp",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 41.6",
+      "fom_breakdown": {
+        "momentum": 14.4,
+        "contrarian": 62.0,
+        "cyclic": 51.5,
+        "quality": 24.1,
+        "bubble_guard": 0.0,
+        "buffett_3m": 50,
+        "final_fom": 41.6
+      }
+    },
+    {
+      "ticker": "AESI",
+      "name": "Atlas Energy Solutions",
+      "verdict": "TRIM-30%",
+      "rationale": "low FOM 38.9",
+      "fom_breakdown": {
+        "momentum": 37.1,
+        "contrarian": 26.0,
+        "cyclic": 51.5,
+        "quality": 34.2,
+        "bubble_guard": -25.0,
+        "buffett_3m": 55,
+        "final_fom": 38.9
+      }
+    },
+    {
+      "ticker": "GRPN",
+      "name": "Groupon",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 46.8",
+      "fom_breakdown": {
+        "momentum": 24.5,
+        "contrarian": 62.0,
+        "cyclic": 51.5,
+        "quality": 70.0,
+        "bubble_guard": 0.0,
+        "buffett_3m": 30,
+        "final_fom": 46.8
+      }
+    },
+    {
+      "ticker": "EXTR",
+      "name": "Extreme Networks",
+      "verdict": "HOLD",
+      "rationale": "neutral FOM 43.5",
+      "fom_breakdown": {
+        "momentum": 46.2,
+        "contrarian": 32.0,
+        "cyclic": 51.5,
+        "quality": 41.4,
+        "bubble_guard": -10.0,
+        "buffett_3m": 50,
+        "final_fom": 43.5
+      }
+    }
+  ],
+  "p1_summary": {
+    "SELL": [
+      "TARK",
+      "LABU",
+      "ORCX",
+      "RGTX",
+      "AAPB",
+      "NOWL",
+      "SMCL",
+      "LULG",
+      "QBTX",
+      "QSU",
+      "RBLU",
+      "QUBX",
+      "OKLL"
+    ],
+    "TRIM": [
+      "CRSR",
+      "DDD",
+      "ENPH",
+      "AMPX",
+      "CRCT",
+      "SWKS"
+    ],
+    "HOLD": [
+      "SBIT",
+      "VSCO",
+      "ARRY",
+      "NOW",
+      "NKE",
+      "LULU",
+      "TSLA",
+      "STZ",
+      "APA",
+      "PG",
+      "PEP",
+      "CRM",
+      "VFC"
+    ],
+    "ADD": []
+  },
+  "p2_summary": {
+    "SELL": [],
+    "TRIM": [
+      "LUNR",
+      "DOCN",
+      "SHAK",
+      "DELL",
+      "SKYT",
+      "AESI"
+    ],
+    "HOLD": [
+      "ZM",
+      "PEP",
+      "DIS",
+      "UPS",
+      "ARRY",
+      "RRX",
+      "IP",
+      "TAC",
+      "GFS",
+      "AAPL",
+      "BIRK",
+      "PG",
+      "ALGM",
+      "RELY",
+      "PATH",
+      "APPN",
+      "GRPN",
+      "EXTR"
+    ],
+    "ADD": [
+      "ORCL",
+      "UEC"
+    ]
+  },
+  "p1_leveraged_audit": [
+    {
+      "ticker": "LABU",
+      "known": true,
+      "name": "Direxion 3x Biotech Bull",
+      "underlying": "XBI",
+      "factor": 3,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 60.8,
+      "underlying_fom": 42.9,
+      "decay_adjusted_score": 12.9,
+      "verdict": "SELL",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "TARK",
+      "known": true,
+      "name": "Tradr 2x ARKK",
+      "underlying": "ARKK",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 47.8,
+      "decay_adjusted_score": 35.6,
+      "verdict": "TRIM",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "ORCX",
+      "known": true,
+      "name": "2x ORCL Daily",
+      "underlying": "ORCL",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 61.3,
+      "decay_adjusted_score": 49.1,
+      "verdict": "TACTICAL-OK",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "SBIT",
+      "known": true,
+      "name": "ProShares Short BTC -1x",
+      "underlying": "BTC-USD",
+      "factor": -1,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 47.1,
+      "decay_adjusted_score": 35.0,
+      "verdict": "INVERSE-HEDGE",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "RGTX",
+      "known": true,
+      "name": "2x RGTI Daily",
+      "underlying": "RGTI",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": null,
+      "decay_adjusted_score": null,
+      "verdict": "TACTICAL-OK",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "AAPB",
+      "known": true,
+      "name": "GraniteShares 2x AAPL",
+      "underlying": "AAPL",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 52.9,
+      "decay_adjusted_score": 40.8,
+      "verdict": "TACTICAL-OK",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "NOWL",
+      "known": true,
+      "name": "2x NOW Daily",
+      "underlying": "NOW",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 52.3,
+      "decay_adjusted_score": 40.1,
+      "verdict": "TACTICAL-OK",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "SMCL",
+      "known": true,
+      "name": "2x SMCI Daily",
+      "underlying": "SMCI",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 49.2,
+      "decay_adjusted_score": 37.1,
+      "verdict": "TRIM",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "LULG",
+      "known": true,
+      "name": "2x LULU Daily",
+      "underlying": "LULU",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 41.0,
+      "decay_adjusted_score": 28.9,
+      "verdict": "TRIM",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "QBTX",
+      "known": true,
+      "name": "2x Quantum Daily",
+      "underlying": "QTUM",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 48.6,
+      "decay_adjusted_score": 36.5,
+      "verdict": "TRIM",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "RBLU",
+      "known": true,
+      "name": "2x RBLX Daily",
+      "underlying": "RBLX",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 35.5,
+      "decay_adjusted_score": 23.4,
+      "verdict": "TRIM",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "QUBX",
+      "known": true,
+      "name": "2x QUBT Daily",
+      "underlying": "QUBT",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": null,
+      "decay_adjusted_score": null,
+      "verdict": "TACTICAL-OK",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    },
+    {
+      "ticker": "OKLL",
+      "known": true,
+      "name": "2x OKLO Daily",
+      "underlying": "OKLO",
+      "factor": 2,
+      "vix_futures": false,
+      "annual_vol_assumed": 0.45,
+      "annual_decay_pct": 20.2,
+      "underlying_fom": 43.3,
+      "decay_adjusted_score": 31.1,
+      "verdict": "TRIM",
+      "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+    }
+  ],
+  "leveraged_underlying_foms": {
+    "ARKK": 47.8,
+    "RBLX": 35.5,
+    "LULU": 41.0,
+    "XBI": 42.9,
+    "NOW": 52.3,
+    "SMCI": 49.2,
+    "ORCL": 61.3,
+    "AAPL": 52.9,
+    "BTC-USD": 47.1,
+    "QTUM": 48.6,
+    "OKLO": 43.3
+  },
+  "bear_hedge_menu": {
+    "note": "Bear-market hedge menu. Inverse-index funds (SQQQ/SOXS/SPXU/SDOW, -3x) bleed via leverage decay; VIX-futures (UVXY/UVIX/VXX) bleed via contango roll. Both are TACTICAL crash insurance \u2014 deploy only on a systemic-risk trigger, size \u2264 a few % of NAV, expect carry bleed. SBIT (-1x BTC) is the BTC-specific hedge.",
+    "inverse_and_long_vol_hedges": [
+      {
+        "ticker": "SBIT",
+        "known": true,
+        "name": "ProShares Short BTC -1x",
+        "underlying": "BTC-USD",
+        "factor": -1,
+        "vix_futures": false,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 20.2,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "INVERSE-HEDGE",
+        "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+      },
+      {
+        "ticker": "SQQQ",
+        "known": true,
+        "name": "ProShares 3x Short QQQ",
+        "underlying": "QQQ",
+        "factor": -3,
+        "vix_futures": false,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 121.5,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "INVERSE-HEDGE",
+        "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+      },
+      {
+        "ticker": "SOXS",
+        "known": true,
+        "name": "Direxion 3x Semis Bear",
+        "underlying": "SOXX",
+        "factor": -3,
+        "vix_futures": false,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 121.5,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "INVERSE-HEDGE",
+        "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+      },
+      {
+        "ticker": "SPXU",
+        "known": true,
+        "name": "ProShares 3x Short SP500",
+        "underlying": "SPY",
+        "factor": -3,
+        "vix_futures": false,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 121.5,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "INVERSE-HEDGE",
+        "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+      },
+      {
+        "ticker": "SDOW",
+        "known": true,
+        "name": "ProShares 3x Short Dow30",
+        "underlying": "DIA",
+        "factor": -3,
+        "vix_futures": false,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 121.5,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "INVERSE-HEDGE",
+        "note": "Leveraged ETFs are tactical, not buy-hold; decay compounds daily. Verdict is decay-first. Inverse funds are hedge instruments."
+      },
+      {
+        "ticker": "UVXY",
+        "known": true,
+        "name": "ProShares Ultra VIX Short-Term Futures (1.5x)",
+        "underlying": "VIX",
+        "factor": 1.5,
+        "vix_futures": true,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 7.6,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "VOL-HEDGE-DECAY",
+        "note": "VIX-futures product: dominant bleed is CONTANGO ROLL (~5-10%/mo in calm markets), NOT the leverage-decay figure above (which understates it). Long-vol = crash insurance, size tiny, expect to bleed daily. Short-vol = carry trade with crash tail risk (cf. XIV Feb-2018 -96%)."
+      },
+      {
+        "ticker": "UVIX",
+        "known": true,
+        "name": "Volatility Shares 2x VIX Futures",
+        "underlying": "VIX",
+        "factor": 2,
+        "vix_futures": true,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 20.2,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "VOL-HEDGE-DECAY",
+        "note": "VIX-futures product: dominant bleed is CONTANGO ROLL (~5-10%/mo in calm markets), NOT the leverage-decay figure above (which understates it). Long-vol = crash insurance, size tiny, expect to bleed daily. Short-vol = carry trade with crash tail risk (cf. XIV Feb-2018 -96%)."
+      },
+      {
+        "ticker": "VXX",
+        "known": true,
+        "name": "iPath B S&P500 VIX Short-Term Futures (1x)",
+        "underlying": "VIX",
+        "factor": 1,
+        "vix_futures": true,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 0.0,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "VOL-HEDGE-DECAY",
+        "note": "VIX-futures product: dominant bleed is CONTANGO ROLL (~5-10%/mo in calm markets), NOT the leverage-decay figure above (which understates it). Long-vol = crash insurance, size tiny, expect to bleed daily. Short-vol = carry trade with crash tail risk (cf. XIV Feb-2018 -96%)."
+      }
+    ],
+    "short_vol_DANGER": [
+      {
+        "ticker": "SVIX",
+        "known": true,
+        "name": "Volatility Shares -1x VIX Futures",
+        "underlying": "VIX",
+        "factor": -1,
+        "vix_futures": true,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 20.2,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "SHORT-VOL-TAIL-RISK",
+        "note": "VIX-futures product: dominant bleed is CONTANGO ROLL (~5-10%/mo in calm markets), NOT the leverage-decay figure above (which understates it). Long-vol = crash insurance, size tiny, expect to bleed daily. Short-vol = carry trade with crash tail risk (cf. XIV Feb-2018 -96%)."
+      },
+      {
+        "ticker": "SVXY",
+        "known": true,
+        "name": "ProShares Short VIX Short-Term Futures (-0.5x)",
+        "underlying": "VIX",
+        "factor": -0.5,
+        "vix_futures": true,
+        "annual_vol_assumed": 0.45,
+        "annual_decay_pct": 7.6,
+        "underlying_fom": null,
+        "decay_adjusted_score": null,
+        "verdict": "SHORT-VOL-TAIL-RISK",
+        "note": "VIX-futures product: dominant bleed is CONTANGO ROLL (~5-10%/mo in calm markets), NOT the leverage-decay figure above (which understates it). Long-vol = crash insurance, size tiny, expect to bleed daily. Short-vol = carry trade with crash tail risk (cf. XIV Feb-2018 -96%)."
+      }
+    ],
+    "deploy_when": "funding_chain stress = STRESS/RUPTURE, or regime = risk_off/capitulation, or a confirmed systemic catalyst \u2014 never as buy-and-hold.",
+    "see": [
+      "wiki/10_defensive_hedging.md",
+      "src/sharks/regime/funding_chain.py"
+    ]
+  }
+}
