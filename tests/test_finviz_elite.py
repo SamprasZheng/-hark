@@ -126,6 +126,26 @@ def test_resolve_target_scope_vs_filters():
     assert kind == "filters" and flt == "ta_alltime_b30h"
 
 
+def test_dimension_columns_is_comprehensive():
+    # all columns 0..70 requested → robust to id↔column mapping (fixes growth/52W gaps)
+    ids = FE.DIMENSION_COLUMNS.split(",")
+    assert "0" in ids and "70" in ids and len(ids) >= 60
+
+
+def test_trend_stage_supercycle_and_3mo():
+    sup = {"Perf Month": "8%", "Perf Quart": "20%", "Perf Half Y": "40%",
+           "Perf Year": "120%", "SMA50": "10%", "SMA200": "35%"}
+    assert FE.trend_stage(sup).startswith("🌊")          # sustained + stack + big year
+    three = {"Perf Month": "5%", "Perf Quart": "12%", "Perf Half Y": "8%",
+             "Perf Year": "10%", "SMA50": "6%", "SMA200": "4%"}
+    assert "月線三連陽" in FE.trend_stage(three)          # sustained + stack, modest year
+    early = {"Perf Month": "6%", "Perf Quart": "-3%", "SMA50": "2%", "SMA200": "-5%"}
+    assert FE.trend_stage(early).startswith("🚀")         # early, not yet stacked/sustained
+    chop = {"Perf Month": "-4%", "Perf Quart": "-2%", "SMA50": "-3%", "SMA200": "-8%"}
+    assert "震盪" in FE.trend_stage(chop)
+    assert FE.trend_stage({"Ticker": "X"}) == ""          # no perf data → blank
+
+
 def test_build_url_custom_view_and_columns():
     url = FE.build_export_url("f1", token="T", view=FE.DIMENSION_VIEW, columns=FE.DIMENSION_COLUMNS)
     assert "v=152" in url and "&c=" in url and "auth=T" in url

@@ -50,6 +50,11 @@ PRESETS: dict[str, str] = {
     # 2022 錯殺反轉:深跌離高(≥30%)+ 月線翻揚 + 量能進場 + 有營收/盈利支撐
     "mis_killed_2022": ("ta_highlow52w_b30h,ta_sma50_pa,sh_relvol_o1.5,sh_avgvol_o500,"
                         "sh_price_o5,fa_sales5years_pos,fa_grossmargin_pos"),
+    # 月線三連陽級別:多頭排列(站上 50/200 線)+ 季線級別上漲(全市場掃,擴大範圍)
+    "uptrend_3mo": ("ta_sma50_pa,ta_sma200_pa,ta_perf_13wup,sh_avgvol_o500,sh_price_o5"),
+    # supercycle 候選:多頭排列 + 半年級別上漲 + 高成長 + 有盈利(找下一個 NVDA/MU)
+    "supercycle": ("ta_sma50_pa,ta_sma200_pa,ta_perf_26wup,fa_sales5years_o15,"
+                   "fa_grossmargin_pos,sh_avgvol_o1000,sh_price_o5"),
 }
 
 _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
@@ -62,8 +67,10 @@ _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
 # superset works. If the rally dims come back mostly None, open your Finviz Custom
 # view, pick those columns, and pass the URL's v=/c= via `view=`/`cols=` overrides.
 DIMENSION_VIEW = "152"
-DIMENSION_COLUMNS = ("1,2,3,7,9,10,18,21,22,23,27,29,30,33,35,38,39,41,"
-                     "43,44,48,50,53,54,57,59,62,63,64,65")
+# Request ALL columns (0..70) so every dim's source column is present — robust to the
+# exact id↔column mapping (finviz_row_to_dims matches by HEADER NAME). Fixes the
+# growth / 52W-High coverage gaps from narrow id guesses.
+DIMENSION_COLUMNS = ",".join(str(i) for i in range(71))
 # The 9 evaluation dims finviz_row_to_dims produces (for coverage reporting).
 DIMS9 = ("technical", "capital", "fundamental", "valuation", "growth",
          "risk", "analyst", "dist_ath_pct", "news")
@@ -241,7 +248,31 @@ def finviz_row_to_dims(row: dict) -> dict:
             "valuation": valuation, "growth": growth, "risk": risk, "analyst": analyst}
 
 
-def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz"):
+def trend_stage(row: dict) -> str:
+    """Classify long-term uptrend stage from Finviz multi-period perf + MA stack
+    (snapshot proxy for 月線三連陽 / 大浪; true monthly-candle counting needs price
+    history). Returns 🌊 supercycle候選 / 📈 月線三連陽(多頭排列)/ 🚀 起漲 / 〰️ 震盪."""
+    pm = _num(row, "Perf Month", "Performance (Month)")
+    pq = _num(row, "Perf Quart", "Perf Quarter", "Performance (Quarter)")
+    ph = _num(row, "Perf Half Y", "Perf Half", "Performance (Half Year)")
+    py = _num(row, "Perf Year", "Performance (Year)")
+    s50 = _num(row, "SMA50", "SMA50 (Relative)")
+    s200 = _num(row, "SMA200", "SMA200 (Relative)")
+    if pm is None and pq is None:
+        return ""
+    stack = (s50 is not None and s50 > 0) and (s200 is not None and s200 > 0)  # 站上 50 & 200
+    sustained = (pm or 0) > 0 and (pq or 0) > 0 and (ph is None or ph > 0)      # 多月持續
+    if stack and sustained and (py or 0) >= 30:
+        return "🌊 supercycle候選"
+    if stack and sustained:
+        return "📈 月線三連陽(多頭排列)"
+    if (pm or 0) > 0 and (s50 or -1) > 0:
+        return "🚀 起漲"
+    return "〰️ 震盪/整理"
+
+
+def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz",
+                              stages: Optional[dict] = None):
     """Write the data-driven re-recommendation to outputs/finviz-scan-<date>.json
     (ranked, with the buy-consider shortlist) — the Finviz analog of FOM's output."""
     import json
@@ -250,10 +281,12 @@ def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz"):
     outputs_dir = Path(outputs_dir)
     outputs_dir.mkdir(parents=True, exist_ok=True)
     date = datetime.now().strftime("%Y-%m-%d")
+    stages = stages or {}
     def row(s):
         return {"ticker": s.ticker, "composite": s.composite, "dna_match": s.dna_match,
                 "streak": s.streak, "conviction": s.conviction,
-                "buy_consider": s.buy_consider, "has_fuel": s.has_fuel, "dims": s.dims}
+                "buy_consider": s.buy_consider, "has_fuel": s.has_fuel,
+                "trend_stage": stages.get(s.ticker, ""), "dims": s.dims}
     rec = {"as_of": date, "source": source, "engine": "finviz-rally", "n": len(signals),
            "buy_consider": [s.ticker for s in signals if s.buy_consider],
            "ranked": [row(s) for s in signals]}
@@ -424,7 +457,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         outdir = Settings.load().outputs_dir
         prior = RS.load_prior_streaks(outdir)
         sigs = signals_from_finviz(rows, prior_streaks=prior)
-        scan_path = write_scan_recommendation(outdir, sigs, source=arg)
+        stages = {(r.get("Ticker") or r.get("ticker") or "").strip().upper(): trend_stage(r)
+                  for r in rows}
+        scan_path = write_scan_recommendation(outdir, sigs, source=arg, stages=stages)
         # dims coverage — so you can tell if the export is missing columns
         dims_list = [finviz_row_to_dims(r) for r in rows]
         n = len(rows) or 1
@@ -440,7 +475,12 @@ def main(argv: Optional[list[str]] = None) -> int:
             dstr = " ".join(f"{lbl}{int(d[k])}" if d.get(k) is not None else f"{lbl}–"
                             for k, lbl in (("technical", "技"), ("capital", "資"),
                                            ("fundamental", "基")))
-            print(f"  {s.ticker:<6} C{s.composite:>4.0f} 連{s.streak} {dstr} · {s.conviction}")
+            st = stages.get(s.ticker, "")
+            print(f"  {s.ticker:<6} C{s.composite:>4.0f} 連{s.streak} {dstr} {st} · {s.conviction}")
+        # supercycle / 月線三連陽 shortlist (the 大浪 candidates)
+        wave = [s.ticker for s in sigs if stages.get(s.ticker, "").startswith(("🌊", "📈"))]
+        if wave:
+            print(f"🌊 大浪/月線三連陽候選({len(wave)}):" + ", ".join(wave[:25]))
         print(f"📄 推薦清單已寫入:{scan_path}")
         print("recommend-only · 連續起漲跨日累計(rally-state)· 永不下單")
         return 0
