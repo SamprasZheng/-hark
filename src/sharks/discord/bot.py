@@ -717,6 +717,10 @@ class SharksBot(discord.Client):
                 return
             await interaction.followup.send(embed=chokepoint_to_embed(res))
 
+        # screens/finviz layer (basecross/rally/stealth/ecomrank/finviz/guide/playbook)
+        from sharks.discord import screen_commands
+        screen_commands.register(tree, settings)
+
     async def _send_followup(self, interaction: discord.Interaction, text: str) -> None:
         parts = _chunks(text)
         await interaction.followup.send(parts[0])
