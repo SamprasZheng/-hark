@@ -168,9 +168,13 @@ def test_trend_stage_pre_ignition_predict():
 
 
 def test_liquid_filter_drops_microcaps():
-    assert FE._liquid({"Price": "12", "Avg Volume": "1.5M"}) is True
-    assert FE._liquid({"Price": "0.8", "Avg Volume": "2M"}) is False      # penny
-    assert FE._liquid({"Price": "20", "Avg Volume": "50K"}) is False      # illiquid (KEEX-type)
+    real = {"Price": "12", "Avg Volume": "1.5M", "Market Cap": "3B", "ROE": "15%"}
+    assert FE._liquid(real) is True                                       # real, liquid company
+    assert FE._liquid({"Price": "0.8", "Avg Volume": "2M", "ROE": "5%"}) is False   # penny
+    assert FE._liquid({"Price": "20", "Avg Volume": "50K", "ROE": "5%"}) is False   # illiquid
+    assert FE._liquid({"Price": "20", "Avg Volume": "2M", "Market Cap": "40M", "ROE": "5%"}) is False  # microcap
+    assert FE._liquid({"Price": "20", "Avg Volume": "2M"}) is False       # 基– (no fundamental) = 墓園型 junk
+    assert FE._liquid({"Price": "20", "Avg Volume": "2M"}, require_fundamental=False) is True
 
 
 def test_build_url_custom_view_and_columns():

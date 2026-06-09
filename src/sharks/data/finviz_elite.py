@@ -64,15 +64,29 @@ STAGE_FILTERS: dict[str, tuple[str, ...]] = {
 }
 
 
-def _liquid(row: dict, *, min_price: float = 5.0, min_avgvol: float = 500_000) -> bool:
-    """中高 beta、可交易:價格 + 均量門檻(濾掉 KEEX 那種微型垃圾)。"""
+def _liquid(row: dict, *, min_price: float = 5.0, min_avgvol: float = 500_000,
+            min_mktcap: float = 300e6, require_fundamental: bool = True) -> bool:
+    """中高 beta、可交易、真公司:價格 + 均量 + 市值門檻 + 要有基本面欄位(濾掉 KEEX/MMA
+    那種『基–』的微型垃圾與墓園型)。"""
     price = _num(row, "Price")
-    avgvol = _num(row, "Avg Volume", "Average Volume")
     if price is not None and price < min_price:
         return False
+    avgvol = _num(row, "Avg Volume", "Average Volume")
     if avgvol is not None and avgvol < min_avgvol:
         return False
+    mktcap = _num(row, "Market Cap")
+    if mktcap is not None and mktcap < min_mktcap:
+        return False
+    if require_fundamental:                     # 真公司:至少有一個基本面欄位(墓園型多為 基–)
+        if all(_num(row, c) is None for c in ("ROE", "Gross Margin", "P/E", "Profit Margin")):
+            return False
     return True
+
+
+# Finviz Index filter codes (best-effort; verify in the Finviz UI). src=sp500 / src=r2k
+# restrict the whole-market scan to those indices = quality, near S&P500/Russell-2000.
+_INDEX_FILTER = {"sp500": "idx_sp500", "r2k": "idx_rut", "russell2000": "idx_rut",
+                 "midcap": "idx_sp400"}
 
 _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
 
@@ -453,8 +467,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     if not pos:
         print("用法(全程 Finviz,不用 yfinance):\n"
               "  python -m sharks.data.finviz_elite rally universe   # 重掃 FOM 全宇宙→9維→排名+推薦JSON\n"
-              "  python -m sharks.data.finviz_elite rally pre_ignition src=market  # **預測** 即將起漲(全市場,深跌剛翻)\n"
-              "  python -m sharks.data.finviz_elite rally supercycle src=market   # 全市場 🌊supercycle候選\n"
+              "  python -m sharks.data.finviz_elite rally pre_ignition src=sp500  # **預測** 即將起漲(限 S&P500,已砍墓園)\n"
+              "  python -m sharks.data.finviz_elite rally pre_ignition src=r2k    # 限 Russell 2000\n"
+              "  python -m sharks.data.finviz_elite rally supercycle src=sp500    # S&P500 🌊supercycle候選\n"
               "  python -m sharks.data.finviz_elite rally uptrend_3mo # 池內篩 月線三連陽(加 src=market 擴全市場)\n"
               "  python -m sharks.data.finviz_elite rally space      # 題材池→Finviz t= 抓→9維→rally\n"
               "  python -m sharks.data.finviz_elite rally dipbuy      # preset(f= 過濾)\n"
@@ -472,9 +487,11 @@ def main(argv: Optional[list[str]] = None) -> int:
         kind, flt, tks = resolve_target(arg)
         try:
             if kind in ("universe", "stage"):
-                if src == "market":                      # 全市場(一次大 export)+ 本地流動性濾
-                    print("全市場掃描(Finviz 一次拉全部 → 本地濾流動性/型態)…", file=sys.stderr)
-                    rows = [r for r in fetch_screen("", view=view, columns=columns) if _liquid(r)]
+                if src in ("market", "sp500", "r2k", "russell2000", "midcap"):
+                    idxf = _INDEX_FILTER.get(src, "")     # sp500/r2k → Finviz index filter
+                    label = src if idxf else "全市場"
+                    print(f"{label} 掃描(Finviz → 本地濾流動性/真公司/型態)…", file=sys.stderr)
+                    rows = [r for r in fetch_screen(idxf, view=view, columns=columns) if _liquid(r)]
                 else:
                     uni = fom_universe()
                     print(f"精選池掃描:{len(uni)} 檔(無 yfinance)…", file=sys.stderr)
@@ -493,6 +510,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         outdir = Settings.load().outputs_dir
         prior = RS.load_prior_streaks(outdir)
         sigs = signals_from_finviz(rows, prior_streaks=prior)
+        if kind in ("universe", "stage") or src != "universe":   # 大範圍掃 → 砍墓園型,留有料的
+            sigs = [s for s in sigs if not s.conviction.startswith("🚫")]
         stages = {(r.get("Ticker") or r.get("ticker") or "").strip().upper(): trend_stage(r)
                   for r in rows}
         scan_path = write_scan_recommendation(outdir, sigs, source=arg, stages=stages)
