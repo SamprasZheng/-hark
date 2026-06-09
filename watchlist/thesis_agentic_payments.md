@@ -28,6 +28,16 @@ recommend-only 研究。已建 `/basecross payments`、`/rally payments`、`/ste
 | **A2A** | Google(捐 Linux 基金會) | 代理↔代理 溝通協作 | 代理間的網路協定 |
 | **x402** | Coinbase | 代理付款(HTTP 402 + USDC 穩定幣按次付) | 機器的「付費閘門」 |
 | **AP2** | Google + 60 夥伴(MC/Amex/PayPal/Coinbase) | 代理支付授權框架,**同時支援卡 + 穩定幣/x402** | 代理付款的「規則書」 |
+| **MPP** | **Stripe + Tempo** | Machine Payments Protocol:Stripe 自己的**機器/代理支付協定**,走 **Tempo(穩定幣 L1)** 結算 | Stripe 想**自己掌軌**,不只串卡 |
+
+> **MPP(Stripe+Tempo)的戰略意義(主理人 2026-06 補)**:Stripe 從「整合卡」走向「**自己擁有
+> 結算軌**」——Tempo 是 Stripe/Paradigm 系的穩定幣鏈,MPP 讓代理用穩定幣按次付。這**直接
+> 挑戰** x402(Coinbase/USDC)與卡組織的「資金層」,把代理支付變成**多軌競爭**:
+> 卡組織(信任/高額)vs Stripe-Tempo-MPP(穩定幣原生)vs Coinbase-x402-USDC(crypto 原生)。
+> 含義:① 機器/微支付這塊**穩定幣軌勝面升高** → 利好穩定幣基建(CRCL/COIN)與「自有軌」的
+> Stripe(等 IPO);② 卡組織仍守「高價值 + 信任 + 爭議」場景,不會被一夕取代,但**成長敘事
+> 被分食**;③ 多協定並存(按場景分),**贏家仍是坐在結算+分發節點的人**,不是協定本身。
+> (細節變化快,以官方為準;本系統無法上網查證。)
 
 **誰吃大餅?我的判斷:不是單一協議贏者全拿,而是「協議商品化管線、價值歸於結算+信任+
 分發」**:

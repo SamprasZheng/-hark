@@ -96,8 +96,15 @@ IPO_PROXIES = [
 AGENTIC_PAYMENTS = [
     "V", "MA", "AXP",                 # 卡組織/信任憑證層(Visa Intelligent Commerce / MC Agent Pay)
     "PYPL", "XYZ", "FI", "GPN", "FOUR",  # 支付平台 / 收單(Stripe 的公開同業)
-    "COIN", "CRCL", "HOOD",           # 加密軌 / 穩定幣(x402/USDC)
+    "COIN", "CRCL", "HOOD",           # 加密軌 / 穩定幣(x402/USDC、Stripe+Tempo MPP)
     "SOFI", "NU",                     # neobank
+]
+# Web3 / 加密週期(2024 減半後的後段循環 + 機器/穩定幣支付)。高 beta、晚週期、看 BTC 循環。
+# 含 BTC 代理(MSTR)、礦工(CLSK/MARA/RIOT…)、交易所/穩定幣(COIN/CRCL/HOOD)、現貨 ETF。
+WEB3_CRYPTO = [
+    "COIN", "MSTR", "HOOD", "CRCL",                       # 交易所 / BTC 代理 / 穩定幣
+    "CLSK", "MARA", "RIOT", "HUT", "WULF", "CIFR", "BITF",  # 礦工(後段循環高 beta)
+    "IBIT",                                               # 現貨 BTC ETF
 ]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
@@ -272,7 +279,8 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     everything = sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE)
                         | set(ecommerce_all) | set(BROADENING_LAGGARDS)
                         | set(SPACE_PUREPLAYS) | set(DIVERSIFIED_TURNAROUND)
-                        | set(MID_RISK_TURNAROUND) | set(IPO_PROXIES) | set(AGENTIC_PAYMENTS))
+                        | set(MID_RISK_TURNAROUND) | set(IPO_PROXIES) | set(AGENTIC_PAYMENTS)
+                        | set(WEB3_CRYPTO))
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
@@ -284,6 +292,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
         "midrisk": ("中風險轉機股(週期/公司轉機)", MID_RISK_TURNAROUND),
         "ipo": ("2026 IPO 超級年 · 上市代理/受惠", IPO_PROXIES),
         "payments": ("Agentic 支付 · 金融科技變革", AGENTIC_PAYMENTS),
+        "crypto": ("Web3/加密週期(BTC 後段循環)", WEB3_CRYPTO),
         "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
@@ -297,6 +306,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     theme.update({t: (theme.get(t, "") + "+中風險").lstrip("+") for t in MID_RISK_TURNAROUND})
     theme.update({t: (theme.get(t, "") + "+IPO代理").lstrip("+") for t in IPO_PROXIES})
     theme.update({t: (theme.get(t, "") + "+支付").lstrip("+") for t in AGENTIC_PAYMENTS})
+    theme.update({t: (theme.get(t, "") + "+加密").lstrip("+") for t in WEB3_CRYPTO})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),

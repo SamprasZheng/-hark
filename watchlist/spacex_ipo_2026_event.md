@@ -9,6 +9,7 @@ source: principal-directive
 # 事件觀察:SpaceX 上市(本週重點事件)
 
 > 主理人標記(2026-06-08):**SpaceX 上市是這週的重點事件**。
+> **更新(主理人):IPO 約 6/12**(以官方 IPO calendar 為準;系統無法上網自動查證)。
 
 recommend-only 事件追蹤,**不是部位**。以下只記錄「該追蹤什麼」與紀律,不捏造
 SpaceX 的 ticker / 定價 / 確切日期(這些以官方公告為準;無確認前一律標 TBD)。

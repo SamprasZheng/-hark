@@ -134,3 +134,12 @@ def test_run_basecross_payments_list():
     assert "支付" in title and {r.ticker for r in rows} == set(BC.AGENTIC_PAYMENTS)
     by = {r.ticker: r for r in rows}
     assert "V" in by and "COIN" in by and "支付" in by["V"].theme
+
+
+def test_run_basecross_crypto_list():
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
+              for t in BC.WEB3_CRYPTO}
+    title, rows = BC.run_basecross("crypto", fetch=_fetch(series))
+    assert "加密" in title and {r.ticker for r in rows} == set(BC.WEB3_CRYPTO)
+    by = {r.ticker: r for r in rows}
+    assert "MSTR" in by and "CLSK" in by and "加密" in by["MSTR"].theme

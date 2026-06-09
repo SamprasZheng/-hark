@@ -771,6 +771,7 @@ class SharksBot(discord.Client):
             app_commands.Choice(name="中風險轉機股(週期/轉機)", value="midrisk"),
             app_commands.Choice(name="2026 IPO 超級年代理", value="ipo"),
             app_commands.Choice(name="Agentic 支付/金融科技", value="payments"),
+            app_commands.Choice(name="Web3/加密週期", value="crypto"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def basecross_cmd(interaction: discord.Interaction,
@@ -798,6 +799,7 @@ class SharksBot(discord.Client):
             app_commands.Choice(name="中風險轉機股(週期/轉機)", value="midrisk"),
             app_commands.Choice(name="2026 IPO 超級年代理", value="ipo"),
             app_commands.Choice(name="Agentic 支付/金融科技", value="payments"),
+            app_commands.Choice(name="Web3/加密週期", value="crypto"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def rally_cmd(interaction: discord.Interaction,

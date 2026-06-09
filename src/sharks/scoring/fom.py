@@ -210,6 +210,10 @@ IPO_PROXIES = ["FI", "GPN", "XYZ", "SOFI", "NU"]
 # 新增的:V/MA/AXP(卡組織)、FOUR(收單)、CRCL(Circle/USDC 穩定幣)。
 AGENTIC_PAYMENTS = ["V", "MA", "AXP", "FOUR", "CRCL"]
 
+# Web3/加密週期高 beta — mirrored in discord/basecross.WEB3_CRYPTO(去掉 ETF IBIT)。
+# 礦工 + BTC 代理;後段循環、看 BTC 四年週期。新增:CLSK/MARA/RIOT/HUT/WULF/CIFR/BITF。
+WEB3_CRYPTO = ["CLSK", "MARA", "RIOT", "HUT", "WULF", "CIFR", "BITF"]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -219,7 +223,8 @@ DEFAULT_UNIVERSE = sorted(set(
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
     SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
     ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS +
-    DIVERSIFIED_TURNAROUND + MID_RISK_TURNAROUND + IPO_PROXIES + AGENTIC_PAYMENTS
+    DIVERSIFIED_TURNAROUND + MID_RISK_TURNAROUND + IPO_PROXIES + AGENTIC_PAYMENTS +
+    WEB3_CRYPTO
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───
