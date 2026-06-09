@@ -37,6 +37,30 @@ def test_missing_token_raises_clear_error(monkeypatch):
         FE.fetch_screen("dipbuy")
 
 
+def test_finviz_row_to_dims_maps_columns():
+    row = {"Ticker": "NVDA", "Perf Month": "12.0%", "SMA50": "5.0%", "SMA200": "20.0%",
+           "RSI": "60", "Rel Volume": "2.0", "Insider Trans": "-1.0%", "Inst Trans": "3.0%",
+           "ROE": "90.0%", "Gross Margin": "70.0%", "Sales growth past 5 years": "60.0%",
+           "Profit Margin": "50.0%", "52W High": "-25.0%"}
+    d = FE.finviz_row_to_dims(row)
+    assert 60 < d["technical"] <= 100        # strong momentum + above MAs
+    assert d["capital"] > 60                  # rel vol 2x + inst buying
+    assert d["fundamental"] > 70              # high ROE/margin/growth
+    assert d["dist_ath_pct"] == 25.0          # |−25%| from 52w high
+    assert d["news"] is None                  # honest TBD
+
+
+def test_finviz_row_to_dims_absent_columns_are_none():
+    d = FE.finviz_row_to_dims({"Ticker": "X", "Company": "Y"})
+    assert d["technical"] is None and d["capital"] is None and d["fundamental"] is None
+
+
+def test_num_parses_suffixes_and_pct():
+    assert FE._num({"a": "2.5M"}, "a") == 2_500_000
+    assert FE._num({"a": "-25.0%"}, "a") == -25.0
+    assert FE._num({"a": "-"}, "a") is None
+
+
 def test_no_hardcoded_token_in_source():
     # guard: no UUID-style API token literal may be committed in the client
     import pathlib

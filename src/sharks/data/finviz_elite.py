@@ -88,6 +88,86 @@ def resolve_filters(filters_or_preset: str) -> str:
     return PRESETS.get(filters_or_preset, filters_or_preset)
 
 
+# ── Finviz column → 5-dimension mapping (更精準:用 Finviz 的基本/技術/資金欄位) ──
+# Finviz export rows carry far richer per-ticker columns than a bare price feed, so
+# we can fuse 資金/技術/基本面 directly from them (no price history needed for the
+# snapshot). Tolerant to which columns are present (matched by HEADER NAME).
+
+def _num(row: dict, *names: str) -> Optional[float]:
+    """First present column among ``names`` → float (strips %, commas, B/M/K)."""
+    for n in names:
+        if n in row and str(row[n]).strip() not in ("", "-", "—"):
+            s = str(row[n]).strip().replace("%", "").replace(",", "")
+            mult = {"B": 1e9, "M": 1e6, "K": 1e3}.get(s[-1:], 1)
+            if mult != 1:
+                s = s[:-1]
+            try:
+                return float(s) * mult
+            except ValueError:
+                continue
+    return None
+
+
+def _clamp(x: float) -> float:
+    return max(0.0, min(100.0, x))
+
+
+def finviz_row_to_dims(row: dict) -> dict:
+    """Map one Finviz export row → {capital, technical, fundamental, news, dist_ath_pct}
+    (0..100 dims, None when the inputs are absent). Feeds rally_signal.assess."""
+    # 技術:月/季動能 + 相對 50/200 日線 + RSI 健康區
+    perf_m = _num(row, "Perf Month", "Performance (Month)")
+    sma50 = _num(row, "SMA50", "SMA50 (Relative)")
+    sma200 = _num(row, "SMA200", "SMA200 (Relative)")
+    rsi = _num(row, "RSI", "Relative Strength Index (14)")
+    tech = None
+    if perf_m is not None or sma50 is not None:
+        t = 50.0 + (perf_m or 0) * 1.2
+        if sma50 is not None:
+            t += 10 if sma50 > 0 else -10
+        if sma200 is not None:
+            t += 8 if sma200 > 0 else -8
+        if rsi is not None and 50 <= rsi <= 72:
+            t += 8
+        tech = _clamp(t)
+
+    # 資金:相對成交量 + 內部人/法人買盤
+    relvol = _num(row, "Rel Volume", "Relative Volume")
+    insider = _num(row, "Insider Trans", "Insider Transactions")
+    inst = _num(row, "Inst Trans", "Institutional Transactions")
+    capital = None
+    if relvol is not None or insider is not None or inst is not None:
+        c = 30.0 + ((relvol or 1) - 1) * 40
+        if insider is not None:
+            c += 12 if insider > 0 else -8
+        if inst is not None:
+            c += 12 if inst > 0 else -8
+        capital = _clamp(c)
+
+    # 基本面:ROE / 毛利 / 營收成長 / 獲利率(quality 代理)
+    roe = _num(row, "ROE", "Return on Equity")
+    gm = _num(row, "Gross Margin")
+    sales = _num(row, "Sales growth past 5 years", "Sales Q/Q", "Sales growth quarter over quarter")
+    pm = _num(row, "Profit Margin", "Net Profit Margin")
+    fund = None
+    if any(v is not None for v in (roe, gm, sales, pm)):
+        f = 50.0
+        if roe is not None:
+            f += 12 if roe > 15 else (4 if roe > 0 else -10)
+        if gm is not None:
+            f += 8 if gm > 40 else (3 if gm > 20 else -5)
+        if sales is not None:
+            f += 10 if sales > 10 else (3 if sales > 0 else -8)
+        if pm is not None:
+            f += 6 if pm > 10 else (0 if pm > 0 else -8)
+        fund = _clamp(f)
+
+    dist = _num(row, "52W High", "52-Week High (Relative)")   # Finviz: negative % from 52w high
+    dist_ath = abs(dist) if dist is not None else None
+    return {"technical": tech, "capital": capital, "fundamental": fund,
+            "news": None, "dist_ath_pct": dist_ath}
+
+
 def fetch_screen(filters_or_preset: str, *, token: Optional[str] = None,
                  view: str = "111", columns: Optional[str] = None,
                  timeout: int = 30) -> list[dict]:
