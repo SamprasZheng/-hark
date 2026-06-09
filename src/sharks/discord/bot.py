@@ -494,6 +494,35 @@ class SharksBot(discord.Client):
         e.set_footer(text="閉環:結論 → wiki → RAG → 下一場記憶 → 新結論 · 只建議不下單,永不下單")
         return e
 
+    def _playbook_embed(self) -> discord.Embed:
+        """作戰儀表板:把各題材論點 + 時間軸 + 對應指令整合成一頁(/playbook)。"""
+        e = discord.Embed(
+            title="🗺️ PolkaSharks 作戰儀表板(2026 H2)",
+            description="把所有題材論點 + **時間軸操作** + 對應篩選指令整合成一頁。"
+                        "底層紀律:**非2021、廣度小 → 只買有燃料(真賺錢/真題材)+ 連續起漲**。",
+            color=0x1ABC9C,
+        )
+        e.add_field(name="🧭 主軸(頂底互換 + 分批)", value=(
+            "賣 NVDA 強勢(頂)→ 買錯殺底(太空/軟體/IPO代理/支付)。"
+            "Jun/Aug/Sep 三段彈藥,**信號驅動、留到九月變盤**。"), inline=False)
+        e.add_field(name="🗓️ 時間軸 × 操作", value=(
+            "**現在→7月(埋伏)**:只動 30–40%,`/stealth` 找資金先進、價未動的。\n"
+            "**8月(確認加碼)**:加碼已 `/rally` 連續起漲+有燃料的;砍沒跟上的。\n"
+            "**9月(變盤決勝)**:牛確認→打滿領頭;熊/盤整→收手留現金。\n"
+            "**Q3–Q4**:SpaceX IPO → 太空代理;Databricks/Stripe IPO → SNOW/支付。\n"
+            "**明年初(2027 H1)**:**N1x/RTX/DGX Spark 上市 → AI-PC 換機潮才引爆**(現在只佈局、別追)。"),
+            inline=False)
+        e.add_field(name="🎯 題材 → 篩選指令", value=(
+            "`/basecross space` 太空(SpaceX)· `/basecross ipo` IPO 超級年代理\n"
+            "`/basecross payments` Agentic 支付(V/MA/PYPL/COIN)· `/basecross ecommerce` 電商\n"
+            "`/basecross ai_software` AI 錯殺軟體 · `/stealth broadening` 廣度隱蔽吸籌\n"
+            "`/rally <題材>` 連續起漲+燃料閘 · `/ecomrank` 綜合排名"), inline=False)
+        e.add_field(name="🛡️ 風控閘(每次出手前)", value=(
+            "① 有燃料?(真賺錢/真題材,否則 🪨缺燃料不追)② 連續起漲?③ 資金面沒 STRESS?"
+            "④ 分層:核心(有營收)大、投機(pre-profit)小。"), inline=False)
+        e.set_footer(text="論點全文見 watchlist/*.md · recommend-only · 永不下單")
+        return e
+
     async def _persona_say(self, channel: discord.abc.Messageable,
                            persona: ChatPersona, text: str) -> None:
         """Speak as a persona via webhook (own name); fall back to a plain message."""
@@ -639,6 +668,12 @@ class SharksBot(discord.Client):
             await interaction.response.send_message(embed=self._tutorial_embed(),
                                                     ephemeral=True)
 
+        @tree.command(name="playbook",
+                      description="作戰儀表板:題材 + 時間軸操作 + 對應篩選指令一頁總表")
+        async def playbook_cmd(interaction: discord.Interaction):
+            await interaction.response.send_message(embed=self._playbook_embed(),
+                                                    ephemeral=True)
+
         @tree.command(name="chatter",
                       description="立刻產一則 #雜談 速解讀(免費新聞→本地 LLM 因果鏈);council:1 同時開議會")
         @app_commands.describe(council="是否同時召開議會辯論(預設否)")
@@ -735,6 +770,7 @@ class SharksBot(discord.Client):
             app_commands.Choice(name="跨產業分散轉機股", value="diversified"),
             app_commands.Choice(name="中風險轉機股(週期/轉機)", value="midrisk"),
             app_commands.Choice(name="2026 IPO 超級年代理", value="ipo"),
+            app_commands.Choice(name="Agentic 支付/金融科技", value="payments"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def basecross_cmd(interaction: discord.Interaction,
@@ -761,6 +797,7 @@ class SharksBot(discord.Client):
             app_commands.Choice(name="跨產業分散轉機股", value="diversified"),
             app_commands.Choice(name="中風險轉機股(週期/轉機)", value="midrisk"),
             app_commands.Choice(name="2026 IPO 超級年代理", value="ipo"),
+            app_commands.Choice(name="Agentic 支付/金融科技", value="payments"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def rally_cmd(interaction: discord.Interaction,
@@ -856,6 +893,11 @@ class SharksBot(discord.Client):
         # !教學 / !tutorial — worked step-by-step examples (the /cmd tutorial).
         if content.lower() in ("!教學", "!tutorial", "!範例", "!example", "!教學範例"):
             await message.channel.send(embed=self._tutorial_embed())
+            return
+
+        # !作戰 / !playbook — the one-page master dashboard (theme × timeline × cmd).
+        if content.lower() in ("!作戰", "!playbook", "!儀表板", "!總表", "!dashboard"):
+            await message.channel.send(embed=self._playbook_embed())
             return
 
         # !sync / !ver — force re-sync slash commands AND report what THIS running

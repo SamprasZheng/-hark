@@ -125,3 +125,12 @@ def test_run_basecross_ipo_proxies_list():
     assert "IPO" in title and {r.ticker for r in rows} == set(BC.IPO_PROXIES)
     by = {r.ticker: r for r in rows}
     assert "RKLB" in by and "SNOW" in by and "IPO代理" in by["SNOW"].theme
+
+
+def test_run_basecross_payments_list():
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
+              for t in BC.AGENTIC_PAYMENTS}
+    title, rows = BC.run_basecross("payments", fetch=_fetch(series))
+    assert "支付" in title and {r.ticker for r in rows} == set(BC.AGENTIC_PAYMENTS)
+    by = {r.ticker: r for r in rows}
+    assert "V" in by and "COIN" in by and "支付" in by["V"].theme

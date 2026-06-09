@@ -90,6 +90,15 @@ IPO_PROXIES = [
     "ADBE",                                               # Canva → 設計軟體
     "PDD",                                                # Shein → 電商
 ]
+# Agentic 支付 / 代理人支付題材(機器人/AI 代理自動下單付款 + 一點 crypto)。Stripe 是
+# 私有領頭(IPO H1'26);公開可佈局的是卡組織(吃信任/憑證)、支付平台、加密軌。
+# 見 watchlist/thesis_agentic_payments.md。
+AGENTIC_PAYMENTS = [
+    "V", "MA", "AXP",                 # 卡組織/信任憑證層(Visa Intelligent Commerce / MC Agent Pay)
+    "PYPL", "XYZ", "FI", "GPN", "FOUR",  # 支付平台 / 收單(Stripe 的公開同業)
+    "COIN", "CRCL", "HOOD",           # 加密軌 / 穩定幣(x402/USDC)
+    "SOFI", "NU",                     # neobank
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -263,7 +272,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     everything = sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE)
                         | set(ecommerce_all) | set(BROADENING_LAGGARDS)
                         | set(SPACE_PUREPLAYS) | set(DIVERSIFIED_TURNAROUND)
-                        | set(MID_RISK_TURNAROUND) | set(IPO_PROXIES))
+                        | set(MID_RISK_TURNAROUND) | set(IPO_PROXIES) | set(AGENTIC_PAYMENTS))
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
@@ -274,6 +283,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
         "diversified": ("跨產業分散轉機股", DIVERSIFIED_TURNAROUND),
         "midrisk": ("中風險轉機股(週期/公司轉機)", MID_RISK_TURNAROUND),
         "ipo": ("2026 IPO 超級年 · 上市代理/受惠", IPO_PROXIES),
+        "payments": ("Agentic 支付 · 金融科技變革", AGENTIC_PAYMENTS),
         "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
@@ -286,6 +296,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     theme.update({t: (theme.get(t, "") + "+分散").lstrip("+") for t in DIVERSIFIED_TURNAROUND})
     theme.update({t: (theme.get(t, "") + "+中風險").lstrip("+") for t in MID_RISK_TURNAROUND})
     theme.update({t: (theme.get(t, "") + "+IPO代理").lstrip("+") for t in IPO_PROXIES})
+    theme.update({t: (theme.get(t, "") + "+支付").lstrip("+") for t in AGENTIC_PAYMENTS})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),

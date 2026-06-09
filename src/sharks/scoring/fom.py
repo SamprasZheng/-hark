@@ -206,6 +206,10 @@ MID_RISK_TURNAROUND = ["C", "BIIB", "MDT", "DE", "LYB", "FCX",
 # 新增的(其餘已在他群):FI/GPN/XYZ(金流)、SOFI/NU(neobank)。
 IPO_PROXIES = ["FI", "GPN", "XYZ", "SOFI", "NU"]
 
+# Agentic 支付題材 — mirrored in discord/basecross.AGENTIC_PAYMENTS.
+# 新增的:V/MA/AXP(卡組織)、FOUR(收單)、CRCL(Circle/USDC 穩定幣)。
+AGENTIC_PAYMENTS = ["V", "MA", "AXP", "FOUR", "CRCL"]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -215,7 +219,7 @@ DEFAULT_UNIVERSE = sorted(set(
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
     SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
     ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS +
-    DIVERSIFIED_TURNAROUND + MID_RISK_TURNAROUND + IPO_PROXIES
+    DIVERSIFIED_TURNAROUND + MID_RISK_TURNAROUND + IPO_PROXIES + AGENTIC_PAYMENTS
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───
