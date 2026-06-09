@@ -37,6 +37,8 @@ def _ecom_universe(scope: str) -> tuple[str, list[str]]:
         return "跨產業分散轉機股", list(BC.DIVERSIFIED_TURNAROUND)
     if scope == "midrisk":
         return "中風險轉機股", list(BC.MID_RISK_TURNAROUND)
+    if scope == "ipo":
+        return "2026 IPO 代理", list(BC.IPO_PROXIES)
     if scope == "killed2022":
         return "2022 殺下來", list(BC.KILLED_2022)
     if scope in ("all", "everything"):
@@ -92,7 +94,7 @@ def render(candidates: list, *, quality_by_ticker=None, prior_streaks=None) -> s
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     _scopes = {"small", "ecommerce_small", "broadening", "stealth", "space",
-               "killed2022", "all", "everything", "ecommerce", "diversified", "midrisk"}
+               "killed2022", "all", "everything", "ecommerce", "diversified", "midrisk", "ipo"}
     scope = "ecommerce"
     extra: list[str] = []
     for a in argv:

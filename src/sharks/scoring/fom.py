@@ -202,6 +202,10 @@ DIVERSIFIED_TURNAROUND = ["ALB", "MMM", "F", "WBD", "PYPL", "DIS"]
 MID_RISK_TURNAROUND = ["C", "BIIB", "MDT", "DE", "LYB", "FCX",
                        "CMCSA", "APTV", "GM", "SLB", "DPZ", "GPC"]
 
+# 2026 IPO 超級年的上市代理/受惠者 — mirrored in discord/basecross.IPO_PROXIES.
+# 新增的(其餘已在他群):FI/GPN/XYZ(金流)、SOFI/NU(neobank)。
+IPO_PROXIES = ["FI", "GPN", "XYZ", "SOFI", "NU"]
+
 # ── Master universe assembly ───────────────────────────────────────────────
 DEFAULT_UNIVERSE = sorted(set(
     MAG7 + SUPPLY_TIER2 + MEMORY + OPTICAL + SIPH + POWER_SEMI +
@@ -211,7 +215,7 @@ DEFAULT_UNIVERSE = sorted(set(
     THEMATIC_2026_BUYS + WIKI_16_THEMES + SERENITY_SUPPLY_CHAIN +
     SPACE + AGENTIC_AI + COMPUTEX_LAPTOP + SEMI_GRANULAR + TECH_DD_NODES +
     ROTATION_2022_AI + ECOMMERCE_AGENTIC + BROADENING_LAGGARDS +
-    DIVERSIFIED_TURNAROUND + MID_RISK_TURNAROUND
+    DIVERSIFIED_TURNAROUND + MID_RISK_TURNAROUND + IPO_PROXIES
 ))
 
 # ─── IP defensibility (qualitative Compiler input) ───

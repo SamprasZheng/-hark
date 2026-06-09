@@ -80,6 +80,16 @@ MID_RISK_TURNAROUND = [
     "C", "BIIB", "MDT", "DE", "LYB", "FCX",       # 金融 / 生技 / 醫材 / 農機 / 化工 / 銅
     "CMCSA", "APTV", "GM", "SLB", "DPZ", "GPC",   # 通訊 / 車用零件 / 車廠 / 油服 / 餐飲 / 汽配
 ]
+# 2026 IPO 超級年(~$3.6T)的「上市公司代理 + 受惠板塊」。散戶多半買不到 IPO 本身,
+# 改提前佈局每個私有巨頭的**公開代理/持股受惠者**。見 watchlist/thesis_2026_ipo_wave.md。
+IPO_PROXIES = [
+    "RKLB", "IRDM", "ASTS", "LUNR",                       # SpaceX → 太空
+    "MSFT", "NVDA", "AVGO", "ORCL", "AMZN", "GOOGL",      # OpenAI/Anthropic/xAI → 算力+持股者
+    "SNOW", "MDB", "PLTR", "CFLT",                        # Databricks → 資料/AI 基建
+    "PYPL", "FI", "GPN", "XYZ", "SOFI", "NU", "HOOD", "COIN",  # Stripe/Revolut/Ripple → 金融科技
+    "ADBE",                                               # Canva → 設計軟體
+    "PDD",                                                # Shein → 電商
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -253,7 +263,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     everything = sorted(set(KILLED_2022) | set(AI_OVERSOLD_SOFTWARE)
                         | set(ecommerce_all) | set(BROADENING_LAGGARDS)
                         | set(SPACE_PUREPLAYS) | set(DIVERSIFIED_TURNAROUND)
-                        | set(MID_RISK_TURNAROUND))
+                        | set(MID_RISK_TURNAROUND) | set(IPO_PROXIES))
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
@@ -263,6 +273,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
         "space": ("太空板塊 · SpaceX IPO 催化", SPACE_PUREPLAYS),
         "diversified": ("跨產業分散轉機股", DIVERSIFIED_TURNAROUND),
         "midrisk": ("中風險轉機股(週期/公司轉機)", MID_RISK_TURNAROUND),
+        "ipo": ("2026 IPO 超級年 · 上市代理/受惠", IPO_PROXIES),
         "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
@@ -274,6 +285,7 @@ def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,
     theme.update({t: (theme.get(t, "") + "+太空").lstrip("+") for t in SPACE_PUREPLAYS})
     theme.update({t: (theme.get(t, "") + "+分散").lstrip("+") for t in DIVERSIFIED_TURNAROUND})
     theme.update({t: (theme.get(t, "") + "+中風險").lstrip("+") for t in MID_RISK_TURNAROUND})
+    theme.update({t: (theme.get(t, "") + "+IPO代理").lstrip("+") for t in IPO_PROXIES})
     tickers = sorted(set(base) | set(t.upper() for t in (extra_tickers or [])))
     rows = screen(tickers, fetch=fetch,
                   quality_by_ticker=quality_from_fom(settings.outputs_dir),

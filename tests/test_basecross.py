@@ -116,3 +116,12 @@ def test_run_basecross_midrisk_list():
     title, rows = BC.run_basecross("midrisk", fetch=_fetch(series))
     assert "中風險" in title and {r.ticker for r in rows} == set(BC.MID_RISK_TURNAROUND)
     assert "C" in {r.ticker for r in rows} and "中風險" in {r.ticker: r for r in rows}["DE"].theme
+
+
+def test_run_basecross_ipo_proxies_list():
+    series = {t: {"close": _daily([100 - i for i in range(40)]), "volume": []}
+              for t in BC.IPO_PROXIES}
+    title, rows = BC.run_basecross("ipo", fetch=_fetch(series))
+    assert "IPO" in title and {r.ticker for r in rows} == set(BC.IPO_PROXIES)
+    by = {r.ticker: r for r in rows}
+    assert "RKLB" in by and "SNOW" in by and "IPO代理" in by["SNOW"].theme

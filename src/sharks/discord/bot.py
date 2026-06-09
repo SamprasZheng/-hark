@@ -734,6 +734,7 @@ class SharksBot(discord.Client):
             app_commands.Choice(name="太空板塊(SpaceX IPO)", value="space"),
             app_commands.Choice(name="跨產業分散轉機股", value="diversified"),
             app_commands.Choice(name="中風險轉機股(週期/轉機)", value="midrisk"),
+            app_commands.Choice(name="2026 IPO 超級年代理", value="ipo"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def basecross_cmd(interaction: discord.Interaction,
@@ -759,6 +760,7 @@ class SharksBot(discord.Client):
             app_commands.Choice(name="太空板塊(SpaceX IPO)", value="space"),
             app_commands.Choice(name="跨產業分散轉機股", value="diversified"),
             app_commands.Choice(name="中風險轉機股(週期/轉機)", value="midrisk"),
+            app_commands.Choice(name="2026 IPO 超級年代理", value="ipo"),
             app_commands.Choice(name="全名單", value="all"),
         ])
         async def rally_cmd(interaction: discord.Interaction,
