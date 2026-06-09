@@ -278,6 +278,13 @@ def signals_from_finviz(rows: list[dict], *, prior_streaks: Optional[dict] = Non
 
 def main(argv: Optional[list[str]] = None) -> int:
     import sys
+    # Load .env so FINVIZ_ELITE_API_KEY is available to the CLI (the bot loads it via
+    # Settings; the standalone CLI must do it itself, BEFORE _token reads os.environ).
+    try:
+        from sharks.discord.config import _read_dotenv, PROJECT_ROOT
+        _read_dotenv(PROJECT_ROOT / ".env")
+    except Exception:
+        pass
     argv = list(sys.argv[1:] if argv is None else argv)
     # optional overrides: view=152  cols=1,2,3,...  (paste from your Finviz Custom URL)
     view_override = cols_override = None
