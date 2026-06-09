@@ -1,4 +1,4 @@
-﻿# Sharks — 雙頻多因子 Wiki 交易系統
+﻿# Shark
 
 > Andy's medium-to-long-term US equity swing trading system + weekend crypto satellite, built on Karpathy's [LLM Wiki](philosophy/references/karpathy-llm-wiki.md) compile-first pattern. **Philosophy first, code second.**
 
