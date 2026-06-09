@@ -44,6 +44,12 @@ PRESETS: dict[str, str] = {
     "dipbuy": "ta_alltime_b30h,sh_avgvol_o500,sh_price_o5,ta_sma50_pa",
     # add survival/quality layer: + current ratio>1.5 + positive sales growth
     "dipbuy_quality": "ta_alltime_b30h,sh_avgvol_o500,sh_price_o5,ta_sma50_pa,fa_curratio_o1.5,fa_sales5years_pos",
+    # 起漲點火:早期上升(站上 20/50 日線)+ 量能放大(買盤)+ 不追高 + 有盈利底(嚴格,tight regime)
+    "rally_ignition": ("ta_sma20_pa,ta_sma50_pa,ta_perf_4wup,sh_relvol_o1.5,"
+                       "sh_avgvol_o500,sh_price_o5,fa_grossmargin_pos,fa_epsyoyttm_pos"),
+    # 2022 錯殺反轉:深跌離高(≥30%)+ 月線翻揚 + 量能進場 + 有營收/盈利支撐
+    "mis_killed_2022": ("ta_highlow52w_b30h,ta_sma50_pa,sh_relvol_o1.5,sh_avgvol_o500,"
+                        "sh_price_o5,fa_sales5years_pos,fa_grossmargin_pos"),
 }
 
 _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
