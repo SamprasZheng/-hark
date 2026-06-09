@@ -222,22 +222,28 @@ def register(tree, settings) -> None:
         await interaction.followup.send(embed=ecomrank_to_embed(ranked, set(_basecross.ECOMMERCE_SMALL)))
 
     @tree.command(name="finviz", description="Finviz API 掃描 → 9維 → rally 排名(全程 Finviz,不用 yfinance)")
-    @app_commands.describe(filters="題材池(space/ipo/payments/crypto…)或 preset 或 Finviz f= 字串",
+    @app_commands.describe(filters="universe(全宇宙)/題材池(space/ipo/payments…)/preset/Finviz f= 字串",
                            cols="可選:Finviz Custom view 的 c= 欄位字串")
     async def finviz_cmd(interaction: discord.Interaction, filters: str = "dipbuy", cols: str = ""):
         await interaction.response.defer(thinking=True)
-        _, flt, tks = _finviz.resolve_target(filters)
+        kind, flt, tks = _finviz.resolve_target(filters)
+        columns = cols or _finviz.DIMENSION_COLUMNS
         try:
-            rows = await asyncio.to_thread(
-                _finviz.fetch_screen, flt or "",
-                view=_finviz.DIMENSION_VIEW, columns=(cols or _finviz.DIMENSION_COLUMNS),
-                tickers=tks)
+            if kind == "universe":
+                rows = await asyncio.to_thread(
+                    _finviz.fetch_universe, _finviz.fom_universe(),
+                    view=_finviz.DIMENSION_VIEW, columns=columns)
+            else:
+                rows = await asyncio.to_thread(
+                    _finviz.fetch_screen, flt or "",
+                    view=_finviz.DIMENSION_VIEW, columns=columns, tickers=tks)
         except Exception as exc:
             await interaction.followup.send(f"⚠️ Finviz 掃描失敗:{exc}"[:1900])
             return
         prior = await asyncio.to_thread(_rally.load_prior_streaks, settings.outputs_dir)
         signals = _finviz.signals_from_finviz(rows, prior_streaks=prior)
         await asyncio.to_thread(_rally.write_state, settings.outputs_dir, signals)
+        await asyncio.to_thread(_finviz.write_scan_recommendation, settings.outputs_dir, signals, source=filters)
         dims = [_finviz.finviz_row_to_dims(r) for r in rows]
         n = len(rows) or 1
         cov = ", ".join(f"{k}{sum(1 for d in dims if d.get(k) is not None)}/{n}"

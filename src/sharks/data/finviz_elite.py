@@ -44,6 +44,12 @@ PRESETS: dict[str, str] = {
     "dipbuy": "ta_alltime_b30h,sh_avgvol_o500,sh_price_o5,ta_sma50_pa",
     # add survival/quality layer: + current ratio>1.5 + positive sales growth
     "dipbuy_quality": "ta_alltime_b30h,sh_avgvol_o500,sh_price_o5,ta_sma50_pa,fa_curratio_o1.5,fa_sales5years_pos",
+    # 起漲點火:早期上升(站上 20/50 日線)+ 量能放大(買盤)+ 不追高 + 有盈利底(嚴格,tight regime)
+    "rally_ignition": ("ta_sma20_pa,ta_sma50_pa,ta_perf_4wup,sh_relvol_o1.5,"
+                       "sh_avgvol_o500,sh_price_o5,fa_grossmargin_pos,fa_epsyoyttm_pos"),
+    # 2022 錯殺反轉:深跌離高(≥30%)+ 月線翻揚 + 量能進場 + 有營收/盈利支撐
+    "mis_killed_2022": ("ta_highlow52w_b30h,ta_sma50_pa,sh_relvol_o1.5,sh_avgvol_o500,"
+                        "sh_price_o5,fa_sales5years_pos,fa_grossmargin_pos"),
 }
 
 _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
@@ -235,6 +241,27 @@ def finviz_row_to_dims(row: dict) -> dict:
             "valuation": valuation, "growth": growth, "risk": risk, "analyst": analyst}
 
 
+def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz"):
+    """Write the data-driven re-recommendation to outputs/finviz-scan-<date>.json
+    (ranked, with the buy-consider shortlist) — the Finviz analog of FOM's output."""
+    import json
+    from datetime import datetime
+    from pathlib import Path
+    outputs_dir = Path(outputs_dir)
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+    date = datetime.now().strftime("%Y-%m-%d")
+    def row(s):
+        return {"ticker": s.ticker, "composite": s.composite, "dna_match": s.dna_match,
+                "streak": s.streak, "conviction": s.conviction,
+                "buy_consider": s.buy_consider, "has_fuel": s.has_fuel, "dims": s.dims}
+    rec = {"as_of": date, "source": source, "engine": "finviz-rally", "n": len(signals),
+           "buy_consider": [s.ticker for s in signals if s.buy_consider],
+           "ranked": [row(s) for s in signals]}
+    path = outputs_dir / f"finviz-scan-{date}.json"
+    path.write_text(json.dumps(rec, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
 def resolve_target(arg: str) -> tuple[str, Optional[str], Optional[str]]:
     """Decide what ``arg`` means → (kind, filters, tickers).
 
@@ -249,6 +276,8 @@ def resolve_target(arg: str) -> tuple[str, Optional[str], Optional[str]]:
             return "scope", None, ",".join(tickers)
     except Exception:
         pass
+    if arg in ("universe", "fom", "fomuniverse", "全宇宙"):
+        return "universe", None, None
     return "filters", resolve_filters(arg), None
 
 
@@ -276,6 +305,33 @@ def fetch_screen(filters_or_preset: str = "", *, token: Optional[str] = None,
 def fetch_tickers(filters_or_preset: str, **kw) -> list[str]:
     """Convenience: screen → ticker list (to feed basecross/rally/stealth)."""
     return tickers_from_rows(fetch_screen(filters_or_preset, **kw))
+
+
+def fetch_universe(tickers: list[str], *, token: Optional[str] = None,
+                   view: str = "152", columns: Optional[str] = None,
+                   batch: int = 80, timeout: int = 30) -> list[dict]:
+    """Bulk Finviz export for MANY tickers (the whole FOM universe), batched to stay
+    under URL limits. Dedupes by ticker. Real fundamentals/technicals, no yfinance."""
+    out: list[dict] = []
+    seen: set[str] = set()
+    for i in range(0, len(tickers), batch):
+        chunk = [t for t in tickers[i:i + batch] if t]
+        if not chunk:
+            continue
+        rows = fetch_screen(token=token, view=view, columns=columns,
+                            tickers=",".join(chunk), timeout=timeout)
+        for r in rows:
+            t = (r.get("Ticker") or r.get("ticker") or "").strip().upper()
+            if t and t not in seen:
+                seen.add(t)
+                out.append(r)
+    return out
+
+
+def fom_universe() -> list[str]:
+    """The full FOM scan universe (lazy import — fom pulls numpy/pandas/yfinance)."""
+    from sharks.scoring import fom
+    return list(fom.DEFAULT_UNIVERSE)
 
 
 def signals_from_finviz(rows: list[dict], *, prior_streaks: Optional[dict] = None,
@@ -325,6 +381,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         mode, pos = "rally", pos[1:]
     if not pos:
         print("用法(全程 Finviz,不用 yfinance):\n"
+              "  python -m sharks.data.finviz_elite rally universe   # 重掃 FOM 全宇宙→9維→排名+推薦JSON\n"
               "  python -m sharks.data.finviz_elite rally space      # 題材池→Finviz t= 抓→9維→rally\n"
               "  python -m sharks.data.finviz_elite rally dipbuy      # preset(f= 過濾)\n"
               "  python -m sharks.data.finviz_elite '<scope|preset|f=>'   # 只驗證+代號清單\n"
@@ -338,9 +395,14 @@ def main(argv: Optional[list[str]] = None) -> int:
     if mode == "rally":
         view = view_override or DIMENSION_VIEW
         columns = cols_override or DIMENSION_COLUMNS
-        _, flt, tks = resolve_target(arg)
+        kind, flt, tks = resolve_target(arg)
         try:
-            rows = fetch_screen(flt or "", view=view, columns=columns, tickers=tks)
+            if kind == "universe":
+                uni = fom_universe()
+                print(f"全宇宙掃描:{len(uni)} 檔(Finviz 批次拉取,無 yfinance)…", file=sys.stderr)
+                rows = fetch_universe(uni, view=view, columns=columns)
+            else:
+                rows = fetch_screen(flt or "", view=view, columns=columns, tickers=tks)
         except Exception as exc:
             print(f"驗證失敗:{exc}", file=sys.stderr)
             return 1
@@ -349,6 +411,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         outdir = Settings.load().outputs_dir
         prior = RS.load_prior_streaks(outdir)
         sigs = signals_from_finviz(rows, prior_streaks=prior)
+        scan_path = write_scan_recommendation(outdir, sigs, source=arg)
         # dims coverage — so you can tell if the export is missing columns
         dims_list = [finviz_row_to_dims(r) for r in rows]
         n = len(rows) or 1
@@ -365,6 +428,7 @@ def main(argv: Optional[list[str]] = None) -> int:
                             for k, lbl in (("technical", "技"), ("capital", "資"),
                                            ("fundamental", "基")))
             print(f"  {s.ticker:<6} C{s.composite:>4.0f} 連{s.streak} {dstr} · {s.conviction}")
+        print(f"📄 推薦清單已寫入:{scan_path}")
         print("recommend-only · 連續起漲跨日累計(rally-state)· 永不下單")
         return 0
 

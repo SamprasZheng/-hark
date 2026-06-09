@@ -73,6 +73,45 @@ def test_num_parses_suffixes_and_pct():
     assert FE._num({"a": "-"}, "a") is None
 
 
+def test_fetch_universe_batches_and_dedupes(monkeypatch):
+    calls = []
+    def fake_fetch(filters_or_preset="", *, token=None, view="152", columns=None,
+                   tickers=None, timeout=30):
+        calls.append(tickers.split(","))
+        return [{"Ticker": t} for t in tickers.split(",")]
+    monkeypatch.setattr(FE, "fetch_screen", fake_fetch)
+    uni = [f"T{i}" for i in range(25)] + ["T1"]      # 26 with a dup
+    rows = FE.fetch_universe(uni, batch=10)
+    assert len(calls) == 3                            # 26 → batches of 10,10,6
+    assert len(rows) == 25                            # dup removed
+    assert all(len(c) <= 10 for c in calls)
+
+
+def test_resolve_target_universe():
+    assert FE.resolve_target("universe")[0] == "universe"
+    assert FE.resolve_target("fom")[0] == "universe"
+
+
+def test_write_scan_recommendation(tmp_path):
+    from sharks.scoring import rally_signal as RS
+    sigs = [RS.assess("AAA", {"technical": 70, "capital": 65, "fundamental": 75}, prior_streak=3),
+            RS.assess("BBB", {"technical": 30}, prior_streak=0)]
+    p = FE.write_scan_recommendation(tmp_path, sigs, source="universe")
+    import json
+    rec = json.loads(p.read_text(encoding="utf-8"))
+    assert rec["source"] == "universe" and rec["n"] == 2
+    assert "ranked" in rec and rec["ranked"][0]["ticker"] in ("AAA", "BBB")
+
+
+def test_rally_ignition_presets_resolve():
+    for p in ("rally_ignition", "mis_killed_2022", "dipbuy"):
+        flt = FE.resolve_filters(p)
+        assert flt and flt != p and "sh_avgvol" in flt or "sma" in flt.lower()
+    # rally_ignition is a filter (not a scope) → filters mode
+    kind, flt, tks = FE.resolve_target("rally_ignition")
+    assert kind == "filters" and tks is None and "ta_sma20_pa" in flt
+
+
 def test_build_url_with_tickers_uses_t_param():
     url = FE.build_export_url(token="T", view="152", tickers="RKLB,IRDM", columns="1,2")
     assert "&t=RKLB,IRDM" in url and "&f=" not in url and "auth=T" in url
