@@ -494,6 +494,33 @@ class SharksBot(discord.Client):
         e.set_footer(text="閉環:結論 → wiki → RAG → 下一場記憶 → 新結論 · 只建議不下單,永不下單")
         return e
 
+    def _guide_embed(self) -> discord.Embed:
+        """導覽:事件→流程的 7 關管線 + 模組/指令索引(像 ERP/MES 的工單流)。"""
+        e = discord.Embed(
+            title="🧭 PolkaSharks 操作導覽(事件 → 流程)",
+            description="把專案當生產線:**你只負責進料(提題材)+ 執行(下單);中間系統跑。**"
+                        "完整手冊:`docs/OPERATING_MANUAL.md`。recommend-only,永不下單。",
+            color=0x16A085,
+        )
+        e.add_field(name="事件出現後的 7 關管線", value=(
+            "**0 進料** `/ingest` → wiki\n"
+            "**1 研究分類** `/council <主題>`(拆價值鏈/找代理/回寫記憶)\n"
+            "**2 篩選(生產線)** `/stealth` → `/basecross` → `/rally`(+Finviz API)\n"
+            "**3 品管閘** 燃料閘+regime+墓園(內建於 /rally;`/feedback`)\n"
+            "**4 排程決策** `weekly_plan` + 分層定量(留彈藥)\n"
+            "**5 執行** 你分批下單、設認賠(系統不下單)\n"
+            "**6 記錄閉環** 議會回寫 wiki + 連續起漲存檔 → 餵回 1、2\n"
+            "**7 反饋維護** `/feedback`、`/rescan fom`、更新論點"), inline=False)
+        e.add_field(name="篩選 scope(題材池)", value=(
+            "`space` `ipo` `payments` `crypto` `ecommerce[_small]` `ai_software` "
+            "`broadening` `diversified` `midrisk` `killed2022` `all` · 或 `tickers:AAPL,NVDA`"), inline=False)
+        e.add_field(name="導覽指令", value=(
+            "`/guide` 本流程 · `/playbook` 市場儀表板 · `/cmd` 教學 · `/status` 版本 · `!sync` 同步\n"
+            "無 bot:`python -m sharks.discord.ecom_screens <scope>` · `python -m sharks.data.finviz_elite <preset>`"),
+            inline=False)
+        e.set_footer(text="閉環:結論→wiki→記憶→下一輪 · 安全:token 只在 .env · docs/OPERATING_MANUAL.md")
+        return e
+
     def _playbook_embed(self) -> discord.Embed:
         """作戰儀表板:把各題材論點 + 時間軸 + 對應指令整合成一頁(/playbook)。"""
         e = discord.Embed(
@@ -675,6 +702,12 @@ class SharksBot(discord.Client):
                       description="作戰儀表板:題材 + 時間軸操作 + 對應篩選指令一頁總表")
         async def playbook_cmd(interaction: discord.Interaction):
             await interaction.response.send_message(embed=self._playbook_embed(),
+                                                    ephemeral=True)
+
+        @tree.command(name="guide",
+                      description="操作導覽:事件→流程的 7 關管線 + 指令/題材索引(ERP/MES 工單流)")
+        async def guide_cmd(interaction: discord.Interaction):
+            await interaction.response.send_message(embed=self._guide_embed(),
                                                     ephemeral=True)
 
         @tree.command(name="chatter",
@@ -903,6 +936,11 @@ class SharksBot(discord.Client):
         # !作戰 / !playbook — the one-page master dashboard (theme × timeline × cmd).
         if content.lower() in ("!作戰", "!playbook", "!儀表板", "!總表", "!dashboard"):
             await message.channel.send(embed=self._playbook_embed())
+            return
+
+        # !導覽 / !guide — the event→pipeline operating guide (ERP/MES flow).
+        if content.lower() in ("!導覽", "!guide", "!流程", "!manual", "!sop"):
+            await message.channel.send(embed=self._guide_embed())
             return
 
         # !sync / !ver — force re-sync slash commands AND report what THIS running
