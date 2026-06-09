@@ -58,8 +58,21 @@ STAGE_FILTERS: dict[str, tuple[str, ...]] = {
     "supercycle": ("🌊",),              # 只要 supercycle候選(站上50&200+月/季/半年漲+年漲≥30%)
     "uptrend_3mo": ("🌊", "📈"),        # 月線三連陽級別(多頭排列+持續)
     "monthly3": ("🌊", "📈"),
-    "rally_stage": ("🌊", "📈", "🚀"),  # 含起漲
+    "pre_ignition": ("🌱",),            # **預測**:醞釀/底部翻揚,深跌有空間、剛站回 50 線、即將起漲
+    "predict": ("🌱",),
+    "rally_stage": ("🌊", "📈", "🚀", "🌱"),  # 含起漲/醞釀
 }
+
+
+def _liquid(row: dict, *, min_price: float = 5.0, min_avgvol: float = 500_000) -> bool:
+    """中高 beta、可交易:價格 + 均量門檻(濾掉 KEEX 那種微型垃圾)。"""
+    price = _num(row, "Price")
+    avgvol = _num(row, "Avg Volume", "Average Volume")
+    if price is not None and price < min_price:
+        return False
+    if avgvol is not None and avgvol < min_avgvol:
+        return False
+    return True
 
 _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
 
@@ -270,6 +283,9 @@ def trend_stage(row: dict) -> str:
         return "🌊 supercycle候選"
     if stack and sustained:
         return "📈 月線三連陽(多頭排列)"
+    # 醞釀/底部翻揚:站回 50 線、但仍在 200 線下(深跌有空間)、月線剛轉 → 預測「即將三連陽」
+    if (s50 is not None and s50 > 0) and (s200 is not None and s200 < 0) and (pm or 0) >= -2:
+        return "🌱 醞釀(底部翻揚·即將起漲)"
     if (pm or 0) > 0 and (s50 or -1) > 0:
         return "🚀 起漲"
     return "〰️ 震盪/整理"
@@ -418,14 +434,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     except Exception:
         pass
     argv = list(sys.argv[1:] if argv is None else argv)
-    # optional overrides: view=152  cols=1,2,3,...  (paste from your Finviz Custom URL)
+    # overrides: view=152  cols=1,2,3,...  src=market|universe  (src=market = 全市場掃 + 本地濾)
     view_override = cols_override = None
+    src = "universe"
     pos: list[str] = []
     for a in argv:
         if a.startswith("view="):
             view_override = a.split("=", 1)[1]
         elif a.startswith(("cols=", "columns=")):
             cols_override = a.split("=", 1)[1]
+        elif a.startswith("src="):
+            src = a.split("=", 1)[1].strip().lower()
         else:
             pos.append(a)
     mode = "tickers"
@@ -434,8 +453,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     if not pos:
         print("用法(全程 Finviz,不用 yfinance):\n"
               "  python -m sharks.data.finviz_elite rally universe   # 重掃 FOM 全宇宙→9維→排名+推薦JSON\n"
-              "  python -m sharks.data.finviz_elite rally supercycle # 全宇宙→本地篩 🌊supercycle候選\n"
-              "  python -m sharks.data.finviz_elite rally uptrend_3mo# 全宇宙→本地篩 月線三連陽(多頭排列)\n"
+              "  python -m sharks.data.finviz_elite rally pre_ignition src=market  # **預測** 即將起漲(全市場,深跌剛翻)\n"
+              "  python -m sharks.data.finviz_elite rally supercycle src=market   # 全市場 🌊supercycle候選\n"
+              "  python -m sharks.data.finviz_elite rally uptrend_3mo # 池內篩 月線三連陽(加 src=market 擴全市場)\n"
               "  python -m sharks.data.finviz_elite rally space      # 題材池→Finviz t= 抓→9維→rally\n"
               "  python -m sharks.data.finviz_elite rally dipbuy      # preset(f= 過濾)\n"
               "  python -m sharks.data.finviz_elite '<scope|preset|f=>'   # 只驗證+代號清單\n"
@@ -452,13 +472,17 @@ def main(argv: Optional[list[str]] = None) -> int:
         kind, flt, tks = resolve_target(arg)
         try:
             if kind in ("universe", "stage"):
-                uni = fom_universe()
-                label = "全宇宙" if kind == "universe" else f"{arg}(本地型態過濾)"
-                print(f"{label} 掃描:{len(uni)} 檔(Finviz 批次拉取,無 yfinance)…", file=sys.stderr)
-                rows = fetch_universe(uni, view=view, columns=columns)
+                if src == "market":                      # 全市場(一次大 export)+ 本地流動性濾
+                    print("全市場掃描(Finviz 一次拉全部 → 本地濾流動性/型態)…", file=sys.stderr)
+                    rows = [r for r in fetch_screen("", view=view, columns=columns) if _liquid(r)]
+                else:
+                    uni = fom_universe()
+                    print(f"精選池掃描:{len(uni)} 檔(無 yfinance)…", file=sys.stderr)
+                    rows = fetch_universe(uni, view=view, columns=columns)
                 if kind == "stage":                      # keep only rows in the target stage(s)
                     keep = STAGE_FILTERS[arg]
                     rows = [r for r in rows if trend_stage(r).startswith(keep)]
+                    print(f"型態過濾後:{len(rows)} 檔({arg} = {''.join(keep)})", file=sys.stderr)
             else:
                 rows = fetch_screen(flt or "", view=view, columns=columns, tickers=tks)
         except Exception as exc:
