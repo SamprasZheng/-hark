@@ -53,6 +53,18 @@ def test_finviz_row_to_dims_maps_columns():
 def test_finviz_row_to_dims_absent_columns_are_none():
     d = FE.finviz_row_to_dims({"Ticker": "X", "Company": "Y"})
     assert d["technical"] is None and d["capital"] is None and d["fundamental"] is None
+    assert d["valuation"] is None and d["growth"] is None and d["risk"] is None
+
+
+def test_finviz_extra_dimensions():
+    row = {"Ticker": "Z", "P/E": "10", "P/S": "1.5", "PEG": "0.8",
+           "EPS growth next year": "40%", "Sales growth past 5 years": "30%",
+           "Beta": "2.0", "Short Float": "20%", "Analyst Recom": "1.5"}
+    d = FE.finviz_row_to_dims(row)
+    assert d["valuation"] > 70      # cheap (low P/E, P/S, PEG<1)
+    assert d["growth"] > 70         # strong eps + sales growth
+    assert d["risk"] > 60           # high beta + crowded short
+    assert d["analyst"] > 80        # recom 1.5 ≈ strong buy
 
 
 def test_num_parses_suffixes_and_pct():

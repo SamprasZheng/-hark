@@ -164,8 +164,50 @@ def finviz_row_to_dims(row: dict) -> dict:
 
     dist = _num(row, "52W High", "52-Week High (Relative)")   # Finviz: negative % from 52w high
     dist_ath = abs(dist) if dist is not None else None
+
+    # ── 更多維度(估值/成長/風險/分析師)——讓評估更立體 ──
+    pe = _num(row, "P/E", "PE")
+    ps = _num(row, "P/S", "PS")
+    peg = _num(row, "PEG")
+    valuation = None                                   # 高分 = 便宜(有上檔空間)
+    if any(v is not None for v in (pe, ps, peg)):
+        v = 50.0
+        if pe is not None:
+            v += 15 if pe < 15 else (5 if pe < 25 else (-15 if pe > 40 else 0))
+        if ps is not None:
+            v += 10 if ps < 2 else (-10 if ps > 10 else 0)
+        if peg is not None:
+            v += 15 if peg < 1 else (-10 if peg > 3 else 0)
+        valuation = _clamp(v)
+
+    eps_next = _num(row, "EPS growth next year", "EPS next Y", "EPS Q/Q")
+    sales_g = _num(row, "Sales growth past 5 years", "Sales Q/Q")
+    growth = None                                      # 高分 = 成長強
+    if eps_next is not None or sales_g is not None:
+        g = 50.0 + min(30, (eps_next or 0) * 0.4) + min(20, (sales_g or 0) * 0.4)
+        growth = _clamp(g)
+
+    beta = _num(row, "Beta")
+    short_f = _num(row, "Short Float", "Float Short")
+    volat = _num(row, "Volatility (Week)", "Volatility", "Volatility W")
+    risk = None                                        # 高分 = 風險高(波動/擁擠空單)
+    if any(v is not None for v in (beta, short_f, volat)):
+        r = 40.0
+        if beta is not None:
+            r += (beta - 1) * 20
+        if short_f is not None:
+            r += min(25, short_f * 1.2)
+        if volat is not None:
+            r += min(20, volat * 2)
+        risk = _clamp(r)
+
+    recom = _num(row, "Analyst Recom", "Recom")        # 1 強力買進 .. 5 賣出
+    analyst = _clamp((5 - recom) / 4 * 100) if recom is not None else None
+
     return {"technical": tech, "capital": capital, "fundamental": fund,
-            "news": None, "dist_ath_pct": dist_ath}
+            "news": None, "dist_ath_pct": dist_ath,
+            # 額外維度(供更立體評估;rally 核心仍用上面五維)
+            "valuation": valuation, "growth": growth, "risk": risk, "analyst": analyst}
 
 
 def fetch_screen(filters_or_preset: str, *, token: Optional[str] = None,

@@ -520,6 +520,9 @@ class SharksBot(discord.Client):
         e.add_field(name="🛡️ 風控閘(每次出手前)", value=(
             "① 有燃料?(真賺錢/真題材,否則 🪨缺燃料不追)② 連續起漲?③ 資金面沒 STRESS?"
             "④ 分層:核心(有營收)大、投機(pre-profit)小。"), inline=False)
+        e.add_field(name="⏳ 晚期警戒(2026末–2027)", value=(
+            "IPO 洪峰 + BTC 後段循環 + 窄廣度 = **多個晚期訊號匯聚**。吃最後一段、用燃料閘挑質、"
+            "**留現金**;把『2027 級回檔』當基準情境。每週表見 `weekly_plan_q3_2026.md`。"), inline=False)
         e.set_footer(text="論點全文見 watchlist/*.md · recommend-only · 永不下單")
         return e
 
