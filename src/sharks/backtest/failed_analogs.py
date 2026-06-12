@@ -208,14 +208,84 @@ def fetch_delisted_tickers(max_pages: int = 3) -> list[dict]:
     return out
 
 
-def collect(budget: int = 20, max_seconds: float = 1200.0) -> dict:
+# ── Phase 2 候選排序先驗(顯式啟發式;不丟棄只重排 — 掃描終究全覆蓋,只是先掃高機率區)──
+
+PRIORITIZE_PRIORS: dict = {
+    "_doc": ("collect 候選重排先驗。2026-06-12 生產實跑:570 檔掃描 100% too_short — "
+             "2010+ 下市清單按字母序前段被 SPAC/殼公司/權證灌爆(<48 根月線必跳票),"
+             "真營運公司死亡(分母要的樣本)被排到後面。重排只改掃描順序、集合不變;"
+             "分數為顯式猜測非擬合,誤判成本僅是「晚一點掃到」。"),
+    "SHELL_NAME": {
+        "score": -2.0,
+        "patterns": ("acquisition", "acq corp", "spac", "blank check",
+                     "capital corp", "holdings corp", "merger"),
+        "_doc": ("名稱含殼公司字樣(不分大小寫子字串)→ 墊後。SPAC/空白支票公司"
+                 "上市到下市常 <4 年,幾乎必 too_short。子字串有誤傷可能"
+                 "(如 'Space…' 含 'spac'),但只重排不丟棄,成本可接受。"),
+    },
+    "WARRANT_SUFFIX": {
+        "score": -3.0, "suffixes": ("W", "R", "U"), "min_len": 5,
+        "_doc": ("ticker 長度 ≥5 且結尾 W/R/U(不分大小寫;Polygon 慣用小寫 w 標"
+                 "權證,如 AINCw、AXG.U)= 權證/權利/單位 — 從來不是營運公司,"
+                 "罰最重。2026-06-12 manifest 驗證:570 檔中 9 檔命中,全 too_short。"
+                 "min_len=5 避免誤殺真公司短碼(如 AAU=Almaden Minerals)。"),
+    },
+    "PRIORITY_YEARS": {
+        "score": 1.0, "lo": "2012", "hi": "2023",
+        "_doc": ("delisted_utc 落在 2012..2023(含)→ 提前:真公司死亡年代,含 "
+                 "2015-16 油價崩盤與 2022 成長股屠殺;2024+ 以 SPAC 清算潮為主,"
+                 "2010-11 與 2024+ 同樣不加分。年份缺值(None)不發明、不加分。"),
+    },
+}
+
+
+def prioritize_candidates(cands: list[dict]) -> list[dict]:
+    """重排(永不丟棄)Phase 2 下市票候選 — 先掃「真營運公司死亡」高機率區。
+
+    純函式、穩定排序(同分保留原始相對順序);缺欄位(name / delisted_utc /
+    ticker = None)一律視為無訊號 = 0 分,不發明值。先驗見 PRIORITIZE_PRIORS。"""
+    shell = PRIORITIZE_PRIORS["SHELL_NAME"]
+    warr = PRIORITIZE_PRIORS["WARRANT_SUFFIX"]
+    yrs = PRIORITIZE_PRIORS["PRIORITY_YEARS"]
+
+    def score(c: dict) -> float:
+        s = 0.0
+        name = (c.get("name") or "").lower()
+        if name and any(p in name for p in shell["patterns"]):
+            s += shell["score"]
+        t = c.get("ticker") or ""
+        if len(t) >= warr["min_len"] and t.upper().endswith(warr["suffixes"]):
+            s += warr["score"]
+        y = (c.get("delisted_utc") or "")[:4]
+        if y and yrs["lo"] <= y <= yrs["hi"]:
+            s += yrs["score"]
+        return s
+
+    return sorted(cands, key=lambda c: -score(c))      # sorted 穩定:同分保原序
+
+
+def _candidate_queue(done: set, fetch_fn=None, prioritize: bool = True) -> list[dict]:
+    """fetch → 過濾(已收 / 缺 ticker / 2010 前下市)→(預設)重排。
+    fetch_fn 可注入(測試離線,不打網路);prioritize=False 保留來源順序。"""
+    cands = [x for x in (fetch_fn or fetch_delisted_tickers)()
+             if x.get("ticker") and x["ticker"] not in done
+             and (x.get("delisted_utc") or "")[:4] >= "2010"]
+    return prioritize_candidates(cands) if prioritize else cands
+
+
+def collect(budget: int = 20, max_seconds: float = 1200.0,
+            prioritize: bool = True, fetch_fn=None) -> dict:
     """收 budget 檔下市票月線 → data/lake/failed/(免費層限速 13s/call)。
     進度存 failed-manifest.jsonl,跨次執行續收。
 
     max_seconds = 牆鐘預算(預設 20 分):budget 只數「可收」票,掃過長段
     too_short 跳票時嘗試數無上限;另外 requests 的 scalar timeout 只管位元組
     間隔,擋不住涓流回應(2026-06-12 生產實跑吊死 2.5h 的根因)— 每筆抓取
-    再包硬性 60s(thread + future timeout),雙保險讓晨間管線永遠走得完。"""
+    再包硬性 60s(thread + future timeout),雙保險讓晨間管線永遠走得完。
+
+    prioritize = 候選重排(預設開;見 prioritize_candidates / PRIORITIZE_PRIORS):
+    殼公司/權證墊後、2012..2023 真公司死亡年代提前,提高每晚 budget 的命中率;
+    fetch_fn 可注入(測試用)。"""
     import requests
     from concurrent.futures import ThreadPoolExecutor
     from concurrent.futures import TimeoutError as FutTimeout
@@ -230,9 +300,7 @@ def collect(budget: int = 20, max_seconds: float = 1200.0) -> dict:
                 done.add(json.loads(ln)["ticker"])
             except Exception:
                 pass
-    cands = [x for x in fetch_delisted_tickers()
-             if x["ticker"] and x["ticker"] not in done
-             and (x.get("delisted_utc") or "")[:4] >= "2010"]
+    cands = _candidate_queue(done, fetch_fn, prioritize)
     got = 0
     t0 = time.monotonic()
     pool = ThreadPoolExecutor(max_workers=1)

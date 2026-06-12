@@ -5,7 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from sharks.backtest.failed_analogs import cap_recommendation, classify_outcome, deepkill_ledger
+from sharks.backtest.failed_analogs import (_candidate_queue, cap_recommendation,
+                                            classify_outcome, deepkill_ledger,
+                                            prioritize_candidates)
 
 
 def _fwd(vals):
@@ -64,3 +66,71 @@ def test_cap_recommendation_formula():
     assert rec["cap_pct"] == 13.3
     assert rec["cap_stress_pct"] < rec["cap_pct"]
     assert 5.0 <= rec["recommended"] <= 15.0
+
+
+# ── Phase 2 候選重排(prioritize_candidates / _candidate_queue)──
+
+def _c(ticker, name=None, delisted=None):
+    return {"ticker": ticker, "name": name, "delisted_utc": delisted}
+
+
+def test_prioritize_shell_names_deprioritized():
+    # 殼公司字樣(不分大小寫)墊後;真公司提前
+    cands = [_c("AACQ", "Origin ACQUISITION Corp", "2016-03-01"),
+             _c("OILX", "Plains Oil Exploration Inc", "2016-02-10"),
+             _c("BLNK", "Star Blank Check Co", "2016-01-05")]
+    out = [c["ticker"] for c in prioritize_candidates(cands)]
+    assert out == ["OILX", "AACQ", "BLNK"]      # 同罰分組內保留原序
+
+
+def test_prioritize_warrant_suffix_deprioritized():
+    # len>=5 結尾 W/R/U(含 Polygon 小寫 w / .U)罰最重;len<5 真公司短碼不誤殺
+    cands = [_c("AINCw", "Ashford Inc Wts", "2015-06-01"),
+             _c("AAU", "Almaden Minerals", "2015-06-01"),
+             _c("AXG.U", None, "2015-06-01"),
+             _c("ACMR", "ACM Research Inc", "2015-06-01")]    # 結尾 R 但 len=4 → 不罰
+    out = [c["ticker"] for c in prioritize_candidates(cands)]
+    assert out == ["AAU", "ACMR", "AINCw", "AXG.U"]
+
+
+def test_prioritize_year_window_preference():
+    # 2012..2023(真公司死亡年代)提前;2010-11 與 2024+ 同樣不加分,同分保原序
+    cands = [_c("AAAA", "Alpha Industries Inc", "2024-05-01"),
+             _c("BBBB", "Beta Manufacturing Inc", "2016-03-01"),
+             _c("CCCC", "Gamma Foods Inc", "2010-07-01"),
+             _c("DDDD", "Delta Mining Inc", "2022-11-01")]
+    out = [c["ticker"] for c in prioritize_candidates(cands)]
+    assert out == ["BBBB", "DDDD", "AAAA", "CCCC"]
+
+
+def test_prioritize_never_drops_and_is_stable():
+    # 不丟棄只重排:集合不變;同分組內保留原始相對順序(穩定排序)
+    neutral = [_c(f"N{i:03d}", "Neutral Industries Inc", "2018-01-01") for i in range(20)]
+    shells = [_c(f"S{i:03d}", "Shell Acquisition Corp", "2018-01-01") for i in range(5)]
+    mixed = []
+    for i in range(5):
+        mixed += [shells[i]] + neutral[4 * i:4 * i + 4]
+    out = prioritize_candidates(mixed)
+    assert sorted(c["ticker"] for c in out) == sorted(c["ticker"] for c in mixed)
+    assert [c["ticker"] for c in out[:20]] == [c["ticker"] for c in neutral]
+    assert [c["ticker"] for c in out[20:]] == [c["ticker"] for c in shells]
+
+
+def test_prioritize_missing_fields_treated_as_no_signal():
+    # 缺 name / delisted_utc → 0 分不發明值;只有有年份加分者提前,其餘保原序
+    cands = [_c("AAAA"), _c("BBBB", None, "2015-01-01"), _c("CCCC", "Real Steel Inc", None)]
+    out = [c["ticker"] for c in prioritize_candidates(cands)]
+    assert out == ["BBBB", "AAAA", "CCCC"]
+
+
+def test_candidate_queue_filters_then_prioritizes():
+    # collect 的接線:fetch_fn 注入(離線)→ 過濾已收/缺 ticker/2010 前 → 重排可關
+    raw = [_c("DONE", "Old Done Corp", "2018-01-01"),        # 已在 manifest → 濾掉
+           _c("OLDY", "Ancient Industries", "2008-01-01"),   # 2010 前下市 → 濾掉
+           _c(None, "No Ticker Corp", "2018-01-01"),         # 缺 ticker → 濾掉
+           _c("SPCY", "Hot Spac Acquisition Corp", "2024-02-01"),
+           _c("REAL", "Real Steel Inc", "2016-01-01")]
+    q = _candidate_queue({"DONE"}, fetch_fn=lambda: raw, prioritize=True)
+    assert [c["ticker"] for c in q] == ["REAL", "SPCY"]
+    q_off = _candidate_queue({"DONE"}, fetch_fn=lambda: raw, prioritize=False)
+    assert [c["ticker"] for c in q_off] == ["SPCY", "REAL"]  # 注入關閉:保留來源順序

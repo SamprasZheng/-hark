@@ -33,11 +33,52 @@ def _monitor(retrieved_at: str = "2026-06-12T09:47:25+00:00") -> dict:
     }
 
 
+def _transitions() -> dict:
+    """合成 regime-transitions 輸出(形狀對齊 outputs/regime-transitions-2026-06-12.json)。"""
+    return {
+        "as_of": "2026-06-12",
+        "current_outlook": {
+            "current_state": "mania",
+            "current_bands": {"gpr_band": "elevated", "gscpi_band": "spike"},
+            "used_level": "unconditioned",
+            "n": 44,
+            "next_month_probs": {"bull": 0.2727, "mania": 0.6364, "bear": 0.0909, "crisis": 0.0},
+            "low_n": False,
+            "fallback_path": [{"level": "joint", "reason": "low_n(n=1<8)"}],
+        },
+    }
+
+
+def _backfill() -> dict:
+    """合成 world-backfill 輸出(形狀對齊 outputs/world-backfill-2026-06-12.json)。"""
+    return {
+        "as_of": "2026-06-12",
+        "event_forward_study": {
+            "underlying": "QQQ",
+            "base_rate": {"n_months": 327, "fwd": {
+                "1m": {"n": 326, "median_pct": 1.51, "mean_pct": 1.1},
+                "3m": {"n": 324, "median_pct": 4.16, "mean_pct": 3.26},
+                "6m": {"n": 321, "median_pct": 8.37, "mean_pct": 6.63}}},
+            "events": {
+                "GSCPI_SPIKE": {"months_fired": 29, "fwd": {
+                    "1m": {"n": 28, "median_pct": 1.79},
+                    "3m": {"n": 27, "median_pct": 1.35},
+                    "6m": {"n": 27, "median_pct": -0.18}}},
+                "TS_HIGH": {"months_fired": 46, "fwd": {
+                    "3m": {"n": 45, "median_pct": 2.0}}},
+            },
+        },
+    }
+
+
 class TestWorldPanel:
     def test_no_files_degrades_gracefully(self, tmp_path):
         out = world_panel(outputs_dir=tmp_path)
         assert out["available"] is False
         assert out["abm"] is None
+        assert out["behavioral"] is None
+        assert out["outlook"] is None
+        assert out["history_lens"] is None
         assert "recommend-only" in out["disclaimer"]
 
     def test_corrupt_json_degrades_not_raises(self, tmp_path):
@@ -98,6 +139,78 @@ class TestAbmCompact:
         assert abm["survival_delta_field"] is None
         assert _abm_compact(None) is None
         assert _abm_compact("not a dict") is None
+
+
+class TestBehavioralOutlookHistoryLens:
+    def test_behavioral_passthrough_compact(self, tmp_path):
+        mon = _monitor()
+        mon["behavioral"] = {
+            "score": 8.5,
+            "components": {"TS_HIGH": 2.8, "GSCPI_SPIKE": 2.0},   # 面板不需要 → 裁掉
+            "missing": [],
+            "mania_note": "mania 狀態 + 行為偏離 8.5/10 ≥ 6:新倉寧缺勿濫(observe-first)。",
+            "regime_state": "mania",
+        }
+        _write(tmp_path, "world-monitor-2026-06-12.json", mon)
+        out = world_panel(outputs_dir=tmp_path)
+        assert out["behavioral"] == {
+            "score": 8.5,
+            "mania_note": "mania 狀態 + 行為偏離 8.5/10 ≥ 6:新倉寧缺勿濫(observe-first)。",
+            "regime_state": "mania",
+        }
+
+    def test_outlook_compaction_from_latest_transitions(self, tmp_path):
+        _write(tmp_path, "world-monitor-2026-06-12.json", _monitor())
+        stale = _transitions()
+        stale["current_outlook"]["current_state"] = "bull"
+        _write(tmp_path, "regime-transitions-2026-06-11.json", stale)
+        _write(tmp_path, "regime-transitions-2026-06-12.json", _transitions())
+        # .bak / intraday 快照一律排除,不得搶最新
+        _write(tmp_path, "regime-transitions-2026-06-13-intraday.json",
+               {"current_outlook": {"current_state": "crisis"}})
+        (tmp_path / "regime-transitions-2026-06-14.json.bak").write_text("{}", encoding="utf-8")
+        out = world_panel(outputs_dir=tmp_path)
+        assert out["outlook"] == {
+            "current_state": "mania",
+            "used_level": "unconditioned",
+            "n": 44,
+            "low_n": False,
+            "next_month_probs": {"bull": 0.2727, "mania": 0.6364, "bear": 0.0909, "crisis": 0.0},
+        }
+
+    def test_history_lens_gscpi_spike_vs_base_rate(self, tmp_path):
+        _write(tmp_path, "world-monitor-2026-06-12.json", _monitor())
+        _write(tmp_path, "world-backfill-2026-06-12.json", _backfill())
+        out = world_panel(outputs_dir=tmp_path)
+        # 只下發 GSCPI_SPIKE vs 基準率的 3m/6m 中位數(1m/mean/TS_HIGH 都裁掉)
+        assert out["history_lens"] == {
+            "event": "GSCPI_SPIKE",
+            "event_3m": 1.35, "event_6m": -0.18,
+            "base_3m": 4.16, "base_6m": 8.37,
+        }
+
+    def test_all_null_degrade_when_sections_absent_or_malformed(self, tmp_path):
+        _write(tmp_path, "world-monitor-2026-06-12.json", _monitor())   # 無 behavioral 區塊
+        _write(tmp_path, "regime-transitions-2026-06-12.json",
+               {"as_of": "2026-06-12", "current_outlook": "not a dict"})
+        _write(tmp_path, "world-backfill-2026-06-12.json",
+               {"as_of": "2026-06-12", "event_forward_study": {
+                   "base_rate": {"fwd": {}}, "events": {}}})            # 四格全空 → 整段降級
+        out = world_panel(outputs_dir=tmp_path)
+        assert out["available"] is True                                  # 主面板照常
+        assert out["behavioral"] is None
+        assert out["outlook"] is None
+        assert out["history_lens"] is None
+
+    def test_outlook_survives_missing_monitor(self, tmp_path):
+        """world-monitor 缺檔不拖垮獨立來源:available=False 但 outlook 照下發。"""
+        _write(tmp_path, "regime-transitions-2026-06-12.json", _transitions())
+        out = world_panel(outputs_dir=tmp_path)
+        assert out["available"] is False
+        assert out["outlook"]["current_state"] == "mania"
+        assert out["outlook"]["next_month_probs"]["mania"] == 0.6364
+        assert out["behavioral"] is None
+        assert out["history_lens"] is None
 
 
 def test_api_world_route_registered():

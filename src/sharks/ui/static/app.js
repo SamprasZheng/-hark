@@ -139,6 +139,25 @@ function updateSliderLabels() {
 /* ── 全球風險面板(world-monitor + ABM 供應鏈;/api/world)── */
 const SEV_CLS = { high: "h-sell", "med-high": "h-trim", med: "h-trim", low: "h-hold", info: "h-tbd" };
 
+/* observe-first 三行(behavioral / outlook / history_lens):null → 空字串,整行不渲染 */
+function behavioralLine(b) {
+  if (!b || b.score == null) return "";
+  const cls = b.score >= 6 ? "h-trim" : "h-hold";   // ≥6 偏離過高 → 警示色
+  return `<div style="margin-bottom:4px">🧠 行為偏差 <span class="hbadge ${cls}">${fmt(b.score, 1)}/10${b.regime_state ? " · " + b.regime_state : ""}</span>${b.mania_note ? ` <span class="muted">${b.mania_note}</span>` : ""}</div>`;
+}
+function outlookLine(o) {
+  if (!o || !o.next_month_probs) return "";
+  const p = o.next_month_probs;
+  const pct = (v) => v == null ? "—" : (v * 100).toFixed(0) + "%";
+  const probs = ["bull", "mania", "bear", "crisis"].map(s => `${s} ${pct(p[s])}`).join(" · ");
+  return `<div style="margin-bottom:4px">🔮 下月態展望(現態 ${o.current_state || "—"} · ${o.used_level || "—"} n=${o.n != null ? o.n : "—"}${o.low_n ? " · 樣本薄" : ""}):${probs}<span class="muted"> — observe-first,不進 sizing</span></div>`;
+}
+function historyLensLine(h) {
+  if (!h || (h.event_3m == null && h.event_6m == null)) return "";
+  const sp = (v) => v == null ? "—" : (v >= 0 ? "+" : "") + fmt(v, 2) + "%";
+  return `<div style="margin-bottom:4px">📜 歷史鏡頭:${h.event || "事件"} 後中位數 3m ${sp(h.event_3m)} / 6m ${sp(h.event_6m)}(全樣本基準 ${sp(h.base_3m)} / ${sp(h.base_6m)};synthetic vintage,非因果)</div>`;
+}
+
 async function loadWorld() {
   const body = $("worldBody");
   let d;
@@ -166,6 +185,7 @@ async function loadWorld() {
       ${metric("GPRC 台灣", m.gprc_twn, `p95 ≈ ${th.gprc_twn_p95 ?? 0.25} · z60 ${fmt(m.gprc_twn_z60, 2)}`, twnHot)}
     </div>
     <div style="margin-bottom:4px">🛡️ deep-kill 上限 ${im.deepkill_cap_multiplier != null ? `×${im.deepkill_cap_multiplier}` : "不變(×1.0)"}${im.exposure_penalty != null ? ` · 曝險罰分 ${im.exposure_penalty}` : ""}${(im.review_groups || []).length ? ` · 覆核組:${im.review_groups.join("、")}` : ""}</div>
+    ${behavioralLine(d.behavioral)}${outlookLine(d.outlook)}${historyLensLine(d.history_lens)}
     ${d.abm && d.abm.survival_delta != null
       ? `<div style="margin-bottom:4px" title="${d.abm.survival_delta_field || ""}">🏭 ABM 供應鏈生存差 ${fmt(d.abm.survival_delta, 3)}${d.abm.scenario ? `(情境 ${d.abm.scenario})` : ""}</div>`
       : `<div class="muted" style="margin-bottom:4px">🏭 ABM 供應鏈模擬:無輸出</div>`}

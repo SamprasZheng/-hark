@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import threading
 import time
 import uuid
@@ -419,10 +420,10 @@ WORLD_THRESHOLDS = {"gscpi_spike": 1.5, "gpr_p95": 169.0, "gprc_twn_p95": 0.25}
 
 
 def _latest_json_file(outputs_dir: Path, prefix: str) -> tuple[Path | None, dict | None]:
-    """最新 outputs/<prefix>-*.json(sorted-glob-last;排除 .bak)。
+    """最新 outputs/<prefix>-*.json(sorted-glob-last;排除 .bak 與 -intraday 快照)。
     無檔 → (None, None);壞檔 → (path, None) — 呼叫端一律優雅降級。"""
     files = sorted(p for p in outputs_dir.glob(f"{prefix}-*.json")
-                   if not p.name.endswith(".bak"))
+                   if not p.name.endswith(".bak") and "intraday" not in p.name)
     if not files:
         return None, None
     try:
@@ -467,14 +468,83 @@ def _abm_compact(d: dict | None) -> dict | None:
     }
 
 
+def _num_or_none(v):
+    """數值守門:bool 不算數(observe-first,缺值→None,永不發明)。"""
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+
+def _behavioral_compact(wm: dict | None) -> dict | None:
+    """world-monitor behavioral 區塊 → 面板摘要(score/mania_note/regime_state)。
+    無區塊或形狀不對 → None,面板不渲染該行。"""
+    b = (wm or {}).get("behavioral") if isinstance(wm, dict) else None
+    if not isinstance(b, dict):
+        return None
+    return {
+        "score": _num_or_none(b.get("score")),
+        "mania_note": b.get("mania_note"),
+        "regime_state": b.get("regime_state"),
+    }
+
+
+def _outlook_compact(rt: dict | None) -> dict | None:
+    """regime-transitions current_outlook → 面板摘要(次月四態機率 + 條件層級 + 樣本數)。
+    observe-first:展示用,不 gate KPI、不進 sizing。"""
+    o = rt.get("current_outlook") if isinstance(rt, dict) else None
+    if not isinstance(o, dict):
+        return None
+    probs = o.get("next_month_probs")
+    return {
+        "current_state": o.get("current_state"),
+        "used_level": o.get("used_level"),
+        "n": _num_or_none(o.get("n")),
+        "low_n": o.get("low_n") if isinstance(o.get("low_n"), bool) else None,
+        "next_month_probs": ({k: _num_or_none(probs.get(k))
+                              for k in ("bull", "mania", "bear", "crisis")}
+                             if isinstance(probs, dict) else None),
+    }
+
+
+def _history_lens_compact(bf: dict | None) -> dict | None:
+    """world-backfill event_forward_study → 面板一行摘要:
+    GSCPI_SPIKE 後 3m/6m 前瞻中位數 vs 全樣本基準率(僅中位數;表格之外不做因果宣稱)。"""
+    study = bf.get("event_forward_study") if isinstance(bf, dict) else None
+    if not isinstance(study, dict):
+        return None
+
+    def med(block, horizon: str):
+        fwd = block.get("fwd") if isinstance(block, dict) else None
+        cell = fwd.get(horizon) if isinstance(fwd, dict) else None
+        return _num_or_none(cell.get("median_pct")) if isinstance(cell, dict) else None
+
+    base = study.get("base_rate")
+    spike = (study.get("events") or {}).get("GSCPI_SPIKE") \
+        if isinstance(study.get("events"), dict) else None
+    out = {
+        "event": "GSCPI_SPIKE",
+        "event_3m": med(spike, "3m"), "event_6m": med(spike, "6m"),
+        "base_3m": med(base, "3m"), "base_6m": med(base, "6m"),
+    }
+    if all(out[k] is None for k in ("event_3m", "event_6m", "base_3m", "base_6m")):
+        return None     # 四格全空 → 整段降級,面板不渲染
+    return out
+
+
 def world_panel(outputs_dir: Path | None = None) -> dict:
-    """/api/world 載荷:最新 world-monitor 摘要 + ABM 生存差(任一缺檔 → 優雅降級)。"""
+    """/api/world 載荷:最新 world-monitor 摘要 + ABM 生存差 + 行為偏差/態轉移展望/
+    歷史鏡頭(各來源獨立 sorted-glob-last;任一缺檔 → 該段 null,優雅降級)。"""
     out_dir = outputs_dir if outputs_dir is not None else PROJECT_ROOT / "outputs"
     wm_path, wm = _latest_json_file(out_dir, "world-monitor")
     _, abm = _latest_json_file(out_dir, "abm-supply-chain")
+    _, rt = _latest_json_file(out_dir, "regime-transitions")
+    _, bf = _latest_json_file(out_dir, "world-backfill")
+    extras = {
+        "behavioral": _behavioral_compact(wm),
+        "outlook": _outlook_compact(rt),
+        "history_lens": _history_lens_compact(bf),
+    }
     if wm is None:
         return {"available": False, "file": wm_path.name if wm_path else None,
-                "abm": _abm_compact(abm), "disclaimer": WORLD_DISCLAIMER}
+                "abm": _abm_compact(abm), **extras, "disclaimer": WORLD_DISCLAIMER}
     metrics = wm.get("metrics") or {}
     impacts = wm.get("impacts") or {}
     return {
@@ -493,6 +563,7 @@ def world_panel(outputs_dir: Path | None = None) -> dict:
                     "review_groups": impacts.get("review_groups") or []},
         "thresholds": WORLD_THRESHOLDS,
         "abm": _abm_compact(abm),
+        **extras,
         "disclaimer": wm.get("disclaimer") or WORLD_DISCLAIMER,
     }
 
@@ -578,6 +649,35 @@ def refresh_one_ticker(ticker: str) -> dict:
             "intraday": us_market_open()}
 
 
+# ── 今日推薦來源(canonical wiki 日度 10-signal 優先;舊 outputs/daily-reco-* fallback)──
+
+_DAILY_NAME = re.compile(r"\A\d{4}-\d{2}-\d{2}\.md\Z")
+_LEGACY_NAME = re.compile(r"\Adaily-reco-(\d{4}-\d{2}-\d{2})\.md\Z")
+_FRONTMATTER = re.compile(r"\A---\r?\n.*?\r?\n---\r?\n", re.S)
+
+
+def latest_reco_file(root: Path = PROJECT_ROOT) -> Path | None:
+    """最新日度推薦:wiki/05_recommendations/YYYY-MM-DD.md(canonical 10-signal)與
+    outputs/daily-reco-YYYY-MM-DD.md(舊 ad-hoc 家族,無產生器)取日期最大者;
+    同日 canonical 優先。非日度命名(README/archive/專題頁)不參賽。"""
+    cands: list[tuple[str, int, str, Path]] = []
+    for p in (root / "wiki" / "05_recommendations").glob("*.md"):
+        if _DAILY_NAME.match(p.name):
+            cands.append((p.stem, 1, p.name, p))
+    for p in (root / "outputs").glob("daily-reco-*.md"):
+        m = _LEGACY_NAME.match(p.name)
+        if m:
+            cands.append((m.group(1), 0, p.name, p))
+    if not cands:
+        return None
+    return max(cands)[3]
+
+
+def strip_frontmatter(md: str) -> str:
+    """去掉 YAML frontmatter — marked 會把 --- 區塊渲染成水平線+裸文字。"""
+    return _FRONTMATTER.sub("", md, count=1)
+
+
 # ── HTTP 層(async 端點 + run_in_threadpool 包阻塞工作)─────────────────────────
 
 def build_app():
@@ -658,10 +758,10 @@ def build_app():
         return JSONResponse(jsonable(await run_in_threadpool(world_panel)))
 
     async def api_reco(request):
-        files = sorted((PROJECT_ROOT / "outputs").glob("daily-reco-*.md"))
-        if not files:
-            return PlainTextResponse("(還沒有 daily-reco 輸出)")
-        return PlainTextResponse(files[-1].read_text(encoding="utf-8"))
+        f = latest_reco_file()
+        if f is None:
+            return PlainTextResponse("(還沒有日度推薦輸出)")
+        return PlainTextResponse(strip_frontmatter(f.read_text(encoding="utf-8")))
 
     return Starlette(routes=[
         Route("/", index),
