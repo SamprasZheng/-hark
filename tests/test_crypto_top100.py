@@ -269,3 +269,84 @@ def _write(tmp_path, text):
     p = tmp_path / "watchlist.yaml"
     p.write_text(text, encoding="utf-8")
     return p
+
+
+# ── on-chain liquidity proxy (prototype) ──────────────────────────────────────
+
+def _stables_payload():
+    return {"peggedAssets": [
+        {"name": "Tether", "symbol": "USDT", "circulating": {"peggedUSD": 140e9}},
+        {"name": "USD Coin", "symbol": "USDC", "circulating": {"peggedUSD": 60e9}},
+        {"name": "Dai", "symbol": "DAI", "circulating": {"peggedUSD": 5e9}},
+    ]}  # total = 205e9
+
+
+class TestStablecoinSupplyTrend:
+    def test_trend_math(self):
+        tr = ct.stablecoin_supply_trend(
+            {"total_circulating_usd": 210.0}, {"total_circulating_usd": 200.0}
+        )
+        assert tr["available"] is True
+        assert tr["delta_usd"] == 10.0
+        assert tr["pct_change"] == 5.0
+        assert tr["direction"] == "expanding"
+
+    def test_no_prior_reports_level_but_no_trend(self):
+        tr = ct.stablecoin_supply_trend({"total_circulating_usd": 210.0}, None)
+        assert tr["available"] is True
+        assert tr["delta_usd"] is None
+
+    def test_no_current_reading_unavailable(self):
+        assert ct.stablecoin_supply_trend(None, {"total_circulating_usd": 200.0})["available"] is False
+
+
+class TestOnchainHappyPath:
+    def test_independent_onchain_feed_populates_block(self, tmp_path):
+        handoff = ct.run_crypto_top100(
+            out_dir=tmp_path / "out", data_dir=tmp_path / "data",
+            watchlist_path=_write(tmp_path, _WATCHLIST_FIXTURE), analysis_dir=tmp_path / "analysis",
+            today="2026-05-31T12:00:00+00:00",
+            opener=_ok_opener(_raw_markets()),          # price feed
+            onchain_opener=_ok_opener(_stables_payload()),  # on-chain feed
+            sleep=lambda *_: None,
+        )
+        assert handoff["live_data"] is True
+        oc = handoff["onchain"]
+        assert oc["live_data"] is True
+        assert oc["stablecoin_supply"]["total_circulating_usd"] == round(205e9, 2)
+
+
+class TestOnchainStaleFallback:
+    def test_onchain_outage_does_not_take_down_price_snapshot(self, tmp_path):
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        prior = {
+            "schema_version": 1, "as_of": "2026-05-30T00:00:00+00:00", "as_of_date": "2026-05-30",
+            "source": "coingecko", "vs_currency": "usd", "count": 2,
+            "live_data": True, "stale_fallback": False,
+            "coins": [{"symbol": "BTC", "market_cap": 600, "market_cap_rank": 1}],
+            "onchain": {
+                "live_data": True, "stale_fallback": False, "source": "defillama",
+                "stablecoin_supply": {"total_circulating_usd": 200e9, "asset_count": 3},
+            },
+        }
+        (data_dir / "top100-2026-05-30.json").write_text(json.dumps(prior), encoding="utf-8")
+
+        def boom(req, timeout=None):
+            raise urllib.error.URLError("defillama down")
+
+        handoff = ct.run_crypto_top100(
+            out_dir=tmp_path / "out", data_dir=data_dir,
+            watchlist_path=_write(tmp_path, _WATCHLIST_FIXTURE), analysis_dir=tmp_path / "analysis",
+            today="2026-05-31T12:00:00+00:00",
+            opener=_ok_opener(_raw_markets()),  # price feed LIVE
+            onchain_opener=boom,                # on-chain feed DOWN
+            sleep=lambda *_: None,
+        )
+        # Independent degrade: price snapshot stays live, only the on-chain column is stale.
+        assert handoff["live_data"] is True
+        assert handoff["stale_fallback"] is False
+        oc = handoff["onchain"]
+        assert oc["live_data"] is False
+        assert oc["stale_fallback"] is True
+        assert oc["stablecoin_supply"]["total_circulating_usd"] == 200e9  # prior re-emitted

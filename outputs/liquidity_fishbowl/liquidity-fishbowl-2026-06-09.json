@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-06-09T16:53:00.155844+00:00",
+  "as_of_date": "2026-06-09",
+  "source": "fred",
+  "report_type": "liquidity_fishbowl",
+  "live_data": true,
+  "stale_fallback": false,
+  "L": 0.6488,
+  "regime_band": "normal",
+  "dragon_eating_dragon": false,
+  "components": {
+    "reserves": 0.5289,
+    "rrp": 0.4974,
+    "hy_oas": 1.0
+  },
+  "weights_used": {
+    "reserves": 0.4545,
+    "rrp": 0.2727,
+    "hy_oas": 0.2727
+  },
+  "missing": [
+    "spx_rvol",
+    "ad_line"
+  ],
+  "series": {
+    "reserves_change_30d": 11.545,
+    "rrp_change_30d": 1.045,
+    "hy_oas_bps": 275.0,
+    "display": {
+      "walcl_latest_million": 6711495.0,
+      "rrp_latest_billion": 1.832,
+      "hy_oas_pct": 2.75,
+      "t10y2y": 0.41,
+      "tga_billion_wtregen": 875713.0
+    },
+    "pit": {
+      "vintage_date": null,
+      "window_start": "2026-02-09",
+      "window_end": "2026-06-09"
+    }
+  },
+  "composite_alert": {
+    "level": "YELLOW",
+    "L": 0.6488,
+    "headline": "liquidity normal (L=0.6488)"
+  },
+  "guardrails": "RECOMMEND-ONLY sizing gauge (never trades). Liquidity is the water level: as L falls, total exposure shrinks and the smallest fish (tier3) is cut first. See philosophy/concepts/liquidity-fishbowl.md + 08-risk-and-position.",
+  "note": "L composite per philosophy/concepts/liquidity-fishbowl.md. SPX 60d rvol + NYSE A/D are optional injected terms; when absent the present weights are renormalised. For backtests pass vintage_date (ALFRED) so L uses values as first published, not later revisions."
+}

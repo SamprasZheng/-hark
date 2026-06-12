@@ -1,0 +1,4 @@
+2026-06-12T05:46:01.363911+00:00 preopen: start
+2026-06-12T05:46:05.698330+00:00 preopen: wrote D:\DOT\$hark\outputs\position-brief-2026-06-12.md
+2026-06-12T06:53:16.364801+00:00 preopen: start
+2026-06-12T06:53:20.620546+00:00 preopen: wrote D:\DOT\$hark\outputs\position-brief-2026-06-12.md

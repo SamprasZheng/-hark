@@ -484,3 +484,86 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - `tech/ai-monetization-reckoning.md`: 主軸轉換 DD (結構, conf 0.68) — capex 建設期 → ROI 清算; 計分板 4 BULL / 1 BEAR (pilot 轉化率僅 ~5-12%) / 1 SPLIT (推論成本 vs 變現). 觸發 = 任一雲廠砍 2027 capex >10%. Cisco-2000 類比.
 - `scoring/exposure.py` (前一 commit): 真實總曝險儀表 (RSU+本業+債相關打擊). 校準 finance/01: NVDA 89% 資產 + ~半收入 + 月現金流負(靠 vest 補)= 四重相關. −35% → 淨值 −$95K + 收入 −$70K. 留-紀律(賣到50%) vs 跳谷歌(脫鉤收入)拆解.
 - observe-first. 全套件綠燈.
+
+## 2026-06-10 — finviz schema 5 個 TO_ADD 欄位接線 (Forward P/E / Earnings / ATR / Inst·Insider Own)
+- 主理人指令 (年度作戰表 / finviz_schema 後續): 把 `raw/metadata/finviz_schema.json` 標 TO_ADD 的 5 欄從文件落到 code。
+- `data/finviz_elite.py`: (a) **Forward P/E** 接進 `finviz_row_to_dims` valuation (`pe_eff` = forward 優先、trailing 退而求其次 — 成長股 trailing 偏高)。(b) 新增 `finviz_row_to_flags()` — 維度不帶的閘門/水位: 財報黑窗 (`_days_to_earnings`, 窗 = risk_config `earnings_blackout_tier1_days`=3)、ATR/ATR%、Inst Own/Insider Own 水位、軋空預警 (Short Float≥10% ＋ Insider Own≥10%; breakout 由 rally 連續起漲確認)、200d 乖離 >30%。(c) 新增 `atr_position_size()` 純函式 (stop = entry−k·ATR; 股數 = equity·risk%÷(k·ATR), 受 `max_position_pct` 上限; risk%/上限由呼叫端給, **不讀 risk 政策檔**)。(d) `write_scan_recommendation` 嵌入 per-row `flags` + 頂層 earnings_blackout/squeeze_watch/overshoot_200d 清單 (向後相容)。(e) rally CLI 加 ⚠️E/🔥sq/⛔乖離 標記。
+- `finviz_schema.json`: 5 欄 TO_ADD → active; `gates.earnings_blackout` / `short_squeeze_alert` 狀態翻 active; 補 `dimensions_consumed_now` flags 區; 註明 Custom view 要加的 5 個 header name。
+- **未竟手動步驟**: 在 Finviz Custom view 勾選 'Forward P/E','Earnings','ATR','Inst Own','Insider Own' (帳號端 UI; 缺欄位優雅降級為 None)。
+- `finviz_row_to_dims` 回傳 key 形狀不變 → `rally_signal.assess` (只取 DIMENSIONS keys) 不受影響。+6 tests; finviz/rally/basecross 相關 75 tests 綠燈。recommend-only, 永不下單。
+
+## 2026-06-12 — P1 持倉更新(2 截圖,2026-06-11 收盤基準)
+- 新 raw:`raw/principal/2026-06-11-snapshot-p1.md`(grade A)。可見 16 檔小計 ≈$6,696;清單 ~$202 截斷、現金不可見 → 下限快照。
+- 寫回:`wiki/positions.md`(stub→live)、`portfolio/index.md` §1/§2、`portfolio_audit.py::PORTFOLIO_1`(32→16 檔)+ `CONCENTRATION_CONTEXT_USD.us_broker_p1` 11,374→6,696、`sleeve_classifier.py::P1_HOLDINGS_USD`。
+- 結構:舊槓桿 TARK/LABU/SBIT/NOWL/AAPB/RBLU 已出(合 06-07 出清指令),**但新開 2x 單股一批(CRWG/MSFU/PTIR/CRMG/LULG ±NXPX)≈28% 可見部位** — 槓桿紀律問題換標的重現,待 Risk Officer 重審。
+- **跟進(TBD)**:(1) SIVEF 解碼(OTC F 股,$891 = 13% 可見部位);(2) NXPX 驗證是否 2x NXPI;(3) 截斷列確認(推定 APA);(4) $202 以下尾部 + 現金需補截圖;(5) 16 檔的 entry/catalyst/invalidation 待 principal 補。
+- audit 重跑:`portfolio-audit-2026-06-12.json` — P1 verdicts:**SELL ×5(MSFU/PTIR/CRMG/LULG 槓桿 decay + INTU low-FOM 36)、TRIM ×1(CRWG)**、HOLD ×10。槓桿紀律問題經 Risk-pipeline 確認。
+- ⚠ 事故記錄:第一次重跑時 `main()` 的 `today` 硬編碼 2026-05-30,覆寫了歷史 `portfolio-audit-2026-05-30.json`;已從 6/1 的 .bak 還原(6/11 21:00 的後續微改不可復原),並把 `today` 參數化為執行日(檔名隨日期,不再覆寫歷史)。
+- TBD#1 已解:**SIVEF = Sivers Semiconductors**(STO:SIVE,principal 2026-06-12 確認)。論點 = CPO 外部光源(ELS)咽喉點;6/11 +12% 催化 = GlobalFoundries 合作(B 級源 ×2 已查證)。新實體頁 `philosophy/entities/sivers-semiconductors.md`(researcher);positions/portfolio_audit/index.md 同步更新。財務體質 TBD(需 A 級財報源)。
+
+## 2026-06-12(b)— P2 複委託 8840 全帳本入庫(3 截圖,06-11 收盤基準)
+- 新 raw:`raw/principal/2026-06-11-snapshot-8840.md`(grade A,字母序 A→Z 完整 24 檔,≈$9,482;成本欄截斷僅近似)。
+- 寫回:`portfolio_audit.py::PORTFOLIO_2`(舊 26 檔換新 24 檔)、`CONCENTRATION_CONTEXT_USD.complementary_p2` 3,000→9,482、`wiki/positions.md` 加 P2 段、`portfolio/index.md` §1/§3。
+- ⚠ **舊 P2 清單(ZM/PEP/DIS/DOCN…26 檔,05-30)與 8840 實帳幾乎無交集** — 疑為另一容器或混帳;已被取代,出處待 principal 釐清。
+- **OPITQ 1,000 股歸零(破產)→ 稅損收割候選**,健檢新增「市值歸零→清倉(稅損)」規則。
+- UI 健檢擴成雙帳本(P1/P2/全部切換);audit 將以新 P2 重跑。
+
+## 2026-06-12(c)— 上漲 DNA 研究 + 20 年回測 + 模型校準(rule-based,零 LLM 在環)
+- 新引擎:`backtest/rally_dna.py`;月線湖補建(576 檔 period=max 1mo,先前為 0)。輸出 `outputs/rally-dna-2026-05-01.json`、寫回 `wiki/06_rally_dna.md`。
+- **DNA 校準**:原 -55%/1.3×量 只抓 1/8 點名案例 → 網格後定案雙 preset:broad(-35%/無量閘,7/7 案例,超額+20.5%/筆)+ deep(-55%/1.3×,超額+49.8%/筆)。全網格 win 44-46% = 穩健。
+- **九轉**:月線 sell-9 逃頂無效(≈基線);**buy-9 抄底有效**(12 月中位 +28.2% vs 基線 +14.0%)。
+- **瘋狂延續**:blow-off 後 6 月續漲 62.6%、中位續漲 +61% vs 回撤 -17% → 持有者移動停利、未持有者不追(最後老鼠的解法是紀律不是預測)。
+- **2026-27 推演**:QQQ 馬可夫+MC 中位 +27.9%、P(正)=85.8%;⚠ iid 抽樣低估尾巴,維持 evidence-gated。
+- **每天買推薦(5y 日線近似)**:技術閘裸跑 2022 為負 → regime/燃料閘是系統的核心而非裝飾。揭露:倖存者偏差、9 維無歷史快照、僅價量下界近似。
+
+## 2026-06-12(d)— DNA v2:底層證據貝葉斯 + 四態馬可夫 + 反身性監控上線
+- `rally_dna.py` v2:(a) **經驗貝葉斯似然表** P(報酬|深殺/buy-9枯竭/量縮):勝率不隨證據變(≈43%)但**期望隨證據單調放大**(0證據+17% → 3證據+70.6%,超額+61.4%)→ 證據數定倉位不定勝負。(b) **觸發點基本面指紋**:MU=教科書錯殺(價-41%營收+62%);LITE/COHR 觸發時營收仍衰退=市場買前瞻拐點;FCF 觸發點普遍深負(這就是便宜的原因)。2019/2023 案例 out_of_window(yfinance 年報限制,Polygon 可補)。(c) **四態馬可夫**:當前=mania;mania→crisis 直接轉移=0%(瘋狂先降溫不直接崩);唯一負期望態=crisis;bear-非crisis 是抄底熱區。MC 至 2027 末中位+26.1%。
+- 新 `scoring/reflexivity.py`:近高×Finviz 機構/內部人流向×FCF YoY。首掃 89 近高 → **15 斷裂警告**(GWW/HUM/SLAB/ICHR…多為防禦輪動領頭=輪動晚段訊號)。修了 finviz token 載入(.env 直讀)與 DIMENSION_VIEW 欄位。
+- 寫回:wiki/06 加 §7-9 + 反身性段;新 `wiki/07_sector_handoff.md`(AI變現/加密/太空接棒的可證偽觸發器+監控排程)。
+
+## 2026-06-12(e)— DNA v3:walk-forward 驗證通過 + 成本入帳 + 阿卡西匹配器 v1
+- **Walk-forward**:broad 參數(2019-26 案例選定)在 2005-2018 OOS:3,216 筆、超額 +19.4%/筆 = 保住 IS 85%,非過擬合。
+- **成本**:0.4% 來回對月線系統無感(mean 27.8→27.4%);日線近似被砍 32% → 低頻持倉方向確認。
+- **`dna_match_today`(阿卡西記憶 v1)**:7 案例觸發月特徵質心(dd36 -13%/距MA10 +22%/buy9=10/r3m +37%)→ z-score 最近鄰。Top:ONTO/OKE★/RVTY/COLM★/ODFL★/UNH★/ELV★/CNC★(健保群聚=2025 醫療屠殺修復區)。參考專案(Danelfin/IKnowFirst/Qlib)定位:差異化在本地湖+紀律層+PIT 誠實,不重造。
+- 質心洞見:**贏家觸發點都已強力修復(+37% 3 月動能),不是還在坑裡** — 抄底=買修復,再次驗證。
+
+## 2026-06-12(f)— 案例庫 v2(60 檔自動發掘)推翻點名質心 + 匹配器三面化 + Qlib/Chroma 計畫
+- `discover_bull_cases`:25+ 年全湖自動挖牛票(每時代 top10、板塊上限 3)→ 60 案例,中位 24mo +1294%(倖存偏差揭露)。**發現:點名 7 案是淺基少數型;系統質心=深殺 -58%+暴力修復 +65%;小型股 40/60;Healthcare 16≈Tech 18**。兩型質心並存。
+- 匹配器 v2:質心換案例庫 + Finviz 三面(dna_plus=技術45/基本面25/買盤20/消息10)。Top:SMCI(買盤100★)/ESTC/HOOD/SWKS★/HUM★…健保群聚 6/15。⚠ HUM/UNH/ELV 同列斷裂警告 → 交叉剔除規則入 wiki。消息欄 TBD。
+- `docs/QLIB-VECTORDB-PLAN.md` + pyproject `[akashic]` extras:Chroma 進入條件(案例>150 或文本檢索需求)、Qlib 先 WSL 驗證/vectorbt 輕量先行、Danelfin/IKF 定位 D 級旁證 watchlist-only。
+- wiki/07 觸發器狀態更新(principal 供數):CapEx 🟢 / BTC ETF 🔴 -$1.67B週 / SPCX ⏳ / 斷裂未擴散科技核心 🟢 → 維持偏多+動態 sizing。
+
+## 2026-06-12(g)— v2.1:權重誠實化 + 自動雙濾鏡 + Qlib 實測可跑
+- **權重問題正面回答**:45/25/20/10 是先驗非擬合,且 Finviz 無歷史快照=無法誠實回測。補救:(1) 敏感度實測 Spearman 0.92-0.94/top10 重疊 9/10 → 排名對權重不敏感;(2) 評分落盤 `dna-scores-log.jsonl` 啟動前瞻校準;(3) v2.1 權重 40/30/20/10,消息(noisy+常None)→ 反身性負懲罰。
+- **自動三欄分流**:斷裂警告無條件剔除;≥85 可入候補/≥75 watch。2026-05:可入 0 / watch 5(SMCI/ESTC/HOOD/SWKS/DXCM)/ 剔除 4(**HUM、ELV 自動剔除**:52w近高+機構流出+FCF -84%/-30%;UNH inst 仍流入留觀察)。修正:反身性近高判準從 dd36 改 52w(ma-scan)。
+- **Qlib 實測:Windows + py3.12 可裝可 import(pyqlib 0.9.7)** — 編譯炸裂是過時資訊;剩 workflow 級驗證(lake→qlib bin 轉換器),計畫文件已更新。
+- 分倉紀律入 wiki:deep-kill ≤10-15% 曝險、硬停 20-25%、時間停損 2 季無 FCF 改善;SMCI Type B 警示記錄(買盤滿分但 TTM FCF ~-$7B)。
+- 待辦序(review 採納):(1) HUM/COHR Polygon PIT 季度序列;(2) 多源消息接通(Polygon news);(3) 案例庫月度排程累積。
+
+## 2026-06-12(h)— 排程上線 + Polygon PIT 客戶端 + Danelfin 金礦交叉驗證
+- **排程(Windows 工作排程器)**:SharksDNA-Morning(07:40 二~六:lake 刷新→EOD ma-scan→reflexivity→rally_dna 評分累積)+ SharksDNA-PreOpen(21:10 一~五:`position-brief-<date>.md` 艙位調整 brief)。新模組 `daily_dna_routine.py`;機器需開機。首份 brief 已產出(mania 態→不開新倉、換股×7、減碼×5、清倉 OPITQ)。
+- **Polygon PIT 客戶端**(`data/polygon_financials.py` + 3 tests):季度 rev/OCF/CapEx/FCF,**filing_date 為 PIT 錨點**;429 退避;同季 YoY。⚠ **blocker:.env 的 POLYGON_API_KEY 是空值** — principal 填 key 後 HUM/SLAB/ICHR/COHR 序列立即可拉。
+- **Danelfin 金礦群交叉(D 級旁證規則實戰)**:其 top10 有 9 檔金屬礦業(AI Score 9-10);我方引擎:全部距 52w 高 -27~-56%、RSI 32-44、零修復訊號、GLD RSI 24 → **被殺進行中、修復未確認 = 進 DNA watch 池等觸發,不接刀**。礦業 11 檔已入湖(BTG/KGC/VALE/EQX/CDE/B/AG/HL 新增)。
+
+## 2026-06-12(i)— Polygon key 入庫,PIT 序列首拉成功(HUM/SLAB/ICHR/COHR ×20 季)
+- key 已入 .env(gitignored 確認)。`pit-fundamentals-2026-06-12.json` 落盤,filing_date 錨點齊。
+- **數據限制**:Polygon 標準化現金流表無 CapEx 細項 → FCF 無法直接導出;cash 腿先用 OCF 趨勢,FCF 補課走 yfinance 季表合併(TODO)。Q4 多無獨立 filing_date(包在 10-K);SLAB 會計年度偏移(2027Q1 filed 2026-05)。
+- **PIT 發現**:(1) **HUM 基本面腿有爭議** — 營收加速(+8.4%→+23.5% YoY)且 2026Q1 OCF 1,254M >> 2025Q1 331M(年度 FCF -84% 主因 2025Q4 OCF -1.65B 保險季節性)→ 斷裂警告的基本面腿可能過早,維持剔除但下次申報後複核。(2) **COHR = Type B 教科書**:營收連 8 季 +9~28% 但 2026Q3 OCF 轉負 -94M(擴張燒現金)。(3) **ICHR 剔除獲 PIT 支持**:營收忽上忽下、OCF ~0。
+
+## 2026-06-12(j)— v3 三件高價值迭代落地:PIT 合併器 + 可解釋評分 + 規則引擎
+- **`data/pit_merger.py`**:Polygon(filing_date)× yfinance 季表(FCF/CapEx ±10 天對齊,fcf_source 標籤)。`pit_contested` 判定:**HUM=True**(營收加速+OCF 改善,年度負讀數疑季節性)、COHR=False(OCF 真惡化,Type B 確認)。
+- **匹配器 v3 可解釋輸出**:SHAP 式分解(SMCI 83.8=技38.4+基19.2+買15.0+反11.2)+ 每檔附最相似 Top3 歷史案例與實際後續報酬(SMCI≈TRGP20/AEO96/BBY97,+1000~1900%)。狀態感知權重:mania → reflexivity 0.10→0.15。
+- **規則引擎**(`config/dna_rules.json` + `apply_rules`,宣告式+rules_fired 留痕):**HUM 自動=剔除+🚩human_review**(break-hard-exclude → pit-overrule-human-review 兩條依序 fire)— 邊緣案例不再人工掃描。deep-kill sizing cap 註記自動掛。
+- `docs/ARCHITECTURE.md`:五層映射(演進不翻修)、依賴採用準則、風險登記簿(failed-analogs 子庫 TODO)。
+
+## 2026-06-12(k)— Failed-analogs 子庫 Phase 1:deep-kill 真實存活率 + sizing 數據化
+- 新 `backtest/failed_analogs.py`(+3 tests):664 deep-kill 觸發 × 固定 24m 視窗 → monster 42.9% / ok 31.2% / dud 11.9% / **disaster 14.0%(中位 -50%)**;存活率 74.1%(倖存者宇宙=上界)。
+- **AXTI 雙尾教材**:2001 觸發 -97% vs 2025 觸發 +4,907% — 同票同形態相反結局,sizing 是全部。失敗群聚 2000-01 → 與 markov 互鎖:crisis 態不開 deep-kill。
+- **Sizing 公式透明化**:cap=拖累預算2%/(P損×損幅)=15%,壓力版 **11%(採用)**;規則 R4 更新為數據驅動。
+- **Phase 2 上線**:Polygon delisted 收集器(`collect`,manifest 續收)掛進晨間排程(10 檔/日)→ 分母逐日誠實化。
+
+## 2026-06-12(l)— Bootstrap CI + AXTI 型規則 + brief 系統健康區塊
+- **Bootstrap(10k 重抽,seed 固定)**:存活率 74.1%,90% CI **71.2–77.0%**(n=664 → CI 窄);cap 公式加 CI 悲觀端(P損/損幅 95 分位)取低者 → 維持 11%。
+- **失敗類比進相似度池**(成功 60 + 失敗 172 同池):新規則 `axti-similar-failures`(Top3 含 ≥2 失敗 → human_review+倉位減半)。首批 fire 12 檔:**DXCM 近鄰失敗×3、ESTC ×2** — watch 名單現在自帶死亡氣味偵測。
+- **brief v2**:新倉名單帶 🚩/⚠近鄰失敗標記;新增「系統健康」區塊(存活率 CI、案例庫規模、規則觸發統計、數據新鮮度)。單筆風險 ≤1-2% 總資本寫進 sizing 行。
+- review 採納記錄:樂透型=衛星倉原則、死亡原因標註(delisted/bankruptcy/FCF 永久惡化)待 Phase 2 分母成長後加欄位。

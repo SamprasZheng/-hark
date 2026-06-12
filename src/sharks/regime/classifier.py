@@ -151,6 +151,22 @@ def load_latest_liquidity(out_dir: Path = Path("outputs")) -> Optional[dict]:
         return None
 
 
+def load_latest_fishbowl(out_dir: Path = Path("outputs")) -> Optional[dict]:
+    """Latest FRED-backed liquidity-fishbowl composite (regime/liquidity.py).
+
+    Preferred over the M2+BTC+Gold ``liquidity-signals`` artifact when present:
+    it carries the documented ``L`` score + a ``composite_alert.level`` band the
+    classifier already matches on. Distinct ``liquidity-fishbowl-*.json`` prefix,
+    so it never collides with ``load_latest_liquidity``."""
+    p = _latest_json(out_dir, "liquidity-fishbowl")
+    if p is None:
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 # ─── Classifier ────────────────────────────────────────────────────────────────
 def classify_regime(
     breadth: Optional[dict] = None,
@@ -184,7 +200,8 @@ def classify_regime(
         }
     """
     breadth = breadth or load_latest_breadth() or {}
-    liquidity = liquidity or load_latest_liquidity() or {}
+    # Prefer the FRED fishbowl L-composite; fall back to the M2/BTC/Gold signal.
+    liquidity = liquidity or load_latest_fishbowl() or load_latest_liquidity() or {}
 
     breadth_verdict = breadth.get("verdict", "UNKNOWN")
     liq_level = (liquidity.get("composite_alert") or {}).get("level", "UNKNOWN")

@@ -44,6 +44,35 @@ Discord 打 `/playbook`(或 `!作戰`)叫出精簡版。
 2. **連續起漲?** 非單根;最好先 🕵️吸籌 → 金叉 → 連漲。
 3. **資金面沒 STRESS?** 翻 STRESS → 收手(防 2022 重演,小型先死)。
 4. **分層 + 留彈藥**:核心(有營收)大、投機(pre-profit)小;≥1/3 留到九月。
+5. **財報黑窗?** 標的 ≤3 交易日內財報 → **不開新倉 / 減倉防跳空**(見下「財報季閘」)。
+
+## 財報季閘 (Earnings-Season Gate) — 注意事項
+財報日是**每檔最強的單點催化劑**:跳空風險 + 隱波劇變。每年日期**季季循環、落在差不多的季節**,
+所以本地建快取(免費,從 `data/lake/info` 的 `earningsTimestamp`)→ 可預測下一次。
+```
+python -m sharks.data.earnings_calendar     # 590 檔免費快取 → data/earnings/upcoming-<date>.json
+```
+- **黑窗(blackout)**:財報前 **≤3 日**(`EARNINGS_BLACKOUT_DAYS`,對齊 `risk_config.yaml`)→ **不開新倉**;
+  既有倉位**減碼防黑天鵝跳空**,或留到財報後止穩再決定。
+- **財報季節奏(輪盤)**:① **JPM/GS 開季**(每季首週,~1月/4月/7月/10月中)→ ② **大型科技週**
+  (MSFT/GOOGL/AMZN/META,7月底/10月底)→ ③ **NVDA 壓軸**(2月底/5月底/**8/26**/11月中)。
+  每段都是**資金與隱波重定價**窗口 → 對齊 [[../wiki/08_forward_calendar]] 月度事件列。
+- **預測標 `(predicted)`** = 季線級推估、未經官方確認 → **下單前必用官方 IR / Finviz / Finnhub 覆蓋**。
+- **本週黑窗範例(2026-06-10)**:`CHWY` `ORCL`(OpenAI 代理)`OXM` 今日、`ADBE`(Canva 代理)`RH` 明日;
+  `MU` T-14、`FDX` T-13 — 黑窗內**不接刀**,等財報後再看連續起漲。
+
+## 隱波套利觀察 (IV / 隱波 Arbitrage Watch) — 高度關注
+**博弈的是隱含波動(IV),不是方向**。圍繞財報的兩種結構性 edge(recommend-only,**最高技術、最小倉位**):
+- **財報前 IV 爬升 → 收斂**:event 前 IV 被買高;若你判定「波動會比市場定價小」→ **賣方策略**(賣價差/鐵兀鷹)賺
+  時間+IV 收斂。反之判定「市場低估事件」→ **買方**(價差/跨式)賭超預期。
+- **財報後 IV crush(隱波崩跌)**:財報一出,IV 從高位**瞬間崩**——裸買選擇權最常死在這:**猜對方向、仍賠錢**。
+  所以 event 前**別裸買 premium**;要嘛賣方收 crush,要嘛用價差限縮 vega。
+- **看什麼名單**:① **選擇權流動性高 + IV 夠高**(才有 premium 可收/可博)② **財報錨定**(用上面的 earnings 快取)
+  ③ 你**有基本面/題材觀點**的(IV 博弈疊加方向觀點才有複利)。初篩池:`NVDA TSLA AMD MU AVGO PLTR COIN MSTR SMCI` 等
+  高 β/高 IV 且財報前後波動劇烈者。
+- **⚠️ 資料缺口(老實說)**:目前系統**沒有 options-chain / IV 資料源**(無 implied-vol、無 vega)——這節是**觀察方法論**,
+  尚不能自動算。要落地需接一個**免費 IV 來源**(yfinance `Ticker.option_chain` 有逐鏈 IV;或 CBOE 個股 IV)→ 才能把
+  「IV 百分位 / 財報前後 IV 變化 / 預期波動 vs 實際」做成像 FOM 一樣的 recommend-only 評分。**這是下一塊要建的。**
 
 ## 各論點全文
 - `deployment_plan_jun_sep_2026.md`(分批計劃)

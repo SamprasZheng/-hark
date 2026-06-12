@@ -160,3 +160,74 @@ def test_no_hardcoded_token_in_source():
     src = pathlib.Path(FE.__file__).read_text(encoding="utf-8")
     uuid_like = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
     assert not uuid_like.search(src), "a token-like literal is hardcoded — remove it"
+
+
+# ── 2026-06-10 delta: the 5 TO_ADD columns (Forward P/E / Earnings / ATR / ownership) ──
+
+def test_forward_pe_preferred_over_trailing_in_valuation():
+    # trailing P/E looks stretched (50 → penalty) but Forward P/E is cheap (12 → bonus)
+    stretched = FE.finviz_row_to_dims({"Ticker": "G", "P/E": "50", "P/S": "5"})
+    fwd_cheap = FE.finviz_row_to_dims({"Ticker": "G", "P/E": "50", "Forward P/E": "12", "P/S": "5"})
+    assert fwd_cheap["valuation"] > stretched["valuation"]   # forward PE rescues a growth name
+    # absent Forward P/E → behaviour unchanged (still consumes trailing P/E)
+    assert FE.finviz_row_to_dims({"Ticker": "G", "P/E": "10", "P/S": "1.5", "PEG": "0.8"})["valuation"] > 70
+
+
+def test_days_to_earnings_parses_finviz_formats():
+    from datetime import date
+    asof = date(2026, 6, 10)
+    assert FE._days_to_earnings("Jun 12/a", asof=asof) == 2          # 'Mon DD' + session marker
+    assert FE._days_to_earnings("Aug 26 AMC", asof=asof) == 77
+    assert FE._days_to_earnings("6/12/2026", asof=asof) == 2         # explicit M/D/Y
+    assert FE._days_to_earnings("Feb 19", asof=asof) == 254          # past month → rolls to 2027
+    assert FE._days_to_earnings("-", asof=asof) is None
+    assert FE._days_to_earnings(None, asof=asof) is None
+
+
+def test_finviz_row_to_flags_gates_and_levels():
+    from datetime import date
+    asof = date(2026, 6, 10)
+    row = {"Ticker": "Q", "Earnings": "Jun 12/a", "ATR": "5.0", "Price": "100",
+           "Forward P/E": "18", "Inst Own": "82%", "Insider Own": "15%",
+           "Short Float": "22%", "SMA200": "45%"}
+    f = FE.finviz_row_to_flags(row, asof=asof)
+    assert f["earnings_blackout"] is True            # 2 days out → within the 3-day window
+    assert f["squeeze_watch"] is True                # short float 22% + insider own 15%
+    assert f["overshoot_200d"] is True               # 45% above 200d MA → 乖離過大
+    assert f["atr_pct"] == 5.0                        # 5.0 / 100 * 100
+    assert f["inst_own"] == 82.0 and f["insider_own"] == 15.0 and f["forward_pe"] == 18.0
+
+
+def test_finviz_row_to_flags_clean_row_trips_nothing():
+    from datetime import date
+    f = FE.finviz_row_to_flags({"Ticker": "C", "Price": "50", "Short Float": "3%",
+                                "Insider Own": "1%", "SMA200": "8%"}, asof=date(2026, 6, 10))
+    assert f["earnings_blackout"] is False and f["squeeze_watch"] is False
+    assert f["overshoot_200d"] is False and f["days_to_earnings"] is None
+
+
+def test_atr_position_size_risk_budget_and_cap():
+    # equity 100k, risk 1% = $1,000 budget; k*ATR = 2.5*4 = $10/share → 100 shares
+    s = FE.atr_position_size(entry=100, atr=4, account_equity=100_000, risk_pct=1.0, k=2.5)
+    assert s["risk_per_share"] == 10.0 and s["shares"] == 100 and s["stop"] == 90.0
+    # position cap binds: 5% of 100k = $5,000 → 50 shares @ $100, not 100
+    capped = FE.atr_position_size(100, 4, 100_000, risk_pct=1.0, k=2.5, max_position_pct=5)
+    assert capped["shares"] == 50
+    assert FE.atr_position_size(0, 4, 100_000) is None        # bad input → None
+
+
+def test_write_scan_recommendation_embeds_flags(tmp_path):
+    import json
+    from sharks.scoring import rally_signal as RS
+    sigs = [RS.assess("AAA", {"technical": 70, "capital": 65, "fundamental": 75}, prior_streak=3)]
+    flags = {"AAA": {"earnings_blackout": True, "squeeze_watch": False,
+                     "overshoot_200d": True, "atr": 5.0}}
+    p = FE.write_scan_recommendation(tmp_path, sigs, source="universe", flags_by_ticker=flags)
+    rec = json.loads(p.read_text(encoding="utf-8"))
+    assert rec["earnings_blackout"] == ["AAA"] and rec["overshoot_200d"] == ["AAA"]
+    assert rec["squeeze_watch"] == []
+    assert rec["ranked"][0]["flags"]["atr"] == 5.0
+    # backward compatible: no flags arg → no flags key, summary lists empty
+    p2 = FE.write_scan_recommendation(tmp_path, sigs, source="universe")
+    rec2 = json.loads(p2.read_text(encoding="utf-8"))
+    assert rec2["earnings_blackout"] == [] and "flags" not in rec2["ranked"][0]

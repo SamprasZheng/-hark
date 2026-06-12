@@ -69,6 +69,14 @@ class TestEconCalendar:
         ev = econ_calendar("2026-06-25")  # no NFP/CPI/FOMC nearby
         assert len(ev) >= 1  # fallback row always present
 
+    def test_spacex_ipo_surfaces_near_listing(self):
+        # 2026-06-12 SpaceX debut; on 2026-06-09 it is within the 21-day IPO window
+        assert any("SPCX" in e for _, e, _ in econ_calendar("2026-06-09"))
+
+    def test_ipo_event_gone_after_listing(self):
+        # well after the listing, the IPO catalyst drops off (no stale rows)
+        assert not any("SPCX" in e for _, e, _ in econ_calendar("2026-07-15"))
+
 
 class TestLoadPicks:
     def test_empty_dir(self, tmp_path):

@@ -42,6 +42,7 @@ from sharks.data.coingecko_client import (
     CoinGeckoError,
     fetch_markets,
 )
+from sharks.data.defillama_client import DefiLlamaError, fetch_stablecoin_supply
 
 GUARDRAILS_NOTE = (
     "RECOMMEND-ONLY (never trades). Crypto = speculative satellite on an already "
@@ -203,9 +204,35 @@ def rank_churn(today, prev, n: int = 10) -> dict:
     }
 
 
+def stablecoin_supply_trend(today_supply, prev_supply) -> dict:
+    """On-chain liquidity proxy: aggregate stablecoin supply + 1-snapshot trend.
+
+    Pure. ``available: False`` when there is no current reading; the trend itself
+    is unavailable (but the level is still reported) on the first run — mirrors
+    ``rank_churn``'s no-prior degrade. Never invents a delta."""
+    cur = (today_supply or {}).get("total_circulating_usd")
+    if cur is None:
+        return {"available": False, "note": "no current stablecoin-supply reading."}
+    prev_total = (prev_supply or {}).get("total_circulating_usd")
+    if not prev_total:  # None or 0 → first run / unusable prior
+        return {
+            "available": True, "total_circulating_usd": cur,
+            "delta_usd": None, "pct_change": None,
+            "note": "no prior on-chain snapshot — trend unavailable on first run.",
+        }
+    delta = cur - prev_total
+    return {
+        "available": True,
+        "total_circulating_usd": cur,
+        "delta_usd": round(delta, 2),
+        "pct_change": round(100.0 * delta / prev_total, 3),
+        "direction": "expanding" if delta > 0 else ("contracting" if delta < 0 else "flat"),
+    }
+
+
 # ── snapshot envelope + handoff ───────────────────────────────────────────────
 
-def build_snapshot_envelope(coins, *, as_of, as_of_date, vs_currency, live_data, stale, source_per_page):
+def build_snapshot_envelope(coins, *, as_of, as_of_date, vs_currency, live_data, stale, source_per_page, onchain=None):
     env = {
         "schema_version": 1,
         "as_of": as_of,
@@ -218,6 +245,8 @@ def build_snapshot_envelope(coins, *, as_of, as_of_date, vs_currency, live_data,
         "live_data": live_data,
         "stale_fallback": bool(stale.get("stale_fallback")) if stale else False,
         "coins": coins,
+        # PROTOTYPE on-chain liquidity proxy (own live_data/stale_fallback flags).
+        "onchain": onchain or {},
     }
     if stale:
         for k, v in stale.items():
@@ -250,6 +279,8 @@ def build_handoff(snapshot, structure, movers_24h, movers_7d, categories, churn,
         "category_counts": {k: len(v) for k, v in categories.items()},
         "uncategorized": categories.get("uncategorized", []),
         "rank_churn": churn,
+        # PROTOTYPE on-chain liquidity proxy, carried through from the snapshot.
+        "onchain": snapshot.get("onchain", {}),
         "watchlist_overrides": watchlist.get("human_overrides", {}),
     }
 
@@ -314,6 +345,23 @@ def render_markdown(snapshot, structure, movers_24h, movers_7d, categories, chur
       "Rising dominance in a drawdown = alts bleeding to BTC. The Compiler reconciles this LIVE number "
       "against the model pages; a contradiction is flagged on the older page (wiki rule).")
     A("")
+
+    # On-chain liquidity proxy (PROTOTYPE) — only rendered when a reading exists.
+    oc = snapshot.get("onchain") or {}
+    supply = oc.get("stablecoin_supply") or {}
+    if supply.get("total_circulating_usd") is not None:
+        oc_flag = "LIVE" if oc.get("live_data") else "STALE ⚠"
+        A("## On-chain liquidity proxy (prototype)")
+        A("")
+        A(f"- Stablecoin aggregate supply (USD-pegged): **${_human(supply['total_circulating_usd'])}** ({oc_flag})")
+        tr = oc.get("supply_trend") or {}
+        if tr.get("available") and tr.get("pct_change") is not None:
+            A(f"- 1-snapshot change: {tr['delta_usd']:+.0f} ({tr['pct_change']:+.3f}%) — {tr.get('direction')}")
+        A("")
+        A("> ⚠ **PROTOTYPE observation column — NOT a trading driver.** The on-chain analog of the macro "
+          "liquidity 'water level'. Crypto is ring-fenced: BTC ≤4% outside the ≤5% Alpha sleeve, alts ≤5% "
+          "spot-only, observation-first.")
+        A("")
 
     A("## Movers — 24h")
     A("")
@@ -388,6 +436,7 @@ def run_crypto_top100(
     today: Optional[str] = None,
     write: bool = True,
     opener=None,
+    onchain_opener=None,
     sleep=time.sleep,
     vs_currency: str = "usd",
     per_page: int = 100,
@@ -396,6 +445,8 @@ def run_crypto_top100(
 
     All data inputs are injectable; a failed fetch degrades to the last good snapshot
     re-stamped with TODAY's ``as_of`` and flagged stale. Never raises on fetch failure.
+    ``onchain_opener`` defaults to ``opener`` so the price feed and the prototype
+    on-chain feed can be exercised (and failed) independently in tests.
     """
     now_iso = today or _utc_now_iso()
     date_str = now_iso[:10]
@@ -425,9 +476,43 @@ def run_crypto_top100(
                 "note": "fetch failed and no prior snapshot — empty snapshot emitted.",
             }
 
+    # PROTOTYPE on-chain liquidity proxy — fetched INDEPENDENTLY so a DefiLlama
+    # outage degrades only this column, leaving the price snapshot LIVE (and vice
+    # versa). Observation-only; the ring-fence guardrail rides on every artifact.
+    prev_onchain = (prev.get("onchain") if isinstance(prev, dict) else None) or {}
+    onchain_live = True
+    onchain_extra: dict = {}
+    try:
+        supply = fetch_stablecoin_supply(
+            as_of=now_iso, opener=(onchain_opener or opener), sleep=sleep
+        )
+    except DefiLlamaError as exc:
+        onchain_live = False
+        supply = prev_onchain.get("stablecoin_supply")
+        onchain_extra = {
+            "stale_fallback": True,
+            "stale_source_as_of": (prev.get("as_of") if isinstance(prev, dict) else None),
+            "error": str(exc),
+        }
+    onchain = {
+        "live_data": onchain_live,
+        "stale_fallback": bool(onchain_extra.get("stale_fallback")),
+        "source": "defillama",
+        "stablecoin_supply": supply,
+        "supply_trend": (
+            stablecoin_supply_trend(supply, prev_onchain.get("stablecoin_supply"))
+            if onchain_live
+            else {"available": False, "note": "on-chain fetch failed — trend not recomputed."}
+        ),
+        "note": "PROTOTYPE observation column — not a trading driver. " + GUARDRAILS_NOTE,
+    }
+    for k, v in onchain_extra.items():
+        if k != "stale_fallback":
+            onchain[k] = v
+
     snapshot = build_snapshot_envelope(
         coins, as_of=now_iso, as_of_date=date_str, vs_currency=vs_currency,
-        live_data=live_data, stale=stale, source_per_page=per_page,
+        live_data=live_data, stale=stale, source_per_page=per_page, onchain=onchain,
     )
     if write:
         write_snapshot(snapshot, data_dir)

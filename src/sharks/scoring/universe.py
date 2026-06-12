@@ -52,6 +52,9 @@ EXTENDED_TICKERS = [
     "WMT", "COST", "TGT", "HD", "LOW", "DG", "DLTR", "KR", "BJ", "TJX", "ROST",
     "ORLY", "AZO", "ULTA", "BBY", "DKS", "FND", "RH", "W", "CHWY", "ETSY", "CVNA",
     "NKE", "LULU", "DECK", "ONON", "CROX", "SKX", "VFC", "RL", "TPR", "CPRI",
+    # apparel / footwear / specialty retail (2026-06-10 principal directive — 服飾類股)
+    "UAA", "VSCO", "PVH", "GAP", "ANF", "LEVI", "COLM", "AEO", "URBN", "BIRK",
+    "BOOT", "FL", "KTB", "HBI", "GIII", "BURL",
     "SBUX", "MCD", "CMG", "YUM", "DPZ", "WING", "TXRH", "DRI", "SHAK", "CAVA",
     "KO", "PEP", "MDLZ", "KHC", "GIS", "K", "HSY", "CL", "KMB", "CLX", "CHD",
     "PG", "EL", "MO", "PM", "STZ", "TAP", "DEO", "BUD",
@@ -67,7 +70,7 @@ EXTENDED_TICKERS = [
     "ALB", "MOS", "CF", "CTVA", "DD", "PPG", "RPM", "AVTR", "IFF",
     # utilities / real estate broad
     "NEE", "DUK", "SO", "D", "AEP", "EXC", "XEL", "PEG", "SRE", "ED", "WEC", "ES",
-    "VST", "CEG", "NRG", "TLN", "AMT", "PLD", "EQIX", "DLR", "O", "CCI", "PSA",
+    "VST", "CEG", "NRG", "TLN", "UUUU", "AMT", "PLD", "EQIX", "DLR", "O", "CCI", "PSA",
     "SPG", "WELL", "VICI", "EXR", "AVB", "EQR", "INVH", "IRM", "SBAC",
     # autos / mobility
     "TSLA", "RIVN", "LCID", "GM", "F", "MBLY", "HSAI", "LAZR", "APTV", "BWA",

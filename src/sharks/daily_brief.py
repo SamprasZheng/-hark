@@ -40,6 +40,14 @@ EDITIONS = {"morning": "早報", "midday": "午報", "evening": "晚報"}
 FOMC_2026 = ["2026-01-28", "2026-03-18", "2026-04-29", "2026-06-17",
              "2026-07-29", "2026-09-16", "2026-10-28", "2026-12-09"]
 
+# Curated IPO catalysts — DATE-CERTAIN only (web-verified 2026-06-10; see
+# watchlist/ipo_calendar_2026.md). Confidential filings with no set date
+# (OpenAI/Anthropic/Discord/Shein) live in that file, not here. Refresh from it.
+IPO_EVENTS_2026 = [
+    ("2026-06-11", "SpaceX (SPCX) IPO 定價 (~$135/股, ~$1.77T)", "🔴 高"),
+    ("2026-06-12", "SpaceX (SPCX) Nasdaq 首日交易 — 太空鏈催化", "🔴 高"),
+]
+
 
 def _g(moves: dict, t: str, k: str = "d1"):
     return (moves.get(t) or {}).get(k)
@@ -123,6 +131,14 @@ def econ_calendar(date_str: str) -> list[tuple]:
     cpi_hi = _dt.date(y, m, 14)
     if 0 <= (cpi_hi - today).days <= 8:
         ev.append((f"{y}-{m:02d}-10~14(估)", "CPI 消費者物價", "🔴 高"))
+    # IPO catalysts — surface from ~3 weeks ahead through the listing day.
+    for ds, name, imp in IPO_EVENTS_2026:
+        try:
+            ed = _dt.date(*map(int, ds.split("-")))
+        except ValueError:
+            continue
+        if -1 <= (ed - today).days <= 21:
+            ev.append((ds, name, imp))
     if not ev:
         ev.append(("—", "本週無排程高衝擊數據(估);留意 Fed 官員談話與盤後財報", "🟡 中"))
     return ev
@@ -192,6 +208,27 @@ def load_news(out_dir: Path, date: str) -> list[str]:
         except Exception:
             return []
     return []
+
+
+def load_postmortems(out_dir: Path, date: str) -> list[dict]:
+    """Latest attribution-postmortem aggregate (outputs/postmortem-<date>.json),
+    compacted for the evening 收盤閉環 section. Empty list if none — the brief
+    degrades. Produced separately by `sharks postmortem`; this only reads."""
+    best = None
+    for p in sorted(out_dir.glob("postmortem-*.json")):
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if isinstance(data, dict) and "postmortems" in data:
+            best = data  # sorted() → newest aggregate wins
+    if not best:
+        return []
+    return [
+        {"ticker": r.get("ticker"), "exited_reason": r.get("exited_reason"),
+         "cause": r.get("cause"), "why": r.get("why")}
+        for r in (best.get("postmortems") or [])[:8]
+    ]
 
 
 # ─── data ──────────────────────────────────────────────────────────────────────
@@ -303,6 +340,14 @@ def render_md(ctx: dict) -> str:
                 nv = r.get("nvidia") or {}
                 L.append(f"    - **{r['ticker']}** [{nv.get('tier')}] {nv.get('type')} — "
                          f"逆勢{_num(r.get('contrarian'))}/動能{_num(r.get('momentum'))}/近3月{_pct(r.get('ret_3m'))}")
+    pms = ctx.get("postmortems")
+    if pms:
+        L += ["", "## 🔁 收盤閉環 — 失敗歸因(recommend-only)",
+              "_止損/未達預期的標的自動歸因:regime_flip / quant_signal_failure / "
+              "narrative_shift / execution_timing_", "",
+              "| 標的 | 出場 | 歸因 | 說明 |", "|---|---|---|---|"]
+        L += [f"| {r.get('ticker')} | {r.get('exited_reason')} | {r.get('cause')} | {r.get('why','')} |"
+              for r in pms]
     L += ["", "## 📅 數據行事曆", "", "| 日期 | 事件 | 衝擊 |", "|---|---|---|"]
     L += [f"| {dt} | {e} | {imp} |" for dt, e, imp in ctx["calendar"]]
     L += ["", "## 📌 觀察重點 + 紀律", "",
@@ -328,6 +373,9 @@ def render_discord(ctx: dict) -> str:
     if pk:
         P += [f"**🎯 進出場** 出 {', '.join(pk['exit']['P1_SELL'][:5]) or '—'} ｜ 減 {', '.join(pk['exit']['P1_TRIM'][:5]) or '—'} ｜ 加 {', '.join(pk['enter']['P2_ADD'][:5]) or '—'}",
               f"**💡 潛力股** {', '.join(p['ticker'] for p in pk['potential'][:6]) or '—'}"]
+    pms = ctx.get("postmortems")
+    if pms:
+        P += ["**🔁 收盤閉環** " + " ｜ ".join(f"{r.get('ticker')}:{r.get('cause')}" for r in pms[:5])]
     cal = " ｜ ".join(f"{e}({imp.split()[0]})" for _, e, imp in ctx["calendar"][:3])
     P += [f"**📅 行事曆** {cal}",
           f"🧭 {ctx['regime']} ｜ 紀律:NVDA=風向球也是你89%曝險,RSU照排程賣到50%,別追高。"]
@@ -369,6 +417,18 @@ def render_html(ctx: dict) -> str:
 <h2>💡 推薦潛力股(FOM 篩選)</h2>
 <table><tr><th class='nm'>標的</th><th>FOM</th><th>動能</th><th>逆勢</th><th>泡沫防護</th><th>護城河</th></tr>{pot}</table>
 <p class="sub">讀法:逆勢高=抄底型、動能高=趨勢型、泡沫防護低=估值偏貴需留意;非進場價,僅篩選。</p>"""
+    pms = ctx.get("postmortems")
+    pm_block = ""
+    if pms:
+        pm_rows = "".join(
+            f"<tr><td class='nm'>{r.get('ticker')}</td><td>{r.get('exited_reason')}</td>"
+            f"<td>{r.get('cause')}</td><td style='text-align:left'>{r.get('why','')}</td></tr>"
+            for r in pms
+        )
+        pm_block = f"""
+<h2>🔁 收盤閉環 — 失敗歸因(recommend-only)</h2>
+<table><tr><th class='nm'>標的</th><th>出場</th><th>歸因</th><th>說明</th></tr>{pm_rows}</table>
+<p class="sub">止損/未達預期自動歸因 — regime_flip / quant_signal_failure / narrative_shift / execution_timing。非建議。</p>"""
     return f"""<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>速解讀 {ctx['date']} {ctx['edition_label']}</title><style>
 :root{{color-scheme:dark}}body{{font:15px/1.6 -apple-system,"Noto Sans TC",system-ui,sans-serif;background:#0d1117;color:#e6edf3;margin:0 auto;padding:24px;max-width:900px}}
@@ -384,7 +444,7 @@ td:not(.nm):not(.px){{text-align:left}}.up{{color:#3fb950}}.dn{{color:#f85149}}.
 <h2>1️⃣ 速覽</h2><table><tr><th class='nm'>指標</th><th>收盤</th><th>日</th><th>週</th><th>月</th></tr>{trows(ctx['macro'])}</table>
 {news}<h2>2️⃣ 速解讀(為什麼)</h2><ul>{interp}</ul>{rot_block}
 <h2>5️⃣ 個股觀察(風向球)</h2><table><tr><th class='nm'>股</th><th>價</th><th>日</th><th>週</th><th>月</th></tr>{trows(ctx['watch'])}</table>
-<div class="box">NVDA 追蹤頁:{NVDA_TRACKER_STATUS}</div>{picks_block}
+<div class="box">NVDA 追蹤頁:{NVDA_TRACKER_STATUS}</div>{picks_block}{pm_block}
 <h2>📅 數據行事曆</h2><table><tr><th class='nm'>日期</th><th>事件</th><th>衝擊</th></tr>{cal}</table>
 <h2>📌 觀察重點 + 紀律</h2><div class="box">環境:<b>{ctx['regime']}</b><br>紀律:NVDA 是風向球也是你 ~89% 曝險;研究非加碼訊號。RSU 照排程賣到 50%,BEAR 觸發看雲廠 capex / ASIC 推論佔比。</div>
 <p class="foot">研究/教育用途 — 非買賣建議。資料 yfinance(grade C);解讀為規則化邏輯。Generated by sharks.daily_brief ({ctx['edition']}).</p>
@@ -417,6 +477,7 @@ def generate(edition: str = "morning", out_dir: str = "outputs") -> dict:
         "calendar": econ_calendar(date), "news": load_news(od, date),
         "picks": load_picks(od) if edition in ("midday", "evening") else None,
         "igv": load_igv(od) if edition in ("midday", "evening") else None,
+        "postmortems": load_postmortems(od, date) if edition == "evening" else None,
     }
     md, html, disc = render_md(ctx), render_html(ctx), render_discord(ctx)
     base = f"daily-brief-{date}-{edition}"

@@ -9,6 +9,8 @@ source: principal-directive
 # 2026 IPO 超級年(~$3.6T)— 買不到 IPO,就佈局「上市代理 + 受惠板塊」
 
 > 主理人(2026-06):還要準備買 IPO 股票,還有可能帶動的板塊部署。
+>
+> ⚠️ **時程已被 web 查證修正(2026-06-10)** → 見 [[ipo_calendar_2026]]。重點:xAI 已併入 SpaceX(無獨立 IPO);Databricks 偏 2027(非 H1);Stripe/Ripple 維持私有;Revolut ~2028;Anthropic 估值已 ~$965B 且僅「祕密遞件、無定日」;SpaceX = **SPCX / 6/12 / $1.77T**。本表「代理對照」仍有效,**時程以 ipo_calendar_2026 為準**。
 
 recommend-only 研究。**散戶通常買不到 IPO 本身**(配售難、鎖倉、首日噴完回落),所以
 真正能做的是**提前佈局每個私有巨頭的「公開代理 / 持股受惠者 / 同業板塊」**。已建成

@@ -1,5 +1,5 @@
 schema_version: 1
-as_of: 2026-05-30
+as_of: 2026-06-10
 notes: |
   Phase 1 universe seed. Tier 1 + Tier 2 are concrete tickers; Tier 3 mid-cap pool
   remains empty until the Phase 4 Finviz screener is live (see
@@ -107,3 +107,46 @@ human_overrides:
     notes: Sentiment-volatile; mandatory social-volume z-score check on every entry decision.
   - ticker: TSM
     notes: Geopolitical premium can move price independent of fundamentals; size at 60% of standard tier2 cap when US-China tension index in wiki/01_macro_state.md is "elevated".
+
+thematic_watch_2026h2:
+  description: |
+    2026-06-10 edit. Year-ahead theme watch tickers for annual_calendar_2026h2_2027h1.md.
+    Prior file state snapshotted to watchlist/history/universe-2026-05-30.yaml per
+    philosophy/09-point-in-time.md BEFORE this edit.
+
+    IMPORTANT — these are a WATCH REGISTRY, not yet FOM-scoring-universe members.
+    tier2b mirrors src/sharks/scoring/fom.py DEFAULT_UNIVERSE; do NOT silently add
+    these there or the scorer desyncs. "already_in_scorer" lists names confirmed
+    present in fom.py groups today; "add_to_score" lists genuine gaps.
+
+    WIRING TODO (needs code + tests, ask before doing):
+      1. fom.py: add POWER_IPP = [CEG, VST, TLN, NRG, SMR]; append GFS to a semi
+         group; SNOW to a software/IPO-proxy group; extend SPACE with IRDM, GSAT.
+         (SPCX has no price history until 2026-06-12 listing -> momentum neutral 50.)
+      2. src/sharks/discord/basecross.py SCOPES: add a "power" scope so
+         /basecross|rally|stealth power works (today SCOPES lacks "power").
+
+  groups:
+    power_bottleneck:
+      thesis: AI capex bottleneck = electricity/cooling (Mag7 2026 capex ~$725-775B). Pelosi bought VST calls 2026-01-16 (congress confluence).
+      already_in_scorer: [VRT, GEV, ETN, CCJ, OKLO]   # DC_INFRA / MATERIALS / bubble-watch
+      add_to_score: [CEG, VST, TLN, NRG, SMR]          # IPP / nuclear — genuine gaps
+    policy_beneficiaries:
+      thesis: Section 232 25% chip tariff (>100MW DC exempt) + CHIPS/Intel 10% govt stake. See thesis_policy_regime_2026.md.
+      already_in_scorer: [INTC, TSM, MU, NVDA, AMD]
+      add_to_score: [GFS]
+    ipo_proxy_2026:
+      thesis: Buy the listed proxy, not the IPO. See thesis_2026_ipo_wave.md. OpenAI->MSFT/AMZN/NVDA; Anthropic->AMZN/GOOGL.
+      already_in_scorer: [MSFT, AMZN, GOOGL, NVDA, AVGO, ORCL]
+      add_to_score: [SNOW, SPCX]                        # SNOW=Databricks proxy; SPCX post-2026-06-12
+    space_revenue:
+      thesis: Prioritise revenue/contract names (has_fuel) over pure pre-profit. SpaceX SPCX lists 2026-06-12.
+      already_in_scorer: [RKLB, ASTS, LUNR, RDW, PL]
+      add_to_score: [IRDM, GSAT]                        # IRDM profitable; GSAT Apple cash
+    crypto_compliance:
+      thesis: CLARITY (pending) + GENIUS (law) winners; BUT crypto is late-cycle (BTC -50% from 2025-10 ATH) -> hard regime gate. See thesis_crypto_cycle_2026.md.
+      already_in_scorer: [COIN, MSTR, HOOD]
+      add_to_score: [CRCL]                              # USDC, public since 2026-01-24
+    congress_confluence:
+      thesis: NANC/Pelosi disclosures as Tier-1 CONFIRMATION layer (45-day STOCK Act lag, not leading). See thesis_congress_tracking.md.
+      note: Not tickers — a weekly overlay intersecting /rally buy_consider with NANC top-20 + Pelosi P000197.

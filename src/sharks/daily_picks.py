@@ -152,8 +152,27 @@ def detect_regime(out_dir: Path, as_of: str) -> dict:
 
     high_freq_ok = os.environ.get("SHARKS_HIGH_FREQ_OK") == "1"
     hf_eligible = bool(high_freq_ok and vix is not None and 12.0 <= vix <= 18.0)
+
+    # Resolve the macro-state provenance to the snapshot actually consulted
+    # (philosophy/09). Best-effort: degrade to the bare "@{as_of}" label if the
+    # PIT layer or wiki/ is unavailable, so picks never fail on provenance.
+    macro_ref = f"wiki/01_macro_state.md@{as_of}"
+    resolved_date: Optional[str] = None
+    resolved_path: Optional[str] = None
+    try:
+        from sharks.state.resolve import resolve_state
+
+        rs = resolve_state("01_macro_state", as_of, on_missing="live")
+        resolved_date, resolved_path = rs.resolved_date, rs.source_path
+        if resolved_date:
+            macro_ref = f"wiki/01_macro_state.md@{resolved_date}"
+    except Exception:
+        pass
+
     return {
-        "macro_state_ref": f"wiki/01_macro_state.md@{as_of}",
+        "macro_state_ref": macro_ref,
+        "macro_state_resolved_date": resolved_date,
+        "macro_state_source_path": resolved_path,
         "vix": vix,
         "cycle_resonance_active": None,  # not computed here; null, not guessed
         "high_freq_mode_eligible": hf_eligible,

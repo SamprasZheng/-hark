@@ -68,6 +68,22 @@ DIMENSION_COLUMNS = ("1,2,3,7,9,10,18,21,22,23,27,29,30,33,35,38,39,41,"
 DIMS9 = ("technical", "capital", "fundamental", "valuation", "growth",
          "risk", "analyst", "dist_ath_pct", "news")
 
+# ── Gate / level thresholds for finviz_row_to_flags (raw/metadata/finviz_schema.json) ──
+# Earnings blackout window mirrors risk_config.yaml exclusions.earnings_blackout_tier1_days
+# (= philosophy/06-exclusions.md). Do NOT invent a different number here.
+EARNINGS_BLACKOUT_DAYS = 3
+OVERSHOOT_MAX_PCT = 30          # >30% above 200d MA → 乖離過大, reject chase
+SQUEEZE_SHORT_FLOAT_MIN = 10.0  # Short Float % floor for a short-squeeze pre-alert
+SQUEEZE_INSIDER_OWN_MIN = 10.0  # paired "high Insider Own" floor (founder/insider-held)
+ATR_STOP_K_DEFAULT = 2.5        # stop = entry − k·ATR (k ~2–3)
+
+# Finviz HEADER NAMES of the 5 columns wired below (add these to your Finviz Custom
+# view once — matching is by header name, so any superset works; absent → graceful None):
+#   "Forward P/E", "ATR", "Earnings", "Inst Own", "Insider Own"
+_MONTHS = {m: i for i, m in enumerate(
+    ("jan", "feb", "mar", "apr", "may", "jun",
+     "jul", "aug", "sep", "oct", "nov", "dec"), start=1)}
+
 
 def _token(explicit: Optional[str] = None) -> str:
     tok = (explicit or os.environ.get(_TOKEN_ENV, "")).strip()
@@ -198,13 +214,16 @@ def finviz_row_to_dims(row: dict) -> dict:
 
     # ── 更多維度(估值/成長/風險/分析師)——讓評估更立體 ──
     pe = _num(row, "P/E", "PE")
+    fwd_pe = _num(row, "Forward P/E", "Fwd P/E", "Forward PE", "P/E Forward")
+    pe_eff = fwd_pe if fwd_pe is not None else pe      # prefer Forward P/E: growth names'
+    #                                                    trailing PE looks stretched
     ps = _num(row, "P/S", "PS")
     peg = _num(row, "PEG")
     valuation = None                                   # 高分 = 便宜(有上檔空間)
-    if any(v is not None for v in (pe, ps, peg)):
+    if any(v is not None for v in (pe_eff, ps, peg)):
         v = 50.0
-        if pe is not None:
-            v += 15 if pe < 15 else (5 if pe < 25 else (-15 if pe > 40 else 0))
+        if pe_eff is not None:
+            v += 15 if pe_eff < 15 else (5 if pe_eff < 25 else (-15 if pe_eff > 40 else 0))
         if ps is not None:
             v += 10 if ps < 2 else (-10 if ps > 10 else 0)
         if peg is not None:
@@ -241,7 +260,104 @@ def finviz_row_to_dims(row: dict) -> dict:
             "valuation": valuation, "growth": growth, "risk": risk, "analyst": analyst}
 
 
-def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz"):
+def _days_to_earnings(raw, *, asof=None) -> Optional[int]:
+    """Finviz 'Earnings' cell → calendar days from ``asof`` (today) to the report date.
+
+    Tolerant of Finviz formats: 'Aug 26 AMC', 'Feb 19/a', 'Sep 3', '2/19/2026', '2/19'.
+    Picks the nearest occurrence; a bare 'Mon DD' >15 days in the past rolls to next year
+    (just-reported names stay slightly negative). Returns None when unparseable.
+    ``asof`` is injectable for point-in-time tests; defaults to today's date."""
+    from datetime import date
+    if raw is None:
+        return None
+    s = str(raw).strip()
+    if s in ("", "-", "—"):
+        return None
+    asof = asof or date.today()
+    mon = day = year = None
+    m = re.match(r"([A-Za-z]{3})[a-z]*\s+(\d{1,2})", s)
+    if m and m.group(1).lower() in _MONTHS:
+        mon, day = _MONTHS[m.group(1).lower()], int(m.group(2))
+    else:
+        m = re.match(r"(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?", s)
+        if m:
+            mon, day = int(m.group(1)), int(m.group(2))
+            if m.group(3):
+                year = int(m.group(3))
+                year += 2000 if year < 100 else 0
+    if not mon or not day:
+        return None
+    try:
+        if year:
+            target = date(year, mon, day)
+        else:
+            target = date(asof.year, mon, day)
+            if (target - asof).days < -15:        # rolled past → next year's print
+                target = date(asof.year + 1, mon, day)
+    except ValueError:
+        return None
+    return (target - asof).days
+
+
+def finviz_row_to_flags(row: dict, *, asof=None) -> dict:
+    """Map one Finviz row → the gates/levels the 0..100 rally dims do NOT carry:
+    earnings blackout, ATR (stop sizing), Forward P/E, ownership levels, short-squeeze
+    pre-alert, 200d overshoot. recommend-only — consumed by write_scan_recommendation
+    and the weekly SOP (raw/metadata/finviz_schema.json gates), never an auto-trade."""
+    fwd_pe = _num(row, "Forward P/E", "Fwd P/E", "Forward PE", "P/E Forward")
+    inst_own = _num(row, "Inst Own", "Institutional Ownership")
+    insider_own = _num(row, "Insider Own", "Insider Ownership")
+    atr = _num(row, "ATR", "Average True Range", "ATR (14)")
+    price = _num(row, "Price")
+    sma200 = _num(row, "SMA200", "SMA200 (Relative)")
+    short_f = _num(row, "Short Float", "Float Short")
+    perf_w = _num(row, "Perf Week", "Performance (Week)")
+    earnings_raw = (row.get("Earnings") or row.get("Earnings Date") or "").strip() or None
+    days_to = _days_to_earnings(earnings_raw, asof=asof)
+    # gate.earnings_blackout: within the next N trading days → trim / avoid new entry.
+    blackout = days_to is not None and 0 <= days_to <= EARNINGS_BLACKOUT_DAYS
+    # short_squeeze_alert: Short Float >10% AND high Insider Own (breakout confirmed by
+    # the rally engine's 連續起漲, not here) → pre-alert, not a buy.
+    squeeze = (short_f is not None and short_f >= SQUEEZE_SHORT_FLOAT_MIN
+               and insider_own is not None and insider_own >= SQUEEZE_INSIDER_OWN_MIN)
+    overshoot = sma200 is not None and sma200 > OVERSHOOT_MAX_PCT
+    atr_pct = round(atr / price * 100, 2) if (atr is not None and price) else None
+    return {
+        "forward_pe": fwd_pe,
+        "inst_own": inst_own,            # ownership LEVEL (≠ Inst Trans change); IPO-drain defense tilt
+        "insider_own": insider_own,
+        "atr": atr, "atr_pct": atr_pct, "price": price,
+        "earnings_date": earnings_raw, "days_to_earnings": days_to,
+        "earnings_blackout": blackout,
+        "short_float": short_f, "perf_week": perf_w, "squeeze_watch": squeeze,
+        "overshoot_200d": overshoot,
+    }
+
+
+def atr_position_size(entry: float, atr: float, account_equity: float, *,
+                      risk_pct: float = 1.0, k: float = ATR_STOP_K_DEFAULT,
+                      max_position_pct: Optional[float] = None) -> Optional[dict]:
+    """ATR-based stop + share count: stop = entry − k·ATR; size so the ATR-stop loss
+    equals ``risk_pct``% of equity (capped at ``max_position_pct``% if given). Pure;
+    recommend-only sizing aid (see finviz_schema.json delta ATR). Returns None on bad
+    inputs. ``risk_pct``/``max_position_pct`` are caller-supplied (e.g. from
+    risk_config.yaml position_caps_pct) — this helper does not read the risk policy."""
+    if not (entry and atr and account_equity) or entry <= 0 or atr <= 0 or account_equity <= 0:
+        return None
+    risk_per_share = k * atr
+    stop = max(0.0, entry - risk_per_share)
+    shares = int((account_equity * (risk_pct / 100.0)) // risk_per_share)
+    if max_position_pct is not None:
+        cap_value = account_equity * (max_position_pct / 100.0)
+        if shares * entry > cap_value:
+            shares = int(cap_value // entry)
+    return {"stop": round(stop, 2), "risk_per_share": round(risk_per_share, 4),
+            "shares": shares, "position_value": round(shares * entry, 2),
+            "k": k, "risk_pct": risk_pct}
+
+
+def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz",
+                              flags_by_ticker: Optional[dict] = None):
     """Write the data-driven re-recommendation to outputs/finviz-scan-<date>.json
     (ranked, with the buy-consider shortlist) — the Finviz analog of FOM's output."""
     import json
@@ -250,16 +366,74 @@ def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz"):
     outputs_dir = Path(outputs_dir)
     outputs_dir.mkdir(parents=True, exist_ok=True)
     date = datetime.now().strftime("%Y-%m-%d")
+    flags_by_ticker = flags_by_ticker or {}
     def row(s):
-        return {"ticker": s.ticker, "composite": s.composite, "dna_match": s.dna_match,
-                "streak": s.streak, "conviction": s.conviction,
-                "buy_consider": s.buy_consider, "has_fuel": s.has_fuel, "dims": s.dims}
+        d = {"ticker": s.ticker, "composite": s.composite, "dna_match": s.dna_match,
+             "streak": s.streak, "conviction": s.conviction,
+             "buy_consider": s.buy_consider, "has_fuel": s.has_fuel, "dims": s.dims}
+        f = flags_by_ticker.get(s.ticker)
+        if f:
+            d["flags"] = f
+        return d
     rec = {"as_of": date, "source": source, "engine": "finviz-rally", "n": len(signals),
            "buy_consider": [s.ticker for s in signals if s.buy_consider],
+           # gate watchlists from finviz_row_to_flags (SOP steps 7 / squeeze pre-alert)
+           "earnings_blackout": sorted(t for t, f in flags_by_ticker.items()
+                                       if f.get("earnings_blackout")),
+           "squeeze_watch": sorted(t for t, f in flags_by_ticker.items()
+                                   if f.get("squeeze_watch")),
+           "overshoot_200d": sorted(t for t, f in flags_by_ticker.items()
+                                    if f.get("overshoot_200d")),
            "ranked": [row(s) for s in signals]}
     path = outputs_dir / f"finviz-scan-{date}.json"
     path.write_text(json.dumps(rec, ensure_ascii=False, indent=2), encoding="utf-8")
     return path
+
+
+def archive_export(rows, *, source: str, market_data_dir, as_of_label: Optional[str] = None):
+    """Persist the RAW Finviz export rows (FULL columns) to a point-in-time CSV under
+    raw/market_data/finviz-export-<source>-<date>.csv.
+
+    Purpose (principal directive 2026-06-10): keep the raw data WHILE the Finviz Elite
+    subscription is live, so after it lapses the system can still backtest / re-score /
+    run OFFLINE off this archive. Tolerant to varying columns (writes the union of keys).
+    recommend-only research data."""
+    from datetime import datetime
+    from pathlib import Path
+    rows = list(rows or [])
+    if not rows:
+        return None
+    d = Path(market_data_dir)
+    d.mkdir(parents=True, exist_ok=True)
+    date = as_of_label or datetime.now().strftime("%Y-%m-%d")
+    safe = re.sub(r"[^A-Za-z0-9_.-]", "_", str(source or "screen"))[:40]
+    path = d / f"finviz-export-{safe}-{date}.csv"
+    fields = list(dict.fromkeys(k for r in rows for k in r.keys()))
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
+        w.writeheader()
+        w.writerows(rows)
+    return path
+
+
+def load_archived_export(market_data_dir, *, source: str = "universe",
+                         as_of: Optional[str] = None) -> list[dict]:
+    """Read the most recent archived raw export (<= as_of if given) for ``source`` →
+    rows. The OFFLINE fallback when the Finviz token/subscription is gone. Falls back
+    to ANY archived export if the source-specific one is absent. Returns [] if none.
+
+    Note: any CSV whose headers match Finviz column names (e.g. a free Wallmine /
+    TradingView export) parses the same way, so this doubles as the no-Finviz path."""
+    from pathlib import Path
+    d = Path(market_data_dir)
+    if not d.exists():
+        return []
+    safe = re.sub(r"[^A-Za-z0-9_.-]", "_", str(source or "screen"))[:40]
+    cands = sorted(d.glob(f"finviz-export-{safe}-*.csv")) or sorted(d.glob("finviz-export-*.csv"))
+    if as_of:
+        le = [p for p in cands if p.stem.rsplit("-", 1)[-1] <= str(as_of)]
+        cands = le or cands
+    return parse_csv(cands[-1].read_text(encoding="utf-8")) if cands else []
 
 
 def resolve_target(arg: str) -> tuple[str, Optional[str], Optional[str]]:
@@ -309,18 +483,35 @@ def fetch_tickers(filters_or_preset: str, **kw) -> list[str]:
 
 def fetch_universe(tickers: list[str], *, token: Optional[str] = None,
                    view: str = "152", columns: Optional[str] = None,
-                   batch: int = 80, timeout: int = 30) -> list[dict]:
+                   batch: int = 80, timeout: int = 30, pause: float = 1.5,
+                   retries: int = 3) -> list[dict]:
     """Bulk Finviz export for MANY tickers (the whole FOM universe), batched to stay
-    under URL limits. Dedupes by ticker. Real fundamentals/technicals, no yfinance."""
+    under URL limits. Dedupes by ticker. Real fundamentals/technicals, no yfinance.
+
+    Polite by default: sleeps ``pause`` s between batches and backs off on HTTP 429
+    (Finviz rate-limits rapid bulk pulls — see CLAUDE.md 'don't get the IP blocked').
+    Pass pause=0 to disable the delay (e.g. when reading few tickers)."""
+    import time
     out: list[dict] = []
     seen: set[str] = set()
-    for i in range(0, len(tickers), batch):
+    for bi, i in enumerate(range(0, len(tickers), batch)):
         chunk = [t for t in tickers[i:i + batch] if t]
         if not chunk:
             continue
-        rows = fetch_screen(token=token, view=view, columns=columns,
-                            tickers=",".join(chunk), timeout=timeout)
-        for r in rows:
+        if bi > 0 and pause:
+            time.sleep(pause)
+        rows = None
+        for attempt in range(max(1, retries)):
+            try:
+                rows = fetch_screen(token=token, view=view, columns=columns,
+                                    tickers=",".join(chunk), timeout=timeout)
+                break
+            except Exception as exc:
+                if "429" in str(exc) and attempt < retries - 1:
+                    time.sleep((pause or 1.0) * (3 ** (attempt + 1)))  # ~4.5s, 13.5s backoff
+                    continue
+                raise
+        for r in (rows or []):
             t = (r.get("Ticker") or r.get("ticker") or "").strip().upper()
             if t and t not in seen:
                 seen.add(t)
@@ -341,7 +532,7 @@ def fom_universe() -> list[str]:
         pass
     try:
         from sharks.scoring import fom                  # core FOM names (skip if pandas/numpy broken)
-        tickers.update(fom.DEFAULT_UNIVERSE)
+        tickers.update(fom.scan_universe())             # widened: full_universe by default (FOM_UNIVERSE env)
     except Exception:
         pass
     return sorted(t for t in tickers if t and not t.startswith("^") and "-USD" not in t)
@@ -408,23 +599,62 @@ def main(argv: Optional[list[str]] = None) -> int:
     if mode == "rally":
         view = view_override or DIMENSION_VIEW
         columns = cols_override or DIMENSION_COLUMNS
-        kind, flt, tks = resolve_target(arg)
-        try:
-            if kind == "universe":
-                uni = fom_universe()
-                print(f"全宇宙掃描:{len(uni)} 檔(Finviz 批次拉取,無 yfinance)…", file=sys.stderr)
-                rows = fetch_universe(uni, view=view, columns=columns)
-            else:
-                rows = fetch_screen(flt or "", view=view, columns=columns, tickers=tks)
-        except Exception as exc:
-            print(f"驗證失敗:{exc}", file=sys.stderr)
-            return 1
-        from sharks.scoring import rally_signal as RS
+        from pathlib import Path
         from sharks.discord.config import Settings
-        outdir = Settings.load().outputs_dir
+        settings = Settings.load()
+        mdir = settings.project_root / "raw" / "market_data"
+        offline = os.environ.get("FINVIZ_OFFLINE", "").strip().lower() in ("1", "true", "yes")
+
+        if arg.startswith("csv:"):
+            # 外部 CSV 直餵(Wallmine / TradingView / 手動匯出);finviz_row_to_dims 以 header 名比對,
+            # 所以任何欄位名對得上的免費 CSV 都能走同一條管線(無 Finviz 時的主路)。
+            csv_path = Path(arg[4:])
+            rows = parse_csv(csv_path.read_text(encoding="utf-8")) if csv_path.exists() else []
+            if not rows:
+                print(f"驗證失敗:CSV 無資料或不存在 {csv_path}", file=sys.stderr)
+                return 1
+            print(f"📄 外部 CSV 餵入:{len(rows)} 列 ← {csv_path}", file=sys.stderr)
+            try:
+                archive_export(rows, source=f"csv_{csv_path.stem}", market_data_dir=mdir)
+            except Exception:
+                pass
+        else:
+            kind, flt, tks = resolve_target(arg)
+            src_label = "universe" if kind == "universe" else arg
+            try:
+                if offline:
+                    raise RuntimeError("FINVIZ_OFFLINE set — skipping live pull")
+                if kind == "universe":
+                    uni = fom_universe()
+                    print(f"全宇宙掃描:{len(uni)} 檔(Finviz 批次拉取,無 yfinance)…", file=sys.stderr)
+                    rows = fetch_universe(uni, view=view, columns=columns)
+                else:
+                    rows = fetch_screen(flt or "", view=view, columns=columns, tickers=tks)
+                # 趁有訂閱:把原始 Finviz 匯出存 point-in-time CSV(離線回測 / 沒訂閱時 fallback)
+                try:
+                    arch = archive_export(rows, source=src_label, market_data_dir=mdir)
+                    if arch:
+                        print(f"📦 raw export archived → {arch} ({len(rows)} rows)", file=sys.stderr)
+                except Exception as aexc:
+                    print(f"(archive skipped: {aexc})", file=sys.stderr)
+            except Exception as exc:
+                # 離線 / 沒訂閱 fallback:讀最近一次本地原始存檔
+                rows = load_archived_export(mdir, source=src_label)
+                if rows:
+                    print(f"⚠️ live Finviz 不可用({exc});改用本地存檔 {len(rows)} 列 — OFFLINE 模式", file=sys.stderr)
+                else:
+                    print(f"驗證失敗:{exc}(且無本地存檔可 fallback)", file=sys.stderr)
+                    return 1
+        from sharks.scoring import rally_signal as RS
+        outdir = settings.outputs_dir
         prior = RS.load_prior_streaks(outdir)
         sigs = signals_from_finviz(rows, prior_streaks=prior)
-        scan_path = write_scan_recommendation(outdir, sigs, source=arg)
+        flags = {}
+        for r in rows:
+            t = (r.get("Ticker") or r.get("ticker") or "").strip().upper()
+            if t:
+                flags[t] = finviz_row_to_flags(r)
+        scan_path = write_scan_recommendation(outdir, sigs, source=arg, flags_by_ticker=flags)
         # dims coverage — so you can tell if the export is missing columns
         dims_list = [finviz_row_to_dims(r) for r in rows]
         n = len(rows) or 1
@@ -437,10 +667,20 @@ def main(argv: Optional[list[str]] = None) -> int:
                   "Finviz Custom URL 覆蓋(見 docs/finviz_screening_recipe.md)。")
         for s in sigs[:30]:
             d = s.dims
+            f = flags.get(s.ticker, {})
             dstr = " ".join(f"{lbl}{int(d[k])}" if d.get(k) is not None else f"{lbl}–"
                             for k, lbl in (("technical", "技"), ("capital", "資"),
                                            ("fundamental", "基")))
-            print(f"  {s.ticker:<6} C{s.composite:>4.0f} 連{s.streak} {dstr} · {s.conviction}")
+            mark = ("".join(m for m, on in ((" ⚠️E", f.get("earnings_blackout")),
+                                            (" 🔥sq", f.get("squeeze_watch")),
+                                            (" ⛔乖離", f.get("overshoot_200d"))) if on))
+            print(f"  {s.ticker:<6} C{s.composite:>4.0f} 連{s.streak} {dstr}{mark} · {s.conviction}")
+        blackout = [t for t, fl in flags.items() if fl.get("earnings_blackout")]
+        squeeze = [t for t, fl in flags.items() if fl.get("squeeze_watch")]
+        if blackout:
+            print(f"⚠️ 財報黑窗(≤{EARNINGS_BLACKOUT_DAYS}日,減倉/不開新倉):{', '.join(sorted(blackout))}")
+        if squeeze:
+            print(f"🔥 軋空預警(Short Float≥{SQUEEZE_SHORT_FLOAT_MIN:.0f}%＋高內部人持股):{', '.join(sorted(squeeze))}")
         print(f"📄 推薦清單已寫入:{scan_path}")
         print("recommend-only · 連續起漲跨日累計(rally-state)· 永不下單")
         return 0

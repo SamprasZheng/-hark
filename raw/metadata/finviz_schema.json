@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-06-10",
+  "author_role": "assistant-research",
+  "source": "principal-directive + alignment with src/sharks/data/finviz_elite.py (header-name matching)",
+  "purpose": "Canonical list of Finviz columns the weekly scan should pull, the dimension/gate each feeds, free-tier availability, and the delta columns to ADD (Earnings Date, ATR, Forward P/E, Inst Own, Insider Own). finviz_row_to_dims() matches by HEADER NAME, so any superset of columns works; to consume a new column you must (a) add it to your Finviz Custom view and (b) wire it in finviz_row_to_dims / a gate.",
+  "disclaimer": "recommend-only research metadata. Finviz has no point-in-time API: stamp every pull with as_of = NYSE prior close and archive to raw/market_data/ per philosophy/09-point-in-time.md.",
+
+  "finviz_view": {
+    "view_id": "152",
+    "view_name": "Custom",
+    "note": "Overview (111) lacks technical/fundamental/ownership columns. Use Custom (152) with a column-id set. Column ids can vary per account; matching is by header name in finviz_row_to_dims, so a superset is safe. 2026-06-10: add the 5 headers in delta_done_2026-06-10.headers_to_add_to_custom_view ('Forward P/E','Earnings','ATR','Inst Own','Insider Own') to this view so the export returns them.",
+    "current_column_ids": "1,2,3,7,9,10,18,21,22,23,27,29,30,33,35,38,39,41,43,44,48,50,53,54,57,59,62,63,64,65",
+    "free_tier": "Finviz free front-end shows the screener but limits to the first page and no CSV export. Elite (export?...&auth=TOKEN, ~$25/mo) gives full result set + CSV. This system uses Elite (FINVIZ_ELITE_API_KEY in .env). Columns marked free_tier:true are visible in the free screener tabs (Overview/Valuation/Financial/Technical/Ownership) for spot checks even without Elite."
+  },
+
+  "dimensions_consumed_now": {
+    "technical": ["Perf Month", "SMA50", "SMA200", "RSI"],
+    "capital": ["Rel Volume", "Insider Trans", "Inst Trans"],
+    "fundamental": ["ROE", "Gross Margin", "Sales growth past 5 years", "Profit Margin"],
+    "valuation": ["P/E", "Forward P/E", "P/S", "PEG"],
+    "growth": ["EPS growth next year", "Sales growth past 5 years"],
+    "risk": ["Beta", "Short Float", "Volatility"],
+    "analyst": ["Analyst Recom"],
+    "dist_ath_pct": ["52W High"],
+    "_flags_via_finviz_row_to_flags": {
+      "earnings_blackout": ["Earnings"],
+      "ownership_level": ["Inst Own", "Insider Own"],
+      "position_sizing": ["ATR", "Price"],
+      "squeeze_watch": ["Short Float", "Insider Own"],
+      "overshoot_200d": ["SMA200"],
+      "note": "non-dim gates/levels; live in finviz_row_to_flags(), surfaced in outputs/finviz-scan-*.json under each row's 'flags' + top-level earnings_blackout/squeeze_watch/overshoot_200d lists"
+    }
+  },
+
+  "columns": [
+    {"header": "Ticker", "feeds": "id", "free_tier": true, "status": "active"},
+    {"header": "Company", "feeds": "id", "free_tier": true, "status": "active"},
+    {"header": "Sector", "feeds": "sector_bucket", "free_tier": true, "status": "active"},
+    {"header": "Industry", "feeds": "sector_bucket", "free_tier": true, "status": "active"},
+    {"header": "Market Cap", "feeds": "gate.market_cap", "free_tier": true, "status": "active", "notes": "survival gate: avoid nano-cap (>$300M)"},
+    {"header": "P/E", "feeds": "valuation", "free_tier": true, "status": "active"},
+    {"header": "PEG", "feeds": "valuation", "free_tier": true, "status": "active"},
+    {"header": "P/S", "feeds": "valuation", "free_tier": true, "status": "active"},
+    {"header": "EPS growth next year", "feeds": "growth", "free_tier": true, "status": "active"},
+    {"header": "Sales growth past 5 years", "feeds": "fundamental+growth", "free_tier": true, "status": "active"},
+    {"header": "ROE", "feeds": "fundamental", "free_tier": true, "status": "active"},
+    {"header": "Gross Margin", "feeds": "fundamental+gate", "free_tier": true, "status": "active", "notes": "Section 232 overlay: raise threshold for hardware/assembly (only fat-margin names that can pass on tariff)"},
+    {"header": "Profit Margin", "feeds": "fundamental", "free_tier": true, "status": "active"},
+    {"header": "Current Ratio", "feeds": "gate.survival", "free_tier": true, "status": "active", "notes": "MOST important survival gate (>1.5) per finviz_screening_recipe.md"},
+    {"header": "Debt/Equity", "feeds": "gate.survival", "free_tier": true, "status": "active", "notes": "<1, ideally <0.5"},
+    {"header": "Perf Month", "feeds": "technical", "free_tier": true, "status": "active"},
+    {"header": "Perf Quarter", "feeds": "technical", "free_tier": true, "status": "active"},
+    {"header": "SMA20", "feeds": "technical", "free_tier": true, "status": "active", "notes": "% distance from 20d MA"},
+    {"header": "SMA50", "feeds": "technical", "free_tier": true, "status": "active"},
+    {"header": "SMA200", "feeds": "technical", "free_tier": true, "status": "active", "notes": "plan wants 'distance >30% = 乖離過大, reject chase' -> add overshoot guard"},
+    {"header": "RSI", "feeds": "technical", "free_tier": true, "status": "active", "notes": "healthy zone 50-72 in scorer"},
+    {"header": "52W High", "feeds": "dist_ath_pct", "free_tier": true, "status": "active", "notes": "negative % from 52w high"},
+    {"header": "Rel Volume", "feeds": "capital", "free_tier": true, "status": "active", "notes": ">1.5 = capital entering"},
+    {"header": "Avg Volume", "feeds": "gate.liquidity", "free_tier": true, "status": "active", "notes": ">500K (ideally >1M) liquidity gate"},
+    {"header": "Price", "feeds": "gate.price_floor", "free_tier": true, "status": "active", "notes": ">$5 (ideally >$10) penny-stock floor"},
+    {"header": "Insider Trans", "feeds": "capital", "free_tier": true, "status": "active", "notes": "CHANGE in insider holdings (positive = buying)"},
+    {"header": "Inst Trans", "feeds": "capital", "free_tier": true, "status": "active", "notes": "CHANGE in institutional holdings"},
+    {"header": "Beta", "feeds": "risk", "free_tier": true, "status": "active"},
+    {"header": "Short Float", "feeds": "risk", "free_tier": true, "status": "active", "notes": ">20% -> runtime short_blacklist; >10% + weekly breakout -> short-squeeze watch"},
+    {"header": "Volatility", "feeds": "risk", "free_tier": true, "status": "active"},
+    {"header": "Analyst Recom", "feeds": "analyst", "free_tier": true, "status": "active", "notes": "1 strong buy .. 5 sell"},
+    {"header": "Forward P/E", "feeds": "valuation", "free_tier": true, "status": "active", "notes": "wired in finviz_row_to_dims (2026-06-10): pe_eff = Forward P/E when present else trailing P/E (growth names' trailing PE looks stretched)"},
+    {"header": "Earnings", "feeds": "gate.earnings_blackout", "free_tier": true, "status": "active", "notes": "wired in finviz_row_to_flags._days_to_earnings (2026-06-10); blackout window = risk_config.yaml earnings_blackout_tier1_days (3). Finviz header is 'Earnings' (e.g. 'Aug 26 AMC', 'Feb 19/a')"},
+    {"header": "ATR", "feeds": "position_sizing.stop_distance", "free_tier": true, "status": "active", "notes": "wired in finviz_row_to_flags + atr_position_size() (2026-06-10): stop = entry - k*ATR (k~2.5); shares = equity*risk_pct / (k*ATR), capped by position_caps_pct. risk_pct/cap are caller-supplied, helper does not read risk policy"},
+    {"header": "Inst Own", "feeds": "capital.ownership_level", "free_tier": true, "status": "active", "notes": "wired in finviz_row_to_flags (2026-06-10): ownership LEVEL (distinct from Inst Trans change); IPO-drain defense tilt, not a gate"},
+    {"header": "Insider Own", "feeds": "capital.ownership_level", "free_tier": true, "status": "active", "notes": "wired in finviz_row_to_flags (2026-06-10): paired with Short Float (>=10% each) for squeeze_watch pre-alert; breakout confirmed by rally 連續起漲"}
+  ],
+
+  "delta_done_2026-06-10": {
+    "note": "The 5 TO_ADD columns are now wired (Forward P/E into the valuation dim; Earnings/ATR/Inst Own/Insider Own into finviz_row_to_flags + atr_position_size). REMAINING manual step: add these 5 HEADER NAMES to your Finviz Custom view so the export returns them ('Forward P/E','Earnings','ATR','Inst Own','Insider Own') — matching is by header name, absent columns degrade to None.",
+    "headers_to_add_to_custom_view": ["Forward P/E", "Earnings", "ATR", "Inst Own", "Insider Own"]
+  },
+
+  "weekly_presets": {
+    "_comment": "From src/sharks/data/finviz_elite.py PRESETS + docs/finviz_screening_recipe.md. Pass a preset name or raw f= string to: python -m sharks.data.finviz_elite <preset>",
+    "dipbuy": "ta_alltime_b30h,sh_avgvol_o500,sh_price_o5,ta_sma50_pa",
+    "dipbuy_quality": "ta_alltime_b30h,sh_avgvol_o500,sh_price_o5,ta_sma50_pa,fa_curratio_o1.5,fa_sales5years_pos",
+    "rally_ignition": "ta_sma20_pa,ta_sma50_pa,ta_perf_4wup,sh_relvol_o1.5,sh_avgvol_o500,sh_price_o5,fa_grossmargin_pos,fa_epsyoyttm_pos",
+    "mis_killed_2022": "ta_highlow52w_b30h,ta_sma50_pa,sh_relvol_o1.5,sh_avgvol_o500,sh_price_o5,fa_sales5years_pos,fa_grossmargin_pos",
+    "steady_turnaround": "ta_highlow52w_b30to50h,ta_sma50_pa,sh_avgvol_o1000,sh_price_o10,fa_debteq_u0.5,fa_curratio_o1.5,fa_sales5years_pos,it_insidertrans_pos",
+    "aggressive_beaten": "ta_highlow52w_b50h,ta_sma20_pa,sh_relvol_o1.5,sh_avgvol_o500,sh_price_o2,fa_curratio_o1,fa_grossmargin_o20"
+  },
+
+  "gates": {
+    "_comment": "Risk filters BEFORE return filters (finviz_screening_recipe.md). Finviz is the net; system (basecross/rally/stealth) decides life/death + 墓園守門.",
+    "survival": {"current_ratio_min": 1.5, "debt_equity_max": 1.0, "gross_margin_min_pct": 20, "sales5y": "positive"},
+    "liquidity": {"avg_volume_min": 500000, "avg_volume_pref": 1000000, "price_min": 5, "price_pref": 10, "market_cap_min": 300000000},
+    "overshoot": {"sma200_distance_max_pct": 30, "note": "reject chase when price >30% above 200d MA (plan 乖離過大)"},
+    "earnings_blackout": {"days_before": 3, "action": "trim/avoid new entry (gap-risk guard)", "status": "active (finviz_row_to_flags; days = risk_config earnings_blackout_tier1_days)"},
+    "short_squeeze_alert": {"short_float_min_pct": 10, "insider_own_min_pct": 10, "needs": ["weekly breakout (rally 連續起漲)"], "status": "active (finviz_row_to_flags.squeeze_watch)"},
+    "short_blacklist_auto": {"short_float_threshold_pct": 20, "note": "auto-add to runtime short_blacklist (universe.yaml)"}
+  },
+
+  "policy_overlay": {
+    "_comment": "From thesis_policy_regime_2026.md — adjust weights/filters by policy, not buy signals.",
+    "section232_hardware": {"raise_gross_margin_gate_for": ["hardware_oem", "assembly"], "rationale": "only fat-margin names can pass on 25% tariff"},
+    "beneficiaries_tilt_up": ["INTC", "TSM", "MU", "NVDA", "AMD", "COIN", "HOOD", "CRCL", "GOOGL", "MSFT", "AMZN", "META"],
+    "phase2_sme_risk_2027": ["AMAT", "LRCX", "ASML"]
+  },
+
+  "congress_overlay": {
+    "_comment": "From thesis_congress_tracking.md — confirmation/confluence layer, NOT leading (STOCK Act 45-day lag).",
+    "sources": ["NANC holdings (top 20)", "GOP holdings (top 20)", "CapitolTrades Pelosi P000197"],
+    "rule": "intersect weekly /rally buy_consider with NANC/Pelosi disclosures -> star Tier-1 confluence (+1 confidence, never a standalone entry)",
+    "do_not": "do not scrape X/Twitter; use ETF holdings pages + CapitolTrades + House Clerk"
+  }
+}

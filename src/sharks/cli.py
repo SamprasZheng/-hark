@@ -33,6 +33,20 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
         f"updates wiki/ pages with as_of_timestamp discipline. "
         f"See docs/ROADMAP.md (Phase 2)."
     )
+    # Point-in-time discipline (philosophy/09): capture an immutable dated copy of
+    # each live compiled state page so a backtest can read the state as it stood on
+    # the trade date. Opt-in until the real compile runtime lands, which will call
+    # snapshot_all_live_pages() at the end of every compile.
+    if getattr(args, "snapshot", False):
+        from sharks.state.snapshot import snapshot_all_live_pages
+
+        snaps = snapshot_all_live_pages()
+        if snaps:
+            print(f"snapshotted {len(snaps)} live state page(s):")
+            for p in snaps:
+                print(f"  - {p}")
+        else:
+            print("no live compiled state pages to snapshot")
     return 0
 
 
@@ -210,19 +224,111 @@ def _cmd_checklist(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_liquidity(args: argparse.Namespace) -> int:
+    """Liquidity Fishbowl composite (the L score) → outputs/liquidity-fishbowl-*.json.
+
+    Pulls WALCL / RRPONTSYD / BAMLH0A0HYM2 from FRED (keyless CSV) and reduces
+    them to the documented L in [0,1] + a GREEN/YELLOW/ORANGE/RED band the regime
+    classifier consumes. SPX 60d rvol + NYSE A/D are optional injected terms.
+    RECOMMEND-ONLY sizing gauge — never trades. Degrades to the last good snapshot
+    on a FRED failure. See philosophy/concepts/liquidity-fishbowl.md.
+    """
+    from pathlib import Path
+
+    from sharks.regime.liquidity import run_liquidity
+
+    env = run_liquidity(
+        out_dir=Path(args.out_dir),
+        write=not args.dry_run,
+        vintage_date=args.vintage_date,
+        spx_60d_rvol=args.spx_rvol,
+        ad_line_60d_slope=args.ad_slope,
+    )
+    ca = env["composite_alert"]
+    print(f"L = {env['L']}  band={env['regime_band']}  alert={ca['level']}  "
+          f"(live={env['live_data']}, stale={env['stale_fallback']})")
+    if env.get("missing"):
+        print(f"  missing terms (weights renormalized): {env['missing']}")
+    if env.get("dragon_eating_dragon"):
+        print("  ! 多殺多 — dragon-eating-dragon regime flagged (Risk Officer escalation)")
+    return 0
+
+
+def _cmd_postmortem(args: argparse.Namespace) -> int:
+    """Attribution telemetry — classify why a closed/failed pick missed.
+
+    With a ticker: post-mortem the most recent entry for it. Without: scan all
+    outputs/picks-*.json long_new entries and report the closed/failed ones,
+    tagging each cause ∈ {regime_flip, quant_signal_failure, narrative_shift,
+    execution_timing}. RECOMMEND-ONLY — never trades. See wiki/03_alpha_library §G.
+    """
+    from pathlib import Path
+
+    # Causes carry CJK in their summaries; force UTF-8 like the checklist command.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+    from sharks.decision.postmortem import (
+        format_summary,
+        run_postmortem,
+        scan_closed_positions,
+        write_aggregate,
+        write_output,
+    )
+
+    out_dir = Path(args.out_dir)
+    exit_date = args.exit_date or _today()
+    net = not args.no_network
+
+    if args.ticker:
+        matches = [e for e in scan_closed_positions(out_dir) if e["ticker"] == args.ticker.upper()]
+        if not matches:
+            print(f"no long_new entry for {args.ticker.upper()} in {out_dir}/picks-*.json")
+            return 0
+        result = run_postmortem(matches[-1], as_of_exit=exit_date, network=net)
+        print(format_summary(result))
+        if not args.dry_run:
+            print(f"wrote {write_output(out_dir, result)}")
+        return 0
+
+    results = []
+    for e in scan_closed_positions(out_dir):
+        r = run_postmortem(e, as_of_exit=exit_date, network=net)
+        if r.exited_reason != "open":
+            results.append(r)
+    print(f"postmortem scan: {len(results)} closed/failed pick(s)")
+    for r in results:
+        print(f"  {r.ticker}: {r.exited_reason} -> {r.cause} ({r.cause_confidence})")
+    if results and not args.dry_run:
+        print(f"wrote {write_aggregate(out_dir, results, exit_date)}")
+    return 0
+
+
 def _today() -> str:
     from datetime import datetime
     return datetime.now().strftime("%Y-%m-%d")
 
 
 def _cmd_wiki_lint(args: argparse.Namespace) -> int:
-    print(
-        f"[stub] sharks wiki lint called. "
-        f"Phase 2 will implement frontmatter validation, [[link]] resolution, "
-        f"as_of_timestamp checks, and log.md format verification. "
-        f"See wiki/README.md and philosophy/09-point-in-time.md."
-    )
-    return 0
+    """Validate point-in-time state-snapshot discipline (philosophy/09).
+
+    Exits non-zero only on hard errors (a live compiled page with no
+    as_of_timestamp). Warnings — e.g. a live page not yet snapshotted — are
+    reported but exit 0, so the command stays green on a freshly-seeded repo.
+    """
+    from sharks.state.lint import lint_state
+
+    findings = lint_state()
+    if not findings:
+        print("wiki lint: state-snapshot discipline OK")
+        return 0
+    errors = [f for f in findings if f["severity"] == "error"]
+    print(f"wiki lint: {len(findings)} finding(s) ({len(errors)} error):")
+    for f in findings:
+        print(f"  [{f['severity']}] {f['page']}: {f['message']}")
+    return 1 if errors else 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -262,6 +368,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--source",
         required=True,
         help="path to the raw/ source file to compile",
+    )
+    p_ingest.add_argument(
+        "--snapshot",
+        action="store_true",
+        help="capture an immutable dated copy of each live wiki state page into "
+        "wiki/_snapshots/ (point-in-time discipline, philosophy/09)",
     )
     p_ingest.set_defaults(func=_cmd_ingest)
 
@@ -372,6 +484,42 @@ def build_parser() -> argparse.ArgumentParser:
     p_chk.add_argument("--dry-run", action="store_true",
                        help="print the scorecard but do not write outputs/")
     p_chk.set_defaults(func=_cmd_checklist)
+
+    # `sharks postmortem` — attribution telemetry on closed/failed picks (REAL)
+    p_pm = subparsers.add_parser(
+        "postmortem",
+        help="attribution telemetry: classify why a closed/failed pick missed "
+        "(regime_flip / quant_signal_failure / narrative_shift / execution_timing; recommend-only)",
+    )
+    p_pm.add_argument("ticker", nargs="?", default=None,
+                      help="ticker to post-mortem; omit to scan all closed picks")
+    p_pm.add_argument("--exit-date", default=None,
+                      help="point-in-time exit date YYYY-MM-DD (default: today)")
+    p_pm.add_argument("--no-network", action="store_true",
+                      help="offline: skip FOM re-score + live regime; use injected/recorded baselines only")
+    p_pm.add_argument("--out-dir", default="outputs",
+                      help="dir holding picks-*.json + where postmortem-*.json is written")
+    p_pm.add_argument("--dry-run", action="store_true",
+                      help="print the attribution but do not write outputs/")
+    p_pm.set_defaults(func=_cmd_postmortem)
+
+    # `sharks liquidity` — FRED liquidity-fishbowl composite (REAL, recommend-only)
+    p_liq = subparsers.add_parser(
+        "liquidity",
+        help="liquidity-fishbowl L composite from FRED (WALCL/RRP/HY-OAS) → "
+        "GREEN/YELLOW/ORANGE/RED band for the regime classifier (recommend-only)",
+    )
+    p_liq.add_argument("--out-dir", default="outputs",
+                       help="dir where liquidity-fishbowl-<date>.json is written")
+    p_liq.add_argument("--vintage-date", default=None,
+                       help="ALFRED vintage YYYY-MM-DD: use values as first published (backtests)")
+    p_liq.add_argument("--spx-rvol", type=float, default=None,
+                       help="optional SPX 60d realised vol (annualised %%) — non-FRED term")
+    p_liq.add_argument("--ad-slope", type=float, default=None,
+                       help="optional NYSE A/D 60d slope, normalised [-1,1] — non-FRED term")
+    p_liq.add_argument("--dry-run", action="store_true",
+                       help="print L + band but do not write outputs/")
+    p_liq.set_defaults(func=_cmd_liquidity)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")

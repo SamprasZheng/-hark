@@ -106,6 +106,16 @@ WEB3_CRYPTO = [
     "CLSK", "MARA", "RIOT", "HUT", "WULF", "CIFR", "BITF",  # 礦工(後段循環高 beta)
     "IBIT",                                               # 現貨 BTC ETF
 ]
+# 電力/算力瓶頸:AI capex 的最終瓶頸是電力與散熱(Mag7 2026 capex ~$725-775B)。
+# IPP(獨立發電,AI 長約)+ 核電/SMR + 鈾燃料 + 資料中心電力/散熱/電網設備。
+# Pelosi 2026-01 買 VST calls(國會共振)。見 thesis_policy_regime_2026.md / thesis_congress_tracking.md。
+POWER_BOTTLENECK = [
+    "VST", "CEG", "NRG", "TLN",          # IPP — AI 長約受惠(Pelosi 買 VST)
+    "OKLO", "SMR", "BWXT",               # 核電 / SMR 小型模組爐
+    "UUUU", "CCJ", "UEC", "DNN",         # 鈾礦 / 核燃料
+    "VRT", "GEV", "ETN", "PWR",          # DC 電力 / 散熱 / 電網設備
+    "NEE",                               # 公用事業(再生能源龍頭)
+]
 
 FetchFn = Callable[[list[str]], dict[str, dict[str, list[float]]]]  # t -> {"close":[],"volume":[]}
 
@@ -276,7 +286,7 @@ def scope_universe(which: str = "all") -> tuple[str, list[str]]:
                         | set(ecommerce_all) | set(BROADENING_LAGGARDS)
                         | set(SPACE_PUREPLAYS) | set(DIVERSIFIED_TURNAROUND)
                         | set(MID_RISK_TURNAROUND) | set(IPO_PROXIES) | set(AGENTIC_PAYMENTS)
-                        | set(WEB3_CRYPTO))
+                        | set(WEB3_CRYPTO) | set(POWER_BOTTLENECK))
     lists = {
         "killed2022": ("2022 殺下來的大底", KILLED_2022),
         "ai_software": ("AI 錯殺軟體股", AI_OVERSOLD_SOFTWARE),
@@ -289,6 +299,7 @@ def scope_universe(which: str = "all") -> tuple[str, list[str]]:
         "ipo": ("2026 IPO 超級年 · 上市代理/受惠", IPO_PROXIES),
         "payments": ("Agentic 支付 · 金融科技變革", AGENTIC_PAYMENTS),
         "crypto": ("Web3/加密週期(BTC 後段循環)", WEB3_CRYPTO),
+        "power": ("電力/算力瓶頸 · 核電/SMR/鈾/DC電力", POWER_BOTTLENECK),
         "all": ("月線大底金叉全名單", everything),
     }
     title, base = lists.get(which, lists["all"])
@@ -297,7 +308,7 @@ def scope_universe(which: str = "all") -> tuple[str, list[str]]:
 
 # Set of valid scope names (for callers that need to tell scope from a raw filter str).
 SCOPES = ("killed2022", "ai_software", "ecommerce", "ecommerce_small", "broadening",
-          "space", "diversified", "midrisk", "ipo", "payments", "crypto", "all")
+          "space", "diversified", "midrisk", "ipo", "payments", "crypto", "power", "all")
 
 
 def run_basecross(which: str = "all", *, settings: Optional[Settings] = None,

@@ -210,27 +210,52 @@ def ask_claude_research(question: str, settings: Settings) -> BrainReply:
     """The /ask loopback: read-only Claude Code over the $hark tree.
 
     On a 'local' backend (offline pin) this degrades to a tool-less Nemotron
-    answer, with a note that it cannot read the repo."""
+    answer, with a note that it cannot read the repo.
+
+    Every call is logged to a local (gitignored) transcript, and an identical
+    recent question is served from cache to cut paid Claude calls (disable with
+    SHARKS_ASK_CACHE=0). Logging/caching is best-effort and never breaks the call.
+    """
+    from sharks.discord import transcript as _tx
+
+    use_cache = os.environ.get("SHARKS_ASK_CACHE", "1") != "0"
+    if use_cache:
+        cached = _tx.get_cached("ask", question)
+        if cached:
+            _tx.log_interaction(kind="ask", prompt=question, response=cached.get("response", ""),
+                                backend="cache", cost_usd=0.0, cache_hit=True)
+            return BrainReply(ok=True, backend="cache", model=cached.get("model", ""),
+                              cost_usd=0.0,
+                              text="（快取 · 近期已答,省一次 API）\n" + cached.get("response", ""))
+
     if settings.backend == "local":
         sys = (
             "你是 PolkaSharks 投研系統的本地助理。離線模式下你無法讀取檔案,"
             "只能用一般知識回答,並提醒使用者開啟混合模式才能讀取 $hark。"
             "用繁體中文,只做研究與分析,不是個人化投資建議,永不代為下單。"
         )
-        rep = _run_nemotron(sys, question, settings)
-        if rep.ok:
-            rep.text = "（離線模式 · 未讀取 $hark）\n" + rep.text
-        return rep
+        reply = _run_nemotron(sys, question, settings)
+        if reply.ok:
+            reply.text = "（離線模式 · 未讀取 $hark）\n" + reply.text
+    else:
+        system = (
+            "你是 PolkaSharks 私人投研系統的研究助理,在唯讀模式下運作。"
+            "你可以讀取整個 $hark(philosophy/、wiki/、analysts/、outputs/、tech/、"
+            "crypto/ 等),回答時盡量引用具體檔案路徑與 outputs/ 的數據。"
+            "嚴守界線:只做研究/分析/教育,這不是個人化投資建議,你不是持牌投顧;"
+            "系統只產生研究與建議,永不代為下單、轉帳或連接券商/交易所。"
+            "用繁體中文,簡潔、可證偽,不要捏造數字或日期(沒資料就說 TBD)。"
+        )
+        reply = _run_claude(question, settings, system_prompt=system, read_only_tools=True)
 
-    system = (
-        "你是 PolkaSharks 私人投研系統的研究助理,在唯讀模式下運作。"
-        "你可以讀取整個 $hark(philosophy/、wiki/、analysts/、outputs/、tech/、"
-        "crypto/ 等),回答時盡量引用具體檔案路徑與 outputs/ 的數據。"
-        "嚴守界線:只做研究/分析/教育,這不是個人化投資建議,你不是持牌投顧;"
-        "系統只產生研究與建議,永不代為下單、轉帳或連接券商/交易所。"
-        "用繁體中文,簡潔、可證偽,不要捏造數字或日期(沒資料就說 TBD)。"
-    )
-    return _run_claude(question, settings, system_prompt=system, read_only_tools=True)
+    # Persist transcript + cache the fresh answer (best-effort; never raises).
+    _tx.log_interaction(kind="ask", prompt=question, response=reply.text,
+                        backend=reply.backend, model=reply.model, cost_usd=reply.cost_usd,
+                        latency_ms=reply.latency_ms, ok=reply.ok)
+    if reply.ok and use_cache:
+        _tx.put_cached("ask", question, response=reply.text, backend=reply.backend,
+                       model=reply.model, cost_usd=reply.cost_usd)
+    return reply
 
 
 # ── multi-backend router (Discord = front-end to all local resources) ─────────

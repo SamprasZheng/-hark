@@ -10,6 +10,8 @@ schema_version: 1
 
 # Forward Event Calendar — 2026 June to December
 
+> ⚠️ **IPO timing rows corrected by web-verification 2026-06-10** → see [[../watchlist/ipo_calendar_2026]]. Overrides: SpaceX = confirmed **SPCX, trades 6/12, $1.77T** (xAI merged in, no separate IPO); OpenAI/Anthropic filed **confidential** S-1s (6/9 / 6/1) with **no committed date** (the "Sept"/"Oct" targets below are unconfirmed → TBD); Databricks slips to **~2027**. Macro-event rows (FOMC, earnings, seasonality) below are unaffected.
+
 For each month: known major catalysts + the FOM-flagged watchlist tickers most likely to react.
 
 ## June 2026 — SpaceX IPO Roadshow + Q2 Earnings Run-up

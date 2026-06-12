@@ -215,7 +215,7 @@ IP_DEFENSIBILITY = {
     "CRWV": 65,  # CoreWeave neocloud
     "ALGM": 65,  # Allegro Micro auto power
     # Wiki 16 themes
-    "DNN":  35, "CCJ": 50, "BEAM": 55, "NEM": 60,
+    "DNN":  35, "CCJ": 50, "UUUU": 35, "BEAM": 55, "NEM": 60,
     "VAL":  30, "AESI": 35, "GLD": 75,
     # Serenity supply-chain (US-listed subset)
     "TSEM": 72,  # Tower Semi — specialty/SiPh foundry ("photonics TSMC")
@@ -254,6 +254,11 @@ IP_DEFENSIBILITY = {
     "MBLY": 50,  # Mobileye — ADAS incumbent; vision-vs-hybrid contested
     "RXRX": 35,  # Recursion — AI-drug platform, 太早, optionality not cashflow
     "SDGR": 38,  # Schrodinger — physics-based drug sim; long-dated option
+    # ── apparel / footwear (2026-06-10) — brand-moat proxy (pricing power / brand equity) ──
+    "NKE": 80, "LULU": 75, "DECK": 72, "ONON": 68, "BIRK": 70, "RL": 70, "TPR": 62,
+    "COLM": 58, "BURL": 55, "LEVI": 55, "CROX": 55, "SKX": 55, "BOOT": 52, "PVH": 50,
+    "CPRI": 48, "KTB": 48, "VFC": 45, "ANF": 45, "URBN": 45, "AEO": 42, "GAP": 42,
+    "VSCO": 42, "UAA": 40, "GIII": 38, "HBI": 35, "FL": 35,
 }
 
 # ─── Data pull ───
@@ -601,6 +606,23 @@ def rank_universe(
     return scores
 
 
+def scan_universe() -> list[str]:
+    """Universe for the FOM scan. Default = the FULL wide net (>=300 across all
+    sectors incl. apparel/consumer/healthcare/financials/industrials/energy, via
+    sharks.scoring.universe + data/universe_extra.txt). Env ``FOM_UNIVERSE`` overrides:
+      ``full`` (default) · ``core``/``default`` (DEFAULT_UNIVERSE only, fast) ·
+      ``otc`` (full + OTC pinks).
+    Lazy import of full_universe avoids the circular import (universe.py imports
+    DEFAULT_UNIVERSE from this module)."""
+    import os
+    mode = os.environ.get("FOM_UNIVERSE", "full").strip().lower()
+    if mode in ("core", "default"):
+        return DEFAULT_UNIVERSE
+    from sharks.scoring.universe import full_universe
+    return full_universe(include_extended=True, include_extra=True,
+                         include_otc=(mode == "otc"))
+
+
 def main(out_dir: Path, use_regime: bool = True) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     today = pd.Timestamp("2026-05-29")
@@ -610,10 +632,11 @@ def main(out_dir: Path, use_regime: bool = True) -> int:
             f"Regime: {regime['label']} ({', '.join(regime['reasons']) or 'no reasons'})",
             file=sys.stderr,
         )
-    print(f"FOM scoring as of {today.date()}, universe {len(DEFAULT_UNIVERSE)} tickers", file=sys.stderr)
-    closes = fetch_monthly(DEFAULT_UNIVERSE + INDICES + SECTOR_ETFS + CRYPTO, "2019-12-01", "2026-05-29")
+    universe = scan_universe()
+    print(f"FOM scoring as of {today.date()}, universe {len(universe)} tickers", file=sys.stderr)
+    closes = fetch_monthly(universe + INDICES + SECTOR_ETFS + CRYPTO, "2019-12-01", "2026-05-29")
     print(f"  data: {len(closes.columns)} tickers with data", file=sys.stderr)
-    scores = rank_universe(closes, DEFAULT_UNIVERSE, today, regime=regime)
+    scores = rank_universe(closes, universe, today, regime=regime)
 
     if regime is not None:
         scoring_method = (
@@ -629,7 +652,7 @@ def main(out_dir: Path, use_regime: bool = True) -> int:
         "as_of": datetime.now(timezone.utc).isoformat(),
         "schema_version": 2,
         "scoring_window": {"start": "2019-12-01", "end": "2026-05-29"},
-        "universe_size": len(DEFAULT_UNIVERSE),
+        "universe_size": len(universe),
         "tickers_scored": len(scores),
         "regime": regime,
         "scoring_method": scoring_method,

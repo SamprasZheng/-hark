@@ -132,6 +132,14 @@ TICKER_SECTOR = {
     "RKLB": "ITA",  # Rocket Lab
     "ACHR": "ITA",  # Archer Aviation
     "CRSP": "XBI",  # CRISPR
+    # apparel / footwear / specialty retail -> consumer discretionary (2026-06-10)
+    "NKE": "XLY", "LULU": "XLY", "DECK": "XLY", "ONON": "XLY", "CROX": "XLY",
+    "SKX": "XLY", "VFC": "XLY", "RL": "XLY", "TPR": "XLY", "CPRI": "XLY",
+    "UAA": "XLY", "VSCO": "XLY", "PVH": "XLY", "GAP": "XLY", "ANF": "XLY",
+    "LEVI": "XLY", "COLM": "XLY", "AEO": "XLY", "URBN": "XLY", "BIRK": "XLY",
+    "BOOT": "XLY", "FL": "XLY", "KTB": "XLY", "HBI": "XLY", "GIII": "XLY", "BURL": "XLY",
+    # power / uranium (2026-06-10)
+    "UUUU": "XLE",
 }
 
 
