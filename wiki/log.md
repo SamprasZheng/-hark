@@ -616,3 +616,14 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **整合**:world_monitor 增 behavioral 區段(QQQ vol ratio + reflexivity 斷裂數自動取)+ 空快照防護(_payload_empty);brief §2 增三行(行為偏差/歷史鏡頭/下月態展望 — 全 observe-first);週六 gated 增 backfill+transitions 週更。
 - **數據事故記錄(supersession)**:`data/lake/world/gscpi-2026-06-12.json` 為日期解析修復前寫入的空序列(首寫不可變)→ 依 CLAUDE.md §2 以 `gscpi-2026-06-12.v2.json` 接替(341 列,1998-01→2026-05;glob 排序自動選用);防護已加,此類事故不再。
 - 測試 +48(backfill 13/transitions 19/bias 16),全套 1142 綠。commit ba84b4a(模組)+ 本條目隨整合 commit。
+
+## 2026-06-12(s)— [09:30 ET] fix | UI「今日推薦」資料過舊 — /api/reco 改讀 canonical 日度
+- **症狀**:dashboard 今日推薦面板停在 2026-06-10。**根因**:`/api/reco` 只 glob `outputs/daily-reco-*.md`,而該家族在 codebase 無產生器(06-10 是先前 session 的一次性 agent 手稿)— 監看了一條死水線。
+- **修補**(`ui/server.py`):新 `latest_reco_file()` — canonical `wiki/05_recommendations/YYYY-MM-DD.md`(嚴格日度命名,README/archive/專題頁不參賽)與 legacy `daily-reco-*` 兩家族取日期最大、同日 canonical 優先;`strip_frontmatter()` 剝 YAML(marked 渲染醜)。+4 tests(ui_server 27 綠)。
+- server 重啟(舊 PID 6772 系統 python → 44384 venv python,repo root cwd);`/api/reco` 實測回 2026-06-12。
+- 註:screener 主表 as_of 2026-06-11 屬正常(lake = EOD,今日美股未收盤);log 撞名記錄:本日有兩條 (r)(日度 10-signal 與夜班 wave1),後續沿用字母續排。
+## 2026-06-12(s)— 夜班 wave2 + 下市票分母「免費層結構性阻斷」實證(重要裁決待主理人)
+- **wave2 落地**(commit 009e195):UI 世界面板補行為偏差(≥6 警示徽章+mania 註記)/下月態展望/歷史鏡頭三行(全 observe-first,缺源不破版,UI 測試 32 綠);collect 候選優先級(殼名/權證尾碼降權、2012-23 死亡年優先 — 純重排不丟棄)。wiki/index MOC 補齊 06-24(commit 2a390ca)。
+- **結構性阻斷實證(夜間三連probe)**:(1) Polygon 免費層對 ABMD(Abiomed,2022-12 被併下市)aggs 回 **0 根**(status OK / resultsCount 0 — 免費 ~2 年窗 + 下市票無資料);(2) yfinance 對 ABMD/AAWW 回 0(Yahoo 清空下市票);(3) Stooq 有 JS 反爬牆。→ **48 根月線門檻在免費層永遠達不到,Phase 2 collect 照原設計不可能成功**。今晚 570 個 too_short 全是免費層假象(含真公司)。
+- **處置**:夜間批次停止(再掃只是燒 API);失能原因寫進模組 docstring + 風險登記簿;**manifest 毒化警告**已記(付費升級後須清 too_short 條目重掃,否則永久跳過可用票)。
+- **待主理人裁決**:deep-kill 真實存活率需要付費數據 — Polygon Starter $29/mo(5 年史)或 Sharadar 級 survivorship-free 源;這正是 plan.md「偶爾付費驗證」的標準場景。在此之前 74.1% 維持倖存者宇宙上界、cap 11% 取悲觀端、collect 排程保留(升級即自動恢復作用)。

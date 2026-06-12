@@ -12,6 +12,14 @@ Phase 2(collect,網路):Polygon delisted 票(下市=湖外的真亡者)逐批收
   data/lake/failed/,跑同樣觸發偵測 → 補進分母。免費層 5 req/min → 每次 --budget N,
   掛排程慢慢收;分母隨之變誠實。
 
+⚠ **免費層結構性阻斷(2026-06-12 夜實證)**:Polygon 免費層對 2 年窗外的下市票
+  aggs 回 **0 根**(ABMD/Abiomed 實測,status OK resultsCount 0);yfinance 對下市票
+  已清空;Stooq 有 JS 反爬牆。→ 免費層下 48 根月線門檻**永遠**達不到,分母回填
+  需付費數據(Polygon Starter $29/mo = 5 年史;Sharadar 等 survivorship-free 源)。
+  **manifest 毒化警告**:目前 too_short 條目多為免費層假象(真公司如 ABMD/AAWW 也
+  被標 too_short)— 升級付費層後必須先清掉 manifest 的 too_short 條目重掃,
+  否則永久跳過可用票。survival 74.1% 維持「倖存者宇宙上界」標注。
+
 ⚠ 揭露:Phase 1 仍是倖存者宇宙(下市者缺席)→ **真實存活率只會更低**,
 sizing 取下緣。llm_involvement: none。
 
