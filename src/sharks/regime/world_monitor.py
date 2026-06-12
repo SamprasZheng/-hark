@@ -277,12 +277,114 @@ def run_world_monitor(out_dir: Path = Path("outputs"), *, today: Optional[str] =
     return report
 
 
+# ── 月度閾值重校(建議制:重算分位數 → 落盤建議;config 是人的裁決,不自動改)──
+
+_PCTL_RE = None     # lazy compile
+
+
+def _leaf_conditions(cond: dict):
+    """攤平 any/all 樹 → 葉節點 generator。"""
+    if "any" in cond:
+        for c in cond["any"]:
+            yield from _leaf_conditions(c)
+    elif "all" in cond:
+        for c in cond["all"]:
+            yield from _leaf_conditions(c)
+    else:
+        yield cond
+
+
+def recalibrate(out_dir: Path = Path("outputs"), *, today: Optional[str] = None,
+                lake_dir: Path = LAKE_WORLD, config_path: Path = EVENTS_CONFIG,
+                write: bool = True, series: Optional[dict] = None) -> dict:
+    """每月重算 1985+ 分位數 → outputs/world-thresholds-suggest-<date>.json。
+
+    只對 `_basis` 標注 pNN 的閾值給建議;drift >10% 標 review 旗
+    (config calibration.review 紀律:regime 內不追雜訊)。series 可注入(測試)。
+    """
+    import re
+    global _PCTL_RE
+    if _PCTL_RE is None:
+        _PCTL_RE = re.compile(r"p(\d{2})")
+    today = today or datetime.now().strftime("%Y-%m-%d")
+    try:
+        config = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    except Exception:
+        config = {}
+    if series is None:
+        series = {}
+        for name in ("gpr_monthly", "gpr_daily"):
+            payload, _ = _lake_latest(name, lake_dir)
+            series[name] = payload or {}
+
+    def q(vals: list[float], pct: int) -> Optional[float]:
+        if not vals:
+            return None
+        s = sorted(vals)
+        i = min(int(round(pct / 100 * (len(s) - 1))), len(s) - 1)
+        return round(s[i], 3)
+
+    hist = {
+        "gpr": _values((series.get("gpr_monthly") or {}).get("GPR") or [], since="1985-01-01"),
+        "gprc_twn": _values((series.get("gpr_monthly") or {}).get("GPRC_TWN") or [],
+                            since="1985-01-01"),
+        "gprc_chn": _values((series.get("gpr_monthly") or {}).get("GPRC_CHN") or [],
+                            since="1985-01-01"),
+        "gprd_ma30": _values((series.get("gpr_daily") or {}).get("GPRD_MA30") or []),
+    }
+    computed = {k: {f"p{p}": q(v, p) for p in (90, 95, 99)} for k, v in hist.items() if v}
+
+    suggestions = []
+    for ev in config.get("events") or []:
+        for leaf in _leaf_conditions(ev.get("condition") or {}):
+            metric, basis = leaf.get("metric"), str(leaf.get("_basis") or "")
+            m = _PCTL_RE.search(basis)
+            if not m or metric not in computed:
+                continue
+            new = computed[metric].get(f"p{m.group(1)}")
+            cur = leaf.get("value")
+            if new is None or not isinstance(cur, (int, float)) or cur == 0:
+                continue
+            drift = round((new - cur) / abs(cur) * 100, 1)
+            suggestions.append({"event": ev.get("id"), "metric": metric,
+                                "basis": f"p{m.group(1)}", "current": cur,
+                                "suggested": new, "drift_pct": drift,
+                                "review": abs(drift) > 10.0})
+    report = {"as_of": today, "generated_at": datetime.now(timezone.utc).isoformat(),
+              "engine": "world-thresholds-recalibrate", "llm_involvement": "none",
+              "n_history": {k: len(v) for k, v in hist.items()},
+              "computed_percentiles": computed, "suggestions": suggestions,
+              "note": "建議制:drift >10% 才考慮動閾值;套用=人工改 config/world_events.json"
+                      "(含 calibration.basis 同步),保留審計鏈。"}
+    if write:
+        out_dir.mkdir(exist_ok=True)
+        p = out_dir / f"world-thresholds-suggest-{today}.json"
+        p.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"wrote {p}", file=sys.stderr)
+    return report
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     import argparse
     ap = argparse.ArgumentParser(description="world monitor — GSCPI/GPR → 世界事件")
     ap.add_argument("--out-dir", default="outputs")
     ap.add_argument("--dry-run", action="store_true", help="印結果不落盤")
+    ap.add_argument("--recalibrate", action="store_true",
+                    help="重算分位數 → 閾值調整建議(不跑感測)")
     args = ap.parse_args(argv)
+    if args.recalibrate:
+        rep = recalibrate(Path(args.out_dir), write=not args.dry_run)
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
+        flagged = [s for s in rep["suggestions"] if s["review"]]
+        print(f"recalibrate:suggestions={len(rep['suggestions'])} "
+              f"review-flagged={len(flagged)}")
+        for s in flagged:
+            print(f"  {s['event']}/{s['metric']} {s['basis']}:"
+                  f"{s['current']} -> {s['suggested']}(drift {s['drift_pct']}%)")
+        return 0
     rep = run_world_monitor(Path(args.out_dir), write=not args.dry_run)
     try:
         sys.stdout.reconfigure(encoding="utf-8")    # cp950 console 防護

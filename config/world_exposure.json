@@ -1,29 +1,33 @@
 {
-  "_doc": "個股全球曝險地圖(world model)。靜態、git 版控(=PIT 安全:回測查當時 commit)。群組成員來源:watchlist/universe.yaml tier2_supply_chain + philosophy/entities/(TSM/ASML/AVGO/AMD)+ wiki/positions.md 光通訊/CPO 持倉論述(COHR/LITE/SIVEF)。曝險 = max(所屬群組權重, sector_base[sector], default)。改名單改這裡,不改程式;每月與 universe.yaml 對帳。",
-  "version": 1,
+  "_doc": "個股全球曝險地圖(world model)。靜態、git 版控(=PIT 安全:回測查當時 commit)。v2(2026-06-12):依 wiki/24_exposure_validation.md 網路證據覆核 — 區分一階「生產斷供」(taiwan_chain:TSMC 代工/台灣組裝)與二階「需求遞延」(taiwan_demand_equipment:設備商台灣營收 19-38%);SIVEF(蘇格蘭廠)/COHR(馬來西亞·越南)/LITE(泰國)移出台鏈、ARM(純 IP)退板塊底線;新增 AAPL/ASX/UMC(CONFIRMED-HIGH)。曝險 = max(所屬群組權重, sector_base[sector], default)。改名單改這裡,不改程式;每月與 universe.yaml 對帳。",
+  "version": 2,
   "as_of": "2026-06-12",
   "groups": {
     "taiwan_chain": {
-      "_doc": "台積電製造/台鏈組裝直接暴露 — TS_HIGH 事件的 review 對象",
+      "_doc": "一階生產斷供:TSMC 代工核心產品或台灣組裝 — TS_HIGH 事件的 review 對象(wiki/24 驗證 CONFIRMED-HIGH;ANET 待組裝地驗證後再加)",
       "weight": 0.9,
-      "tickers": ["TSM", "NVDA", "AMD", "AVGO", "ARM", "MU", "AMAT", "LRCX",
-                  "ASML", "KLAC", "ONTO", "SMCI", "COHR", "LITE", "SIVEF",
-                  "AAOI", "MRVL", "ALAB", "CRDO", "QCOM"]
+      "tickers": ["TSM", "NVDA", "AMD", "AVGO", "MU", "SMCI", "AAOI", "MRVL",
+                  "ALAB", "CRDO", "QCOM", "AAPL", "ASX", "UMC"]
+    },
+    "taiwan_demand_equipment": {
+      "_doc": "二階需求遞延:半導體設備商台灣營收占比 19-38%(FY2025:AMAT 24/LRCX 19/ASML 30-35/KLAC ~26/ONTO 31-38)— 斷供時是訂單遞延風險非停產風險,降權 0.6 且不觸發 human_review(wiki/24 結構性建議)",
+      "weight": 0.6,
+      "tickers": ["AMAT", "LRCX", "KLAC", "ASML", "ONTO", "TER"]
     },
     "optics_cpo": {
-      "_doc": "光通訊/CPO 供應鏈(關稅+台海雙重暴露)",
+      "_doc": "光通訊/CPO 供應鏈 — 製造在泰國(LITE/FN)/馬來西亞·越南(COHR)/蘇格蘭(SIVEF);真實共同軸 = 關稅 + TSMC 代工 DSP(間接),非台海組裝斷供(wiki/24 修正)",
       "weight": 0.7,
       "tickers": ["COHR", "LITE", "SIVEF", "AAOI", "FN"]
     },
     "china_revenue": {
-      "_doc": "中國營收/需求暴露(關稅與報復措施第一排)",
+      "_doc": "中國營收/需求暴露(關稅與報復第一排)。wiki/24 抽驗:TXN ~50% 中國出貨、INTC 29% 中國營收 confirmed;其餘 10 檔仍為專家先驗(TBD)",
       "weight": 0.6,
       "tickers": ["AAPL", "TSLA", "NKE", "SBUX", "QCOM", "TXN", "INTC",
                   "MCHP", "ADI", "WYNN", "LVS", "CAT"]
     }
   },
   "sector_base": {
-    "_doc": "無群組命中時的板塊底線曝險(lake info sector 欄,yfinance 口徑)",
+    "_doc": "無群組命中時的板塊底線曝險(lake info sector 欄,yfinance 口徑)。ARM 自 v2 起落此(純 IP 授權,二階權利金暴露)",
     "Technology": 0.45,
     "Communication Services": 0.3,
     "Consumer Cyclical": 0.35,

@@ -2,15 +2,19 @@
 type: synthesis
 tags: [world-model, geopolitical, supply-chain, gscpi, gpr, taiwan, dna-engine]
 title: World Model — 全球供應鏈 + 地緣反身性感測層
-as_of_timestamp: 2026-06-12T17:50:00+08:00
+as_of_timestamp: 2026-06-12T18:40:00+08:00
 author_role: compiler
 source_paths:
   - outputs/world-monitor-2026-06-12.json
+  - outputs/abm-supply-chain-2026-06-12.json
   - config/world_events.json
   - config/world_exposure.json
   - src/sharks/regime/world_monitor.py
+  - src/sharks/regime/abm_supply_chain.py
   - src/sharks/data/world_indicators.py
   - src/sharks/scoring/global_exposure.py
+  - src/sharks/memory/case_store.py
+  - wiki/24_exposure_validation.md
   - watchlist/plan.md
 confidence: 0.7
 status: live
@@ -56,8 +60,10 @@ GPRC_TWN p90/p95/p99 = 0.17/0.25/0.37。每月重算,漂移 >10% 才動閾值。
 
 ## 3. Global Exposure(個股曝險)
 
-`config/world_exposure.json`(靜態、git 版控=PIT 安全):taiwan_chain 0.9 /
-optics_cpo 0.7 / china_revenue 0.6,無命中退板塊底線再退 default 0.25。
+`config/world_exposure.json`(靜態、git 版控=PIT 安全;v2 經 [[24_exposure_validation]]
+網證覆核):taiwan_chain 0.9(一階生產斷供)/ taiwan_demand_equipment 0.6(二階需求
+遞延,不觸發 human_review)/ optics_cpo 0.7 / china_revenue 0.6,無命中退板塊底線
+再退 default 0.25。
 曝險只在事件活躍時生效:`dna_plus × world_factor`,`factor = 1 − exposure × penalty`
 (地板 0.65;**無事件 = 1.0,平時零行為差異**,保住既有前瞻校準連續性)。
 `dna_plus_raw`、`global_exposure`、`world_factor` 全部落 `outputs/dna-scores-log.jsonl`。
@@ -73,26 +79,36 @@ deep-kill 袖上限 11% × 0.75 = **8.2%**;ONTO(台鏈,曝險 0.9)70.4 → 54.6 
 + human_review;UNH(曝險 0.15)63.4 → 61.1 幾乎不動。張力狀態已回寫
 [[01_macro_state]] §4c(universe.yaml 的 TSM 60% cap override 正式有了機器供值來源)。
 
-## 5. 監控排程(接 [[07_sector_handoff]] §4 註冊表)
+## 5. 監控排程(接 [[07_sector_handoff]] §4 註冊表;2026-06-12 全部自動化落定)
 
 | 觸發器 | 引擎 | 頻率 |
 |---|---|---|
 | 世界事件(TS/GSCPI/GPR) | `regime/world_monitor`(SharksDNA-Morning 07:40,rally_dna 之前) | 日 |
-| 事件閾值分位數重校 | 手動 `sharks world-monitor --dry-run` + 本頁更新 | 月 |
-| 曝險名單 ↔ universe.yaml 對帳 | 人工(Risk Officer) | 月 |
+| ABM 供應鏈情境 | `regime/abm_supply_chain`(morning gated:週二 TPE=美股週一收盤後) | 週 |
+| 案例庫向量 sync | `memory/case_store.sync_from_outputs`(morning,rally_dna 之後) | 日 |
+| 事件閾值分位數重校 | `world_monitor.recalibrate` → `outputs/world-thresholds-suggest-*`(morning gated:每月 1 日;建議制,人工套用) | 月 |
+| 曝險名單 ↔ universe.yaml 對帳 | 人工(Risk Officer)+ [[24_exposure_validation]] 更新 | 月 |
 
-## 6. 技術債 / 明確不做(外部草案的裁決)
+排程本體已 repo 版控:`scripts/install_dna_schedule.ps1`(冪等註冊
+SharksDNA-Morning/PreOpen,2026-06-12 已執行替換 ad-hoc 任務)。
 
-1. **Mesa ABM 供應鏈模擬** — 延後:免費數據已給出可落地訊號;ABM 需先有曝險—營收
-   的實證鏈才不是玩具。入庫條件:world 事件與個股報酬的前瞻相關性累積 ≥6 個月。
-2. **LanceDB 遷移** — 不採:repo 已有 Chroma 決策(`docs/QLIB-VECTORDB-PLAN.md`,
-   入庫條件案例 >150,現 60)。PIT 需求由 state 快照 + lake vintage + dated outputs 滿足;
-   LanceDB time-travel 重評條件:案例庫破門檻**且**需要跨版本向量查詢時。
-3. **Streamlit 世界儀表板** — 延後:brief(§2 全球風險區塊)先驗證讀者價值。
+## 6. 技術債裁決(2026-06-12 全量衝刺後狀態)
+
+1. **ABM 供應鏈模擬** — ✅ 已落地(`regime/abm_supply_chain`,純 Python+numpy 無 mesa;
+   情境先驗依 GPRC_TWN 分位數分帶,首跑 extreme 帶:預期斷供 2.09 季、TS_HIGH 條件式
+   deep-kill 折減 -4.73pp)。mesa 引入條件記錄於模組 mesa_note。
+2. **向量案例庫** — ✅ 已落地(`memory/case_store`,Chroma/numpy 雙 backend;入庫條件
+   實際已達:212 案例 > 150 門檻)。LanceDB 仍不採(PIT 由 state 快照 + lake vintage 滿足);
+   重評條件:需要跨版本向量查詢時。rally_dna 的 brute-force Top3 保留,store 為持久化/
+   檢索層(SMCI 近鄰交叉一致)。
+3. **世界儀表板** — ✅ 已落地(`ui/server` `/api/world` + 🌍 卡片;Starlette 版,
+   streamlit 維持不動)。
 4. **GPRC_TWN 歷史 vintage 缺口** — 無解(來源限制);只能前向累積,文件已標注。
-5. **曝險地圖是專家先驗** — 未用 10-K 地理營收驗證;Researcher 後續用
-   `polygon_financials`(filing_date 錨)抽驗 taiwan_chain 名單的台灣營收占比。
-6. **TARIFF/CYBER 手動旗** — 無免費機讀源;依 CLAUDE.md §5,D/E 級訊號不得自動觸發。
+5. **曝險地圖驗證** — ✅ 人工網證已做([[24_exposure_validation]]:SIVEF 蘇格蘭廠移出
+   台鏈、設備商拆出二階群組 0.6、新增 AAPL/ASX/UMC → config v2)。仍開:10-K 地理營收
+   的機器驗證(`polygon_financials` filing_date 錨)、china_revenue 其餘 10 檔證據、
+   ANET 組裝地驗證。
+6. **TARIFF/CYBER 手動旗** — 維持手動;無免費機讀源,D/E 級訊號不得自動觸發(CLAUDE.md §5)。
 
 ## See also
 

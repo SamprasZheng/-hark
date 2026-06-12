@@ -89,6 +89,29 @@ def run_morning() -> int:
              f"(dir {res['total_in_dir']})")
     except Exception:
         _log("morning: failed-analogs collect FAILED\n" + traceback.format_exc())
+    try:
+        from sharks.memory import case_store    # 每日:案例庫向量 sync(rally_dna 之後)
+        res = case_store.sync_from_outputs()
+        _log(f"morning: case-store sync ok ({res})")
+    except Exception:
+        _log("morning: case-store sync FAILED\n" + traceback.format_exc())
+    now = datetime.now()
+    if now.weekday() == 1:                      # 週二 TPE = 美股週一收盤後:ABM 情境模擬
+        try:
+            from sharks.regime import abm_supply_chain
+            abm_supply_chain.main([])
+            _log("morning: abm ok")
+        except Exception:
+            _log("morning: abm FAILED\n" + traceback.format_exc())
+    if now.day == 1:                            # 每月 1 日:世界閾值重校建議(人工套用)
+        try:
+            from sharks.regime import world_monitor
+            rep = world_monitor.recalibrate()
+            flagged = sum(1 for s in rep.get("suggestions") or [] if s.get("review"))
+            _log(f"morning: world recalibrate ok ({len(rep.get('suggestions') or [])} "
+                 f"suggestions, {flagged} review-flagged)")
+        except Exception:
+            _log("morning: world recalibrate FAILED\n" + traceback.format_exc())
     _log("morning: done")
     return 0
 
@@ -100,6 +123,7 @@ def compose_position_brief() -> str:
     dna = _latest("rally-dna")
     reflex = _latest("reflexivity")
     world = _latest("world-monitor")
+    abm = _latest("abm-supply-chain")
     try:
         from sharks.ui.server import holdings_health
         health = holdings_health("all")
@@ -148,6 +172,11 @@ def compose_position_brief() -> str:
          f"- GSCPI {wm.get('gscpi', '—')}(z 單位;≥1.5=尖峰)· "
          f"GPR {wm.get('gpr', '—')}(基準~100;p95≈169/p99≈330)· "
          f"台灣分項 {wm.get('gprc_twn', '—')}(60月z {wm.get('gprc_twn_z60', '—')};p95≈0.25)",
+         *([f"- ABM 情境(週更):TS_HIGH 先驗 {(abm.get('scenario_priors') or {}).get('TS_HIGH', '—')} · "
+            f"預期斷供 {abm.get('expected_disruption_quarters', '—')} 季 · deep-kill 折減 "
+            f"{abm.get('deepkill_survival_delta_pct', '—')}pp"
+            f"(TS_HIGH 條件式 {((abm.get('per_scenario_loss') or {}).get('TS_HIGH') or {}).get('survival_delta_pct_conditional', '—')}pp;"
+            f"與 cap 乘數不疊乘)"] if abm else []),
          "",
          "## 3. 持倉動作(健檢自動裁決)"]
     for a in ("清倉", "換股", "減碼", "待驗證", "續抱⚠"):

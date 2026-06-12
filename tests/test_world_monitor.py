@@ -256,6 +256,44 @@ class TestRunWorldMonitor:
         assert rep["events_triggered"] == []
         assert set(rep["failed_sources"]) == {"gscpi", "gpr_monthly", "gpr_daily"}
 
+    def test_recalibrate_suggestions_and_drift_flag(self, tmp_path):
+        from sharks.regime.world_monitor import recalibrate
+        cfg = tmp_path / "events.json"
+        cfg.write_text(json.dumps({"events": [
+            {"id": "GPR_ELEVATED",
+             "condition": {"any": [
+                 {"metric": "gpr", "op": ">=", "value": 169, "_basis": "p95(1985+)"}]},
+             "impact": {}},
+            {"id": "TS_HIGH",
+             "condition": {"any": [
+                 {"metric": "gprc_twn", "op": ">=", "value": 0.25, "_basis": "p95"}]},
+             "impact": {}},
+        ]}), encoding="utf-8")
+        # 100 點均勻分布 → p95 落在 95 附近;0.25 對 0.0~0.2 的 TWN 分布 drift 必 >10%
+        gpr_vals = [float(v) for v in range(1, 101)]
+        twn_vals = [v / 500.0 for v in range(100)]            # 0 ~ 0.198
+        series = {"gpr_monthly": {
+            "GPR": _monthly("GPR", gpr_vals),
+            "GPRC_TWN": _monthly("GPRC_TWN", twn_vals),
+        }, "gpr_daily": {}}
+        rep = recalibrate(tmp_path / "out", today="2026-07-01", series=series,
+                          config_path=cfg, write=True)
+        assert (tmp_path / "out" / "world-thresholds-suggest-2026-07-01.json").exists()
+        by = {s["event"]: s for s in rep["suggestions"]}
+        assert by["GPR_ELEVATED"]["suggested"] == 95.0        # p95 of 1..100
+        assert by["GPR_ELEVATED"]["review"] is True           # 169→95 drift >10%
+        assert by["TS_HIGH"]["review"] is True
+        assert rep["llm_involvement"] == "none"
+
+    def test_recalibrate_no_data_no_suggestions(self, tmp_path):
+        from sharks.regime.world_monitor import recalibrate
+        cfg = tmp_path / "events.json"
+        cfg.write_text(json.dumps({"events": []}), encoding="utf-8")
+        rep = recalibrate(tmp_path / "out", today="2026-07-01",
+                          series={"gpr_monthly": {}, "gpr_daily": {}},
+                          config_path=cfg, write=False)
+        assert rep["suggestions"] == [] and rep["computed_percentiles"] == {}
+
     def test_lake_snapshot_immutable(self, tmp_path):
         cfg = _write_config(tmp_path)
         lake = tmp_path / "lake"
