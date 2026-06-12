@@ -1,0 +1,30 @@
+{
+  "_doc": "DNA 匹配器規則引擎(Decision & Risk Layer)。宣告式:when 全部等值匹配 → 套用 then。順序執行,後者可覆寫前者。改規則改這裡,不改程式。",
+  "rules": [
+    {
+      "id": "break-hard-exclude",
+      "when": {"reflexivity": "斷裂警告"},
+      "then": {"bucket": "剔除", "rule_note": "反身性斷裂無條件剔除"}
+    },
+    {
+      "id": "pit-overrule-human-review",
+      "when": {"reflexivity": "斷裂警告", "pit_fundamental_contested": true},
+      "then": {"human_review": true, "rule_note": "PIT 翻案爭議:季度營收加速+OCF 改善,年度負讀數疑季節性 — 維持剔除但交人工複核"}
+    },
+    {
+      "id": "mania-no-new-entry",
+      "when": {"market_state": "mania", "bucket": "可入候補"},
+      "then": {"bucket": "watch", "rule_note": "mania 態不開新倉(降級 watch)"}
+    },
+    {
+      "id": "axti-similar-failures",
+      "when": {"axti_risk": true},
+      "then": {"human_review": true, "rule_note": "AXTI 型警示:最相似 Top3 含 ≥2 個失敗類比(同形態相反結局)— 人工複核 + 倉位減半"}
+    },
+    {
+      "id": "deep-kill-sizing-cap",
+      "when": {"archetype": "deep_kill"},
+      "then": {"sizing_note": "deep-kill 袖上限 11%(failed-analogs 2026-06-12 壓力版:P損30.6%×損37.2%,拖累預算2%;下市票回填後重算)、硬停損 20-25%、2 季無 FCF 改善即出"}
+    }
+  ]
+}
