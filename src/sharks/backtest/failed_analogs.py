@@ -208,10 +208,17 @@ def fetch_delisted_tickers(max_pages: int = 3) -> list[dict]:
     return out
 
 
-def collect(budget: int = 20) -> dict:
+def collect(budget: int = 20, max_seconds: float = 1200.0) -> dict:
     """收 budget 檔下市票月線 → data/lake/failed/(免費層限速 13s/call)。
-    進度存 failed-manifest.jsonl,跨次執行續收。"""
+    進度存 failed-manifest.jsonl,跨次執行續收。
+
+    max_seconds = 牆鐘預算(預設 20 分):budget 只數「可收」票,掃過長段
+    too_short 跳票時嘗試數無上限;另外 requests 的 scalar timeout 只管位元組
+    間隔,擋不住涓流回應(2026-06-12 生產實跑吊死 2.5h 的根因)— 每筆抓取
+    再包硬性 60s(thread + future timeout),雙保險讓晨間管線永遠走得完。"""
     import requests
+    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import TimeoutError as FutTimeout
     from sharks.data.polygon_financials import _token
     tok = _token()
     FAILED_DIR.mkdir(parents=True, exist_ok=True)
@@ -227,17 +234,27 @@ def collect(budget: int = 20) -> dict:
              if x["ticker"] and x["ticker"] not in done
              and (x.get("delisted_utc") or "")[:4] >= "2010"]
     got = 0
+    t0 = time.monotonic()
+    pool = ThreadPoolExecutor(max_workers=1)
     with manifest.open("a", encoding="utf-8") as fh:
         for x in cands:
-            if got >= budget:
+            if got >= budget or time.monotonic() - t0 > max_seconds:
                 break
             t = x["ticker"]
             time.sleep(13)
             try:
                 u = (f"https://api.polygon.io/v2/aggs/ticker/{t}/range/1/month/"
                      f"2005-01-01/2026-06-01")
-                r = requests.get(u, params={"adjusted": "true", "limit": 500, "apiKey": tok},
-                                 timeout=30)
+                fut = pool.submit(requests.get, u,
+                                  params={"adjusted": "true", "limit": 500, "apiKey": tok},
+                                  timeout=30)
+                try:
+                    r = fut.result(timeout=60)      # 硬上限:涓流回應也走得掉
+                except FutTimeout:
+                    fh.write(json.dumps({"ticker": t, "status": "err:hard-timeout-60s"}) + "\n")
+                    pool.shutdown(wait=False)        # 棄置卡住的 worker,換新池
+                    pool = ThreadPoolExecutor(max_workers=1)
+                    continue
                 r.raise_for_status()
                 rows = r.json().get("results") or []
                 if len(rows) < 48:                  # 至少 4 年月線才夠形態偵測
@@ -254,7 +271,9 @@ def collect(budget: int = 20) -> dict:
                 got += 1
             except Exception as e:
                 fh.write(json.dumps({"ticker": t, "status": f"err:{str(e)[:60]}"}) + "\n")
-    return {"collected": got, "total_in_dir": len(list(FAILED_DIR.glob('*_1mo.parquet')))}
+    pool.shutdown(wait=False)
+    return {"collected": got, "total_in_dir": len(list(FAILED_DIR.glob('*_1mo.parquet'))),
+            "elapsed_s": round(time.monotonic() - t0, 1)}
 
 
 def main(argv: Optional[list[str]] = None) -> int:

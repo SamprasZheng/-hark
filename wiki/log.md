@@ -596,3 +596,9 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **preopen 三件**:(a) 可選本地模型評論區(grade-E 標注,失敗靜默跳過);(b) `risk-review-queue.jsonl` append-only 冪等佇列 — 首日 15 筆:AMAT(high,持倉×斷裂)+ 14 檔 human_review(含 rules_fired 審計與 world 上下文,SMCI 帶台鏈規則);(c) brief 照舊 rule-based。
 - **morning 新 gated**:週六(美股週五收盤後)`failed_analogs.main` 全量重算存活率+CI+cap — 分母隨每日 collect 成長,11% 上限變動態。collect 觀察:manifest 384 行多為 too_short 跳票,budget 計「可收」不計嘗試 → 長跑屬設計內(Polygon 5 req/min)。
 - 測試 +7(research_agent 4 + risk_queue 3)= 全套 1090;wiki/23 §6 增 7-10 項裁決記錄。
+## 2026-06-12(q)— 生產事故修復:collect 涓流懸掛(2.5h)→ 雙保險硬上限
+- **事故**:morning 實跑中 failed-analogs collect 吊死 2.5h — manifest 停在 384 行(ARIZ),CPU 每小時僅 +6s,一條 ESTABLISHED socket 掛 198.44.194.59:443(無反解)。**根因**:requests scalar timeout=30 只管位元組間隔,伺服器涓流回應可無限延長;且 budget 只數「可收」票,掃 too_short 長段時嘗試數無上限。
+- **處置**:kill 進程(所有上游輸出早已落盤;collect 為可續收累積器,零損失)。
+- **修補**(`failed_analogs.collect`):(a) `max_seconds` 牆鐘預算(預設 20 分,晨間鏈永遠走得完);(b) 每筆抓取包 thread+future 硬性 60s,涓流也走得掉(超時棄置 worker 換新池);(c) 回傳加 `elapsed_s`。Live 驗證:budget=3/240s → 248.2s 乾淨退出,manifest 384→402 穿過卡點。
+- **觀察**:manifest 402 行全為 too_short/err — 2010 後下市且 ≥48 根月線的票在字母序前段極稀,**failed-analogs 的下市票分母至今 = 0**,每日 20 分預算下會慢慢養;存活率 74.1% 仍是湖內倖存者宇宙上界(已知偏差,docs 已標)。
+- 案例庫 re-sync(212 筆,吃進今晨新 rally-dna norms);全套 1090 綠。
