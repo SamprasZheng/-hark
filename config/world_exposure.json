@@ -1,13 +1,13 @@
 {
-  "_doc": "個股全球曝險地圖(world model)。靜態、git 版控(=PIT 安全:回測查當時 commit)。v2(2026-06-12):依 wiki/24_exposure_validation.md 網路證據覆核 — 區分一階「生產斷供」(taiwan_chain:TSMC 代工/台灣組裝)與二階「需求遞延」(taiwan_demand_equipment:設備商台灣營收 19-38%);SIVEF(蘇格蘭廠)/COHR(馬來西亞·越南)/LITE(泰國)移出台鏈、ARM(純 IP)退板塊底線;新增 AAPL/ASX/UMC(CONFIRMED-HIGH)。曝險 = max(所屬群組權重, sector_base[sector], default)。改名單改這裡,不改程式;每月與 universe.yaml 對帳。",
-  "version": 2,
+  "_doc": "個股全球曝險地圖(world model)。靜態、git 版控(=PIT 安全:回測查當時 commit)。v3(2026-06-12 晚,wiki/24 §6 Round 2):china_revenue 12 檔 10 檔一手源驗證完畢;ANET 入台鏈(獨家 Broadcom 矽 ~95% TSMC,與 NVDA 同款邏輯);AVGO 升 A 級一手源(自家 10-K ~95% CM 晶圓 TSMC)。v2:一階「生產斷供」(taiwan_chain)與二階「需求遞延」(taiwan_demand_equipment 19-38% 台灣營收)分離;SIVEF(Glasgow 廠)/COHR(馬·越)/LITE(泰)移出台鏈、ARM(純 IP)退板塊底線;新增 AAPL/ASX/UMC。曝險 = max(所屬群組權重, sector_base[sector], default)。改名單改這裡,不改程式;每月與 universe.yaml 對帳。",
+  "version": 3,
   "as_of": "2026-06-12",
   "groups": {
     "taiwan_chain": {
-      "_doc": "一階生產斷供:TSMC 代工核心產品或台灣組裝 — TS_HIGH 事件的 review 對象(wiki/24 驗證 CONFIRMED-HIGH;ANET 待組裝地驗證後再加)",
+      "_doc": "一階生產斷供:TSMC 代工核心產品或台灣組裝 — TS_HIGH 事件的 review 對象(wiki/24 驗證 CONFIRMED-HIGH)。ANET v3 加入:組裝在馬/越/墨但交換矽獨家 Broadcom(~95% TSMC、無書面供應保證)— 命脈在投片非組裝;傳導為庫存遞延(較慢)",
       "weight": 0.9,
       "tickers": ["TSM", "NVDA", "AMD", "AVGO", "MU", "SMCI", "AAOI", "MRVL",
-                  "ALAB", "CRDO", "QCOM", "AAPL", "ASX", "UMC"]
+                  "ALAB", "CRDO", "QCOM", "AAPL", "ASX", "UMC", "ANET"]
     },
     "taiwan_demand_equipment": {
       "_doc": "二階需求遞延:半導體設備商台灣營收占比 19-38%(FY2025:AMAT 24/LRCX 19/ASML 30-35/KLAC ~26/ONTO 31-38)— 斷供時是訂單遞延風險非停產風險,降權 0.6 且不觸發 human_review(wiki/24 結構性建議)",
@@ -20,7 +20,7 @@
       "tickers": ["COHR", "LITE", "SIVEF", "AAOI", "FN"]
     },
     "china_revenue": {
-      "_doc": "中國營收/需求暴露(關稅與報復第一排)。wiki/24 抽驗:TXN ~50% 中國出貨、INTC 29% 中國營收 confirmed;其餘 10 檔仍為專家先驗(TBD)",
+      "_doc": "中國營收/需求暴露。v3 全 12 檔驗畢(wiki/24 §6a,FY2025 口徑):QCOM 45.9%(ship-to)/LVS 57% 澳門/WYNN 52% 澳門/ADI 26%/TSLA 22.1%+Giga 上海/MCHP 17%/AAPL 15.5%+組裝集中/TXN ~50% 出貨/INTC 29%;PARTIAL:NKE 14.7%、SBUX 8.5%(Boyu JV 後通道=股權+權利金)、CAT ~5-10% 貼下緣(弱環)。注意:WYNN/LVS 傳導=簽證/博彩監管/中國消費非關稅;扁平 0.6 隱藏一個量級的離散 — 下版候選拆兩層(≥25% / 5-15%),需 Risk Officer 裁決",
       "weight": 0.6,
       "tickers": ["AAPL", "TSLA", "NKE", "SBUX", "QCOM", "TXN", "INTC",
                   "MCHP", "ADI", "WYNN", "LVS", "CAT"]

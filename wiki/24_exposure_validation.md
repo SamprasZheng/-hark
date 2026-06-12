@@ -105,3 +105,55 @@ INTC 中國(含港)FY2024 營收 29.3%、為最大單一市場([bullfincher.io](
 - [[23_world_model]] — 被驗證的曝險地圖所屬感測層
 - [[../philosophy/09-point-in-time]] — config 為 git 版控,改名單即留 vintage
 - [[../philosophy/08-risk-and-position]] — 群組權重變更需 Risk Officer 覆核
+
+---
+
+## 6. Round 2 補洞(2026-06-12 晚 — 3 平行 researcher)
+
+第一輪的三個開口全數關閉(來源檢索日 2026-06-12):
+
+### 6a. china_revenue 全 12 檔現況(10 檔一手/一線源,2 檔彙整源)
+
+| Ticker | 分類 | 證據 | 來源 |
+|---|---|---|---|
+| QCOM | CONFIRMED | FY2025 10-K:中國+香港佔淨銷售 45.9%(ship-to 口徑,終端需求偏低估) | [sec.gov 10-K](https://www.sec.gov/Archives/edgar/data/0000804328/000080432825000085/qcom-20250928.htm) |
+| LVS | CONFIRMED | FY2025 Sands China $7.44B/$13.02B ≈ 57%(澳門) | [prnewswire](https://www.prnewswire.com/news-releases/las-vegas-sands-reports-fourth-quarter-2025-results-302673006.html) |
+| WYNN | CONFIRMED | FY2025 澳門兩物業 $3.72B/$7.14B ≈ 52% | [prnewswire](https://www.prnewswire.com/news-releases/wynn-resorts-limited-reports-fourth-quarter-and-year-end-2025-results-302686824.html) |
+| ADI | CONFIRMED | FY2025 中國 $2.86B/$11.02B ≈ 26%(+34% YoY 含補庫存循環成分) | [10-K via stocktitan](https://www.stocktitan.net/sec-filings/ADI/10-k-analog-devices-inc-files-annual-report-cff84e25d8f6.html) |
+| TSLA | CONFIRMED | FY2025 中國營收 $20.96B ≈ 22.1% + Giga Shanghai 產線(需求+供給雙暴露) | [bullfincher](https://bullfincher.io/companies/tesla/revenue-by-geography) |
+| MCHP | CONFIRMED | FY2025 10-K 原文:中國 17%(FY23 21%→遞減;國產替代侵蝕中) | [sec.gov 10-K](https://www.sec.gov/Archives/edgar/data/827054/000082705425000077/mchp-20250331.htm) |
+| AAPL | CONFIRMED | FY2025 大中華 $64.4B ≈ 15.5% + 組裝集中(報復向量在產線非營收) | [sec.gov 8-K](https://www.sec.gov/Archives/edgar/data/0000320193/000032019325000077/a8-kex991q4202509272025.htm) |
+| NKE | PARTIAL | FY2025 大中華 14.7% + 鞋類 17% 中國製(主軸已移越南 51%) | [Nike 10-K](https://s1.q4cdn.com/806093406/files/doc_financials/2025/ar/Nike-Inc-2025_10K.pdf) |
+| SBUX | PARTIAL(通道改變) | FY2025 中國 8.5%;Boyu JV 2026-04 完成 — 60% 中國零售已售,通道變股權+權利金 | [starbucks.com](https://about.starbucks.com/press/2026/starbucks-and-boyu-capital-finalize-joint-venture-to-accelerate-long-term-growth-in-china/) |
+| CAT | PARTIAL(弱環) | 10-K 不拆中國;公司口徑 5-10% 且近年貼下緣(~5%)— 群組內最低一檔 | [spokesman](https://www.spokesman.com/stories/2022/aug/02/caterpillar-says-china-sales-slow-as-demand-dented/) |
+| TXN | CONFIRMED(R1) | 出貨入中國 ~50%(終端 HQ 口徑 ~20%) | 見 §2 |
+| INTC | CONFIRMED(R1) | 中國(含港)29.3%,最大單一市場 | 見 §2 |
+
+群組維持 12 檔、權重 0.6。已知扁平權重的失真:CAT(~5%)與 LVS(57%)同權 —
+下一版 config 候選改兩層(≥25% / 5-15%);WYNN/LVS 的傳導通道是簽證/博彩監管/
+中國消費,非關稅,`_doc` 已標注。
+
+### 6b. 特別覆核三項
+
+- **AVGO 升級 A 級一手源**:Broadcom 自家 FY2025 10-K —「約 95% 的 CM 晶圓由 TSMC
+  生產」「我們的晶圓需求佔 TSMC 總產能有意義的比重」;封測 CM 含 TSMC/ASE/SPIL(全台)。
+  §1 表中 Counterpoint 彙整源(C 級)就此被一手揭露取代
+  ([sec.gov 10-K](https://www.sec.gov/Archives/edgar/data/1730168/000173016825000121/avgo-20251102.htm))。
+  同溫層教訓:媒體普遍引 Counterpoint 估計,而更硬的數字一直躺在公司自己的 filing 裡。
+- **ANET 入台鏈(0.9)**:FY2025 10-K — 組裝在馬來西亞/越南/墨西哥(非台灣),但交換
+  晶片「主要依賴 Broadcom」單一來源、無書面供應保證,而該矽 ~95% TSMC 代工 → 與
+  NVDA 同款入群邏輯(命脈在 TSMC 投片,非組裝地)。傳導通道為晶片庫存遞延(較組裝
+  斷供慢),已標注([sec.gov 10-K](https://www.sec.gov/Archives/edgar/data/1596532/000159653226000013/anet-20251231.htm))。
+  殘餘缺口:CM(Jabil/Sanmina/Flex/Foxconn)× 產品線 × 國別的對映未到站點級。
+- **SIVEF WRONG 二次確認**:公司自述 fab 與總部在 Glasgow;站點 Kista/哥德堡/Glasgow/
+  Chatham,無台灣;無 DSP 產品線;CPO 整合夥伴為 GlobalFoundries(非台系 fab)。
+  v2 移出正確([sivers-semiconductors.com](https://www.sivers-semiconductors.com/about-us/))。
+
+### 6c. Round 2 後的同溫層缺口(誠實聲明)
+
+- QCOM 45.9% 是 ship-to 口徑,真實中國終端需求偏低;且其更大的中國風險
+  (監管/反壟斷/授權)不在營收權重的捕捉範圍。
+- ADI 26% 含 FY2025 補庫存反彈,結構性常態可能在低 20%,FY2026 Q2 後複驗。
+- ANET 的站點級組裝對映、AAPL 組裝集中度的量化,仍未驗證。
+- config v3 已套用本節結論(ANET 入台鏈、_doc 全面更新);兩層 china_revenue
+  拆分留給下一版(需 Risk Officer 裁決權重)。
