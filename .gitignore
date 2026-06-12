@@ -76,6 +76,10 @@ data/transcripts/*
 !data/earnings/.gitkeep
 !data/transcripts/.gitkeep
 
+# Akashic case store — 向量庫持久化(chroma sqlite / numpy json),可隨時從 outputs/ 重建
+data/akashic/*
+!data/akashic/.gitkeep
+
 # Watchlist snapshots — committed in current form; history snapshots in
 # Phase 2+ go to watchlist/history/ which IS tracked (point-in-time integrity)
 # (no rule needed; they're kept)
