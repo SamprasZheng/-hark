@@ -5,9 +5,42 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from sharks.backtest.failed_analogs import (_candidate_queue, cap_recommendation,
-                                            classify_outcome, deepkill_ledger,
-                                            prioritize_candidates, reset_thin_manifest)
+from sharks.backtest.failed_analogs import (_candidate_queue, _load_curated,
+                                            cap_recommendation, classify_outcome,
+                                            deepkill_ledger, prioritize_candidates,
+                                            reset_thin_manifest)
+
+CURATED_YAML = """as_of: 2026-06-12
+candidates:
+  - ticker: BBBY
+    delisted: 2023
+    type: bankruptcy
+    why: 教科書案例
+  - ticker: SIVB
+    delisted: 2023
+"""
+
+
+class TestCuratedQueue:
+    def test_load_curated_parses_ticker_and_year(self, tmp_path):
+        p = tmp_path / "c.yaml"
+        p.write_text(CURATED_YAML, encoding="utf-8")
+        out = _load_curated(p)
+        assert [c["ticker"] for c in out] == ["BBBY", "SIVB"]
+        assert out[0]["delisted_utc"] == "2023-01-01" and out[0]["curated"] is True
+
+    def test_load_curated_missing_file(self, tmp_path):
+        assert _load_curated(tmp_path / "nope.yaml") == []
+
+    def test_curated_jump_queue_and_done_filter(self, tmp_path):
+        p = tmp_path / "c.yaml"
+        p.write_text(CURATED_YAML, encoding="utf-8")
+        fetch = lambda: [{"ticker": "ZZZZ", "name": "Real Co",
+                          "delisted_utc": "2015-06-01"},
+                         {"ticker": "BBBY", "name": "dup in feed",
+                          "delisted_utc": "2023-05-01"}]
+        q = _candidate_queue({"SIVB"}, fetch_fn=fetch, curated_path=p)
+        assert [c["ticker"] for c in q] == ["BBBY", "ZZZZ"]   # curated 先、done 濾、feed 去重
 
 
 class TestResetThinManifest:

@@ -30,6 +30,16 @@ class TestCallLog:
         assert rows[0]["ok"] is True and "latency_ms" in rows[0]
         assert rows[1]["ok"] is False and "boom" in rows[1]["note"]
 
+    def test_summary_range_accumulates_dates(self, tmp_path):
+        from sharks.data.call_log import summary_range
+        p = tmp_path / "log.jsonl"
+        rows = [{"ts": "2026-06-10T01:00:00+00:00", "source": "polygon", "ok": True},
+                {"ts": "2026-06-11T01:00:00+00:00", "source": "polygon", "ok": False},
+                {"ts": "2026-06-01T01:00:00+00:00", "source": "polygon", "ok": True}]
+        p.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+        s = summary_range(dates=["2026-06-10", "2026-06-11"], log_path=p)
+        assert s == {"polygon": {"calls": 2, "errors": 1}}    # 6/1 在窗外
+
     def test_summary_date_filter(self, tmp_path):
         p = tmp_path / "log.jsonl"
         p.write_text(json.dumps({"ts": "2020-01-01T00:00:00+00:00",

@@ -132,14 +132,17 @@ def run_morning() -> int:
 
 
 def _api_usage_line() -> str:
-    """當日 per-source API 計數(call_log;觀測用,DataRouter 提案的採納內核)。"""
+    """當日 + 近 7 日 per-source API 計數(call_log;觀測用)。"""
     try:
-        from sharks.data.call_log import summary
-        s = summary()
-        if not s:
+        from sharks.data.call_log import summary, summary_range
+        def fmt(s):
+            return " · ".join(f"{src} {v['calls']}"
+                              + (f"(err {v['errors']})" if v["errors"] else "")
+                              for src, v in sorted(s.items())) or "—"
+        today, week = summary(), summary_range(7)
+        if not week:
             return "(無記錄)"
-        return " · ".join(f"{src} {v['calls']}" + (f"(err {v['errors']})" if v["errors"] else "")
-                          for src, v in sorted(s.items()))
+        return f"{fmt(today)} ｜ 7 日累計:{fmt(week)}"
     except Exception:
         return "(無記錄)"
 

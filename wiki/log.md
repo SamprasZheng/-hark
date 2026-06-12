@@ -635,3 +635,7 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - 駁回理由:(1) 提案殺手賣點「yfinance 突破下市票 2 年限制」已被當夜實測否證(0 根)— 路由層救不了數據存在性;(2) lake 已是 local-first 層 + 各 client 自帶限速/fallback,再包 DataRouter = 983+ 測試付翻修稅換零新數據(演進不翻修);(3) 提案路由表本身有誤(rally_dna 跑在 yfinance 數十年月線湖上,非 Polygon)。
 - 採納內核:`data/call_log`(per-source API 呼叫記帳,never-raise)— 接線 polygon financials/aggs-delisted、NY Fed、Iacoviello 四個受限呼叫點;brief 系統健康新增「API 用量(今日 UTC)」行。+5 tests。
 - ARCHITECTURE 新增「數據源矩陣」表(裁決記錄 + 各引擎來源/限制/fallback 一覽)。
+## 2026-06-12(v)— 「abc」指令:API 週累計 + curated 下市票清單(數據補強的不翻修版)
+- **A**:call_log 增 summary_range(近 N 日累計);brief API 用量行升級「當日 ｜ 7 日累計」(週對週趨勢等記錄滿兩週才有意義,不發明)。
+- **B**:`watchlist/delisted_candidates.yaml` — 17 檔 curated 高價值真亡者(BBBY/SIVB/FRC/SDC/FSR/TUP… 深殺後死亡型,每檔附 why;ABMD 留作可得性探針);`_candidate_queue` 升級 curated 永遠隊首(_load_curated 目標式解析,_yamlite 不支援列表故不用)。**作用日=阻斷解除日**(Polygon Starter 或 Tiingo key):reset-thin 清假條目 → curated 17 檔最先回填,每檔都是 deep-kill 分母的真貨。顧問提的 Stooq 已否證不採;Tiingo 需 key,留待主理人決策時一併考慮(免費 tier 是否服務下市票未驗證,不寫進承諾)。
+- **C**:夜班續跑,23:05 巡檢輪不變。tests +5(curated 3 + summary_range 1 + 已有 reset-thin 2 計入前條),全套 1165 綠。

@@ -1,0 +1,81 @@
+# 下市票 curated 清單 — failed-analogs 分母的高價值目標(2026-06-12 夜班建)
+#
+# 用途:免費層結構性阻斷(見 wiki/log 2026-06-12(s))解除日(Polygon Starter 升級
+# 或 Tiingo key 落地),collect 先抓這份清單再掃字母序 — 每一檔都是「真公司、
+# 真深殺、真死亡」,對 deep-kill 存活率分母的價值遠高於隨機 SPAC 殼。
+#
+# 維護紀律:條目來自公開重大事件(高確信),但 delisted 年份/型態在首抓日仍須
+# 對 Polygon reference 數據覆核(不發明);新增條目附一行 why。
+# 解析:failed_analogs._load_curated 只讀 "- ticker:" 與同縮排的欄位行。
+as_of: 2026-06-12
+_doc: 深殺後死亡(bankruptcy/暴跌後賤賣)優先;穩健併購離場(如 ABMD)不屬失敗類比,僅作數據可得性探針。
+
+candidates:
+  - ticker: BBBY
+    delisted: 2023
+    type: bankruptcy
+    why: Bed Bath & Beyond — meme 反彈後歸零,deep-kill 假反彈的教科書案例
+  - ticker: SIVB
+    delisted: 2023
+    type: bank_failure
+    why: SVB — 急殺後直接清零,尾部速度案例
+  - ticker: FRC
+    delisted: 2023
+    type: bank_failure
+    why: First Republic — 深殺後被接管,survivor 假象案例
+  - ticker: RAD
+    delisted: 2023
+    type: bankruptcy
+    why: Rite Aid — 多年陰跌至 Ch11,慢性死亡型
+  - ticker: PRTY
+    delisted: 2023
+    type: bankruptcy
+    why: Party City — 疫後反彈失敗型
+  - ticker: SDC
+    delisted: 2023
+    type: bankruptcy
+    why: SmileDirectClub — 2021 高位 -95% 後歸零,成長股深殺死亡
+  - ticker: VORB
+    delisted: 2023
+    type: bankruptcy
+    why: Virgin Orbit — 太空題材殞落,題材池失敗類比
+  - ticker: APRN
+    delisted: 2023
+    type: distressed_sale
+    why: Blue Apron — 深殺後賤賣,IPO 高點 -99%
+  - ticker: WE
+    delisted: 2023
+    type: bankruptcy
+    why: WeWork — 估值神話歸零
+  - ticker: NVTA
+    delisted: 2024
+    type: bankruptcy
+    why: Invitae — 基因檢測題材 -99%,ARKK 持倉死亡案例
+  - ticker: CANO
+    delisted: 2024
+    type: bankruptcy
+    why: Cano Health — 醫療 SPAC 中少數有實質營收者仍死
+  - ticker: EXPR
+    delisted: 2024
+    type: bankruptcy
+    why: Express — 服飾零售慢性死亡
+  - ticker: BIG
+    delisted: 2024
+    type: bankruptcy
+    why: Big Lots — 折扣零售深殺後死亡
+  - ticker: TUP
+    delisted: 2024
+    type: bankruptcy
+    why: Tupperware — 2023 meme 假反彈後死亡(BBBY 同型)
+  - ticker: FSR
+    delisted: 2024
+    type: bankruptcy
+    why: Fisker — EV 題材死亡,深殺無反彈型
+  - ticker: APPH
+    delisted: 2023
+    type: bankruptcy
+    why: AppHarvest — agtech SPAC 死亡
+  - ticker: ABMD
+    delisted: 2022
+    type: acquisition_strong
+    why: Abiomed — 非失敗(強勢併購);留作數據可得性探針(免費層 0 根的實測標的)

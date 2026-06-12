@@ -272,13 +272,44 @@ def prioritize_candidates(cands: list[dict]) -> list[dict]:
     return sorted(cands, key=lambda c: -score(c))      # sorted 穩定:同分保原序
 
 
-def _candidate_queue(done: set, fetch_fn=None, prioritize: bool = True) -> list[dict]:
-    """fetch → 過濾(已收 / 缺 ticker / 2010 前下市)→(預設)重排。
-    fetch_fn 可注入(測試離線,不打網路);prioritize=False 保留來源順序。"""
+CURATED_PATH = Path("watchlist/delisted_candidates.yaml")
+
+
+def _load_curated(path: Optional[Path] = None) -> list[dict]:
+    """讀 curated 下市票清單(目標式解析:只認 '- ticker:' 與其 delisted: 行;
+    _yamlite 不支援列表故不用)。缺檔/壞檔 → []。"""
+    import re
+    p = path or CURATED_PATH
+    out: list[dict] = []
+    try:
+        cur = None
+        for ln in p.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"^\s*-\s*ticker:\s*([A-Z][A-Z0-9.]*)\s*$", ln)
+            if m:
+                cur = {"ticker": m.group(1), "name": None, "delisted_utc": None,
+                       "curated": True}
+                out.append(cur)
+                continue
+            if cur is not None:
+                d = re.match(r"^\s+delisted:\s*(\d{4})\s*$", ln)
+                if d:
+                    cur["delisted_utc"] = f"{d.group(1)}-01-01"
+    except Exception:
+        return []
+    return out
+
+
+def _candidate_queue(done: set, fetch_fn=None, prioritize: bool = True,
+                     curated_path: Optional[Path] = None) -> list[dict]:
+    """curated 清單(高價值真亡者)永遠排最前 → fetch → 過濾(已收 / 缺 ticker /
+    2010 前下市)→(預設)重排。fetch_fn 可注入;prioritize=False 保留來源順序。"""
+    curated = [c for c in _load_curated(curated_path) if c["ticker"] not in done]
+    seen = {c["ticker"] for c in curated}
     cands = [x for x in (fetch_fn or fetch_delisted_tickers)()
-             if x.get("ticker") and x["ticker"] not in done
+             if x.get("ticker") and x["ticker"] not in done and x["ticker"] not in seen
              and (x.get("delisted_utc") or "")[:4] >= "2010"]
-    return prioritize_candidates(cands) if prioritize else cands
+    tail = prioritize_candidates(cands) if prioritize else cands
+    return curated + tail
 
 
 def collect(budget: int = 20, max_seconds: float = 1200.0,

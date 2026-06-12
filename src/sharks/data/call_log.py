@@ -61,6 +61,18 @@ class timed_call:
 def summary(date: Optional[str] = None, log_path: Optional[Path] = None) -> dict:
     """某日(預設今天 UTC)per-source 計數:{source: {calls, errors}}。"""
     date = date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return summary_range(dates=[date], log_path=log_path)
+
+
+def summary_range(days: int = 7, *, dates: Optional[list[str]] = None,
+                  log_path: Optional[Path] = None) -> dict:
+    """近 N 日(或指定日期清單)per-source 累計:{source: {calls, errors}}。
+    純掃描;趨勢比較(週對週)等記錄滿兩週後才有意義,不發明。"""
+    if dates is None:
+        from datetime import timedelta
+        today = datetime.now(timezone.utc).date()
+        dates = [(today - timedelta(days=i)).isoformat() for i in range(days)]
+    wanted = set(dates)
     p = log_path or LOG_PATH
     out: dict = {}
     if not p.exists():
@@ -70,7 +82,7 @@ def summary(date: Optional[str] = None, log_path: Optional[Path] = None) -> dict
             r = json.loads(ln)
         except Exception:
             continue
-        if not str(r.get("ts", "")).startswith(date):
+        if str(r.get("ts", ""))[:10] not in wanted:
             continue
         s = out.setdefault(r.get("source", "?"), {"calls": 0, "errors": 0})
         s["calls"] += 1
