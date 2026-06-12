@@ -10,6 +10,9 @@
 - 觸發事件:**TS_HIGH**(high)、**GSCPI_SPIKE**(med-high)、**GPR_ELEVATED**(info)
 - GSCPI 1.769(z 單位;≥1.5=尖峰)· GPR 184.2(基準~100;p95≈169/p99≈330)· 台灣分項 0.489(60月z 2.24;p95≈0.25)
 - ABM 情境(週更):TS_HIGH 先驗 0.22 · 預期斷供 2.09 季 · deep-kill 折減 -0.21pp(TS_HIGH 條件式 -4.73pp;與 cap 乘數不疊乘)
+- 行為偏差分數:**8.5/10**(顯式先驗;組件 BREADTH_BREAK+GSCPI_SPIKE+TS_HIGH+TWN_Z60+VOL_PANIC) — mania 狀態 + 行為偏離 8.5/10 ≥ 6:過度自信/從眾風險升高 — 漲勢共識最擁擠時新倉寧缺勿濫、既有倉覆核失效條件(observe-first,非倉位指令)。
+- 歷史鏡頭(1999+,synthetic-revised vintage):GSCPI_SPIKE 月份 QQQ 前向 3m 1.35% / 6m -0.18% vs 基準 4.16% / 8.37% — 唯一明確跑輸基準的事件;TS_HIGH 月份歷史上不低於基準(恐懼≠賣訊,實質供應鏈壓力才是)
+- 下月態展望(經驗計數,observe-first):mania 64% / bull 27% / bear 9%(條件層級 unconditioned,n=44)
 
 ## 3. 持倉動作(健檢自動裁決)
 - **清倉**:OPITQ
@@ -33,4 +36,4 @@
 - 規則觸發統計(本批):{'axti-similar-failures': 12, 'deep-kill-sizing-cap': 17, 'world-gscpi-deepkill-caution': 17, 'world-ts-high-taiwan-review': 1, 'break-hard-exclude': 1, 'pit-overrule-human-review': 1}
 - 數據新鮮度:scan 2026-06-11 · rally-dna 2026-05-01 · reflexivity 2026-06-11 · world 2026-06-12
 
-_generated 2026-06-12T12:33:21.849249+00:00_
+_generated 2026-06-12T14:13:17.262367+00:00_

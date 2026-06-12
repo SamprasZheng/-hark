@@ -12,3 +12,12 @@
 2026-06-12T12:33:17.186723+00:00 preopen: start
 2026-06-12T12:33:23.916857+00:00 preopen: wrote D:\DOT\$hark\outputs\position-brief-2026-06-12.md
 2026-06-12T12:33:23.921366+00:00 preopen: risk-queue +15
+2026-06-12T13:10:00.673118+00:00 preopen: start
+2026-06-12T13:10:06.954252+00:00 preopen: wrote D:\DOT\$hark\outputs\position-brief-2026-06-12.md
+2026-06-12T13:10:06.959252+00:00 preopen: risk-queue +0
+2026-06-12T13:25:29.834178+00:00 preopen: start
+2026-06-12T13:25:36.682336+00:00 preopen: wrote D:\DOT\$hark\outputs\position-brief-2026-06-12.md
+2026-06-12T13:25:36.686340+00:00 preopen: risk-queue +0
+2026-06-12T14:13:12.338209+00:00 preopen: start
+2026-06-12T14:13:19.331288+00:00 preopen: wrote D:\DOT\$hark\outputs\position-brief-2026-06-12.md
+2026-06-12T14:13:19.336301+00:00 preopen: risk-queue +0

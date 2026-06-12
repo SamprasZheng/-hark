@@ -176,6 +176,50 @@ def test_swap_candidates_filters_and_ranks():
     assert swap_candidates("Technology", rows, exclude={"AAA", "DDD2"}) == []
 
 
+# ── 今日推薦來源選擇 ──
+
+def _reco_tree(tmp_path):
+    wiki = tmp_path / "wiki" / "05_recommendations"
+    out = tmp_path / "outputs"
+    wiki.mkdir(parents=True)
+    out.mkdir()
+    return wiki, out
+
+
+def test_latest_reco_canonical_beats_older_legacy(tmp_path):
+    from sharks.ui.server import latest_reco_file
+    wiki, out = _reco_tree(tmp_path)
+    (out / "daily-reco-2026-06-10.md").write_text("legacy", encoding="utf-8")
+    (wiki / "2026-06-12.md").write_text("canonical", encoding="utf-8")
+    (wiki / "2026-05-29-fom-monthly.md").write_text("專題頁不參賽", encoding="utf-8")
+    (wiki / "README.md").write_text("readme", encoding="utf-8")
+    (wiki / "archive.md").write_text("archive", encoding="utf-8")
+    assert latest_reco_file(tmp_path).name == "2026-06-12.md"
+
+
+def test_latest_reco_newer_legacy_wins_same_day_prefers_canonical(tmp_path):
+    from sharks.ui.server import latest_reco_file
+    wiki, out = _reco_tree(tmp_path)
+    (wiki / "2026-06-12.md").write_text("canonical", encoding="utf-8")
+    (out / "daily-reco-2026-06-13.md").write_text("較新的舊家族", encoding="utf-8")
+    assert latest_reco_file(tmp_path).name == "daily-reco-2026-06-13.md"
+    (wiki / "2026-06-13.md").write_text("同日 canonical", encoding="utf-8")
+    assert latest_reco_file(tmp_path).name == "2026-06-13.md"
+
+
+def test_latest_reco_empty_returns_none(tmp_path):
+    from sharks.ui.server import latest_reco_file
+    assert latest_reco_file(tmp_path) is None
+
+
+def test_strip_frontmatter():
+    from sharks.ui.server import strip_frontmatter
+    md = "---\ntype: recommendation\ntags: [a, b]\n---\n\n# Daily\n內文"
+    out = strip_frontmatter(md)
+    assert "type: recommendation" not in out and "# Daily" in out
+    assert strip_frontmatter("# 無 frontmatter\n---\n分隔線留著") == "# 無 frontmatter\n---\n分隔線留著"
+
+
 # ── misc ──
 
 def test_us_market_open_returns_bool():
