@@ -109,6 +109,21 @@ SharksDNA-Morning/PreOpen,2026-06-12 已執行替換 ad-hoc 任務)。
    的機器驗證(`polygon_financials` filing_date 錨)、china_revenue 其餘 10 檔證據、
    ANET 組裝地驗證。
 6. **TARIFF/CYBER 手動旗** — 維持手動;無免費機讀源,D/E 級訊號不得自動觸發(CLAUDE.md §5)。
+7. **ABM 斷供季數進 DNA 特徵向量 — 明確不做(PIT 否決)**:MATCH_FEATS 是歷史案例庫的
+   共同尺;歷史案例無 ABM 值,加入即是用今日特徵汙染歷史質心(lookahead 的鏡像)。
+   ABM 影響 sizing/規則(cap 乘數 + brief)是正確通道,維持現狀。外部顧問建議已審,駁回。
+8. **本地小模型線(2026-06-12 晚加入)**:`ai/research_agent.py` — nemoclaw 本地
+   nemotron-3-nano:4b(RTX 5070 12GB 的誠實上限;非顧問宣稱的 32B/70B)產 grade-E
+   研究草稿(假設/反方/待驗證問題+檢索詞)→ `outputs/research-draft-*`;**永不**直寫
+   wiki、不觸發部位;升級路徑=網證逐項驗證後進 [[24_exposure_validation]] 類頁面。
+   preopen brief 尾端可選「本地模型評論」區(grade-E 標注,Ollama 沒開自動跳過)。
+   高精度走 `SHARKS_NEMOTRON_BACKEND=nim`(雲端 49B,同介面)。
+9. **Risk Officer 待審佇列(2026-06-12 晚加入)**:`outputs/risk-review-queue.jsonl`
+   (append-only,冪等)— 持倉×斷裂交集(high)+ human_review 票(medium,含
+   rules_fired 與 world 上下文)。preopen 自動寫;首日 15 筆(AMAT high)。
+10. **存活率動態化(2026-06-12 晚加入)**:collect 每日 +10 檔下市票累積分母,
+    `failed_analogs.main`(analyze 全量重算)排入每週六 morning gated step —
+    deep-kill cap 從「11% 靜態建議」變成隨分母成長自我更新的數字。
 
 ## See also
 

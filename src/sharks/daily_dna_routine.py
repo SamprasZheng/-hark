@@ -103,6 +103,13 @@ def run_morning() -> int:
             _log("morning: abm ok")
         except Exception:
             _log("morning: abm FAILED\n" + traceback.format_exc())
+    if now.weekday() == 5:                      # 週六 TPE = 美股週五收盤後:存活率全量重算
+        try:                                    # (collect 每日累積分母;cap 隨之動態更新)
+            from sharks.backtest import failed_analogs
+            failed_analogs.main([])             # analyze → outputs/failed-analogs-<date>.json
+            _log("morning: failed-analogs survival recompute ok")
+        except Exception:
+            _log("morning: failed-analogs recompute FAILED\n" + traceback.format_exc())
     if now.day == 1:                            # 每月 1 日:世界閾值重校建議(人工套用)
         try:
             from sharks.regime import world_monitor
@@ -235,13 +242,89 @@ def compose_position_brief() -> str:
     return "\n".join(L)
 
 
+def risk_queue_entries(today: str, held_breaks: list[str],
+                       match_rows: list[dict], world_events: list[str]) -> list[dict]:
+    """Risk Officer 待審佇列(純函式):持倉×斷裂交集(最高優先)+ human_review 票。
+    每筆帶 reason 與來源欄位,append-only JSONL 留審計鏈。"""
+    entries = []
+    for t in held_breaks:
+        entries.append({"date": today, "ticker": t, "priority": "high",
+                        "reason": "持倉 × 反身性斷裂交集",
+                        "source": "reflexivity ∩ holdings"})
+    for r in match_rows or []:
+        if r.get("human_review"):
+            entries.append({"date": today, "ticker": r.get("ticker"),
+                            "priority": "medium",
+                            "reason": "、".join(r.get("rules_fired") or []) or "human_review",
+                            "source": "dna_match_today",
+                            "world_events": world_events or None})
+    return entries
+
+
+def _append_risk_queue(entries: list[dict]) -> int:
+    """冪等 append:同 (date,ticker,reason) 不重複寫。回傳新增筆數。"""
+    q = PROJECT_ROOT / "outputs" / "risk-review-queue.jsonl"
+    seen = set()
+    if q.exists():
+        for line in q.read_text(encoding="utf-8").splitlines():
+            try:
+                d = json.loads(line)
+                seen.add((d.get("date"), d.get("ticker"), d.get("reason")))
+            except Exception:
+                continue
+    new = [e for e in entries if (e["date"], e["ticker"], e["reason"]) not in seen]
+    if new:
+        with q.open("a", encoding="utf-8") as fh:
+            for e in new:
+                fh.write(json.dumps(e, ensure_ascii=False) + "\n")
+    return len(new)
+
+
+def _local_llm_commentary(md: str) -> str:
+    """可選:本地 nemotron 評論區(grade-E,永不 gate 任何裁決)。失敗回空字串。"""
+    try:
+        from sharks.ai.nemotron_client import NemotronClient
+        client = NemotronClient()
+        call = client.chat("executor", [
+            {"role": "system",
+             "content": ("你是 $hark 的本地 Risk Officer 助理。讀完艙位 brief,"
+                         "用繁體中文輸出最多 4 條一行評論:優先指出(1)brief 內互相"
+                         "矛盾之處(2)被低估的風險交集(3)執行紀律提醒。"
+                         "禁止建議買賣;不知道就不寫;不重複 brief 已明說的內容。")},
+            {"role": "user", "content": md[:6000]},
+        ], reasoning="off", temperature=0.2, max_tokens=350)
+        if getattr(call, "error", None) or not getattr(call, "content", ""):
+            return ""
+        return ("\n\n## 7. 本地模型評論(nemotron · grade-E — 僅供參考,"
+                "不 gate 任何裁決)\n" + call.content.strip() + "\n")
+    except Exception:
+        return ""
+
+
 def run_preopen() -> int:
     os.chdir(PROJECT_ROOT)
     _log("preopen: start")
     md = compose_position_brief()
+    md += _local_llm_commentary(md)             # Ollama 沒開 = 空字串,brief 照常
     p = PROJECT_ROOT / "outputs" / f"position-brief-{datetime.now().strftime('%Y-%m-%d')}.md"
     p.write_text(md, encoding="utf-8")
     _log(f"preopen: wrote {p}")
+    try:                                        # Risk Officer 待審佇列(append-only)
+        today = datetime.now().strftime("%Y-%m-%d")
+        dna = _latest("rally-dna")
+        reflex = _latest("reflexivity")
+        world = _latest("world-monitor")
+        breaks = [r["ticker"] for r in (reflex.get("rows") or [])
+                  if r.get("verdict") == "斷裂警告"]
+        from sharks.ui.server import holdings_health
+        held = {r["ticker"] for r in (holdings_health("all").get("rows") or [])}
+        match_rows = (dna.get("dna_match_today") or {}).get("top") or []
+        ev = [e.get("id") for e in (world.get("events_triggered") or [])]
+        n = _append_risk_queue(risk_queue_entries(
+            today, sorted(held & set(breaks)), match_rows, ev))
+        _log(f"preopen: risk-queue +{n}")
+    except Exception:
+        _log("preopen: risk-queue FAILED\n" + traceback.format_exc())
     try:
         sys.stdout.reconfigure(encoding="utf-8")    # cp950 console 防護
     except Exception:
