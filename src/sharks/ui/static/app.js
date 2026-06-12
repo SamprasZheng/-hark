@@ -50,6 +50,7 @@ const KINDS = [["rally", "起漲 rally"], ["basecross", "月線金叉 basecross"
 async function init() {
   if (window._noECharts) toast("⚠️ ECharts CDN 載入失敗(離線?)— 圖表無法畫,表格照常");
   renderSignalChips(); renderPresets(); renderKindChips(); bindUI();
+  loadWorld();                          // 全球風險面板:獨立載入,失敗不影響篩選器
   try {
     META = await api("/api/meta");
     $("tickerList").innerHTML = META.tickers.map(t => `<option value="${t}">`).join("");
@@ -133,6 +134,43 @@ function updateSliderLabels() {
   $("rsiVal").textContent = `${F.rsi[0]} – ${F.rsi[1]}`;
   $("dhVal").textContent = `${F.dh[0]} – ${F.dh[1]}`;
   $("dlVal").textContent = `${F.dl[0]} – ${F.dl[1]}${F.dl[1] >= 300 ? "+" : ""}`;
+}
+
+/* ── 全球風險面板(world-monitor + ABM 供應鏈;/api/world)── */
+const SEV_CLS = { high: "h-sell", "med-high": "h-trim", med: "h-trim", low: "h-hold", info: "h-tbd" };
+
+async function loadWorld() {
+  const body = $("worldBody");
+  let d;
+  try { d = await api("/api/world"); }
+  catch (e) { body.textContent = "未啟用/無數據(world-monitor 尚未輸出)"; return; }
+  if (!d || !d.available) { body.textContent = "未啟用/無數據(world-monitor 尚未輸出)"; return; }
+  $("worldMeta").textContent = `retrieved ${String(d.retrieved_at || "—").slice(0, 16).replace("T", " ")} UTC · ${d.file || ""}`;
+  const m = d.metrics || {}, im = d.impacts || {}, th = d.thresholds || {};
+  const evts = d.events_triggered || [];
+  const badge = (e) => `<span class="hbadge ${SEV_CLS[e.severity] || "h-tbd"}"
+    title="${e.category || ""} · severity ${e.severity || "—"}">${e.id}${e.name ? " · " + e.name : ""}</span>`;
+  const metric = (label, v, ctx, hot) => `<div class="card"><div class="k">${label}</div>
+    <div class="v ${hot ? "pos" : ""}">${fmt(v, 2)}${hot ? " ⚠" : ""}</div><div class="muted">${ctx}</div></div>`;
+  const gscpiHot = m.gscpi != null && m.gscpi >= (th.gscpi_spike ?? 1.5);
+  const gprHot = m.gpr != null && m.gpr >= (th.gpr_p95 ?? 169);
+  const twnHot = m.gprc_twn != null && m.gprc_twn >= (th.gprc_twn_p95 ?? 0.25);
+  body.classList.remove("muted");
+  body.innerHTML = `
+    <div class="chipwrap" style="margin-bottom:10px">
+      ${evts.length ? evts.map(badge).join(" ") : '<span class="muted">無觸發事件</span>'}
+    </div>
+    <div class="cards">
+      ${metric("GSCPI 供應鏈壓力", m.gscpi, `尖峰線 ≥ ${th.gscpi_spike ?? 1.5}(z 單位)`, gscpiHot)}
+      ${metric("GPR 全球地緣風險", m.gpr, `p95 ≈ ${th.gpr_p95 ?? 169}(1985+ 月度)`, gprHot)}
+      ${metric("GPRC 台灣", m.gprc_twn, `p95 ≈ ${th.gprc_twn_p95 ?? 0.25} · z60 ${fmt(m.gprc_twn_z60, 2)}`, twnHot)}
+    </div>
+    <div style="margin-bottom:4px">🛡️ deep-kill 上限 ${im.deepkill_cap_multiplier != null ? `×${im.deepkill_cap_multiplier}` : "不變(×1.0)"}${im.exposure_penalty != null ? ` · 曝險罰分 ${im.exposure_penalty}` : ""}${(im.review_groups || []).length ? ` · 覆核組:${im.review_groups.join("、")}` : ""}</div>
+    ${d.abm && d.abm.survival_delta != null
+      ? `<div style="margin-bottom:4px" title="${d.abm.survival_delta_field || ""}">🏭 ABM 供應鏈生存差 ${fmt(d.abm.survival_delta, 3)}${d.abm.scenario ? `(情境 ${d.abm.scenario})` : ""}</div>`
+      : `<div class="muted" style="margin-bottom:4px">🏭 ABM 供應鏈模擬:無輸出</div>`}
+    ${(d.stale_sources || []).length ? `<div class="banner warn">⚠️ 過期來源:${d.stale_sources.join("、")}</div>` : ""}
+    <div class="muted">${d.disclaimer || "recommend-only;事件=篩選/微調輸入,非倉位指令。"}</div>`;
 }
 
 /* ── 板塊廣度 ── */

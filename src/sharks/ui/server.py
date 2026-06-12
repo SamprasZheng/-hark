@@ -408,6 +408,95 @@ def holdings_health(book: str = "all") -> dict:
     })
 
 
+# ── 全球風險面板(world-monitor + ABM 供應鏈 → /api/world)──────────────────────
+# recommend-only:事件/指標是篩選與微調輸入,非倉位指令(同 world-monitor 輸出免責)。
+
+WORLD_DISCLAIMER = "recommend-only;事件=篩選/微調輸入,非倉位指令。"
+
+# 展示用閾值錨點 — 與 config/world_events.json 的 _basis 一致(分位數定錨,非擬合):
+#   GSCPI 本身即 NY Fed z-score → 尖峰線 1.5σ;GPR 月度 1985+ p95=169;GPRC_TWN p95=0.25。
+WORLD_THRESHOLDS = {"gscpi_spike": 1.5, "gpr_p95": 169.0, "gprc_twn_p95": 0.25}
+
+
+def _latest_json_file(outputs_dir: Path, prefix: str) -> tuple[Path | None, dict | None]:
+    """最新 outputs/<prefix>-*.json(sorted-glob-last;排除 .bak)。
+    無檔 → (None, None);壞檔 → (path, None) — 呼叫端一律優雅降級。"""
+    files = sorted(p for p in outputs_dir.glob(f"{prefix}-*.json")
+                   if not p.name.endswith(".bak"))
+    if not files:
+        return None, None
+    try:
+        d = json.loads(files[-1].read_text(encoding="utf-8"))
+        return files[-1], (d if isinstance(d, dict) else None)
+    except Exception:
+        return files[-1], None
+
+
+def _abm_compact(d: dict | None) -> dict | None:
+    """ABM 供應鏈輸出 → 面板摘要。引擎由 sibling 任務開發、schema 未定 → 防衛式抽取:
+    找含 survival 的數值欄(優先 survival+delta 命名,深至 3 層);抽不到 → None,不發明值。"""
+    if not isinstance(d, dict):
+        return None
+
+    def _num(v):
+        return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+    def scan(obj, want_delta: bool, depth: int = 0):
+        if depth > 3 or not isinstance(obj, dict):
+            return None, None
+        for k, v in obj.items():
+            kl = str(k).lower()
+            if "survival" in kl and (("delta" in kl or "diff" in kl) if want_delta else True) \
+                    and _num(v) is not None:
+                return str(k), v
+        for v in obj.values():
+            key, val = scan(v, want_delta, depth + 1)
+            if key is not None:
+                return key, val
+        return None, None
+
+    key, val = scan(d, want_delta=True)
+    if key is None:
+        key, val = scan(d, want_delta=False)
+    return {
+        "as_of": d.get("as_of"),
+        "generated_at": d.get("generated_at") or d.get("retrieved_at"),
+        "survival_delta": val,
+        "survival_delta_field": key,    # 抽到的欄名(前端 tooltip 用,debug 友善)
+        "scenario": d.get("scenario") or d.get("event") or d.get("geopolitical_event"),
+    }
+
+
+def world_panel(outputs_dir: Path | None = None) -> dict:
+    """/api/world 載荷:最新 world-monitor 摘要 + ABM 生存差(任一缺檔 → 優雅降級)。"""
+    out_dir = outputs_dir if outputs_dir is not None else PROJECT_ROOT / "outputs"
+    wm_path, wm = _latest_json_file(out_dir, "world-monitor")
+    _, abm = _latest_json_file(out_dir, "abm-supply-chain")
+    if wm is None:
+        return {"available": False, "file": wm_path.name if wm_path else None,
+                "abm": _abm_compact(abm), "disclaimer": WORLD_DISCLAIMER}
+    metrics = wm.get("metrics") or {}
+    impacts = wm.get("impacts") or {}
+    return {
+        "available": True,
+        "file": wm_path.name,
+        "retrieved_at": wm.get("retrieved_at"),
+        "as_of": wm.get("as_of"),
+        "stale_sources": wm.get("stale_sources") or [],
+        "events_triggered": [{"id": e.get("id"), "name": e.get("name"),
+                              "category": e.get("category"), "severity": e.get("severity")}
+                             for e in (wm.get("events_triggered") or [])
+                             if isinstance(e, dict)],
+        "metrics": {k: metrics.get(k) for k in ("gscpi", "gpr", "gprc_twn", "gprc_twn_z60")},
+        "impacts": {"deepkill_cap_multiplier": impacts.get("deepkill_cap_multiplier"),
+                    "exposure_penalty": impacts.get("exposure_penalty"),
+                    "review_groups": impacts.get("review_groups") or []},
+        "thresholds": WORLD_THRESHOLDS,
+        "abm": _abm_compact(abm),
+        "disclaimer": wm.get("disclaimer") or WORLD_DISCLAIMER,
+    }
+
+
 # ── 背景 jobs(主題池掃描要打 yfinance,分鐘級 → 不能卡 request)────────────────
 
 JOBS: dict[str, dict] = {}
@@ -565,6 +654,9 @@ def build_app():
             book = "all"
         return JSONResponse(await run_in_threadpool(holdings_health, book))
 
+    async def api_world(request):
+        return JSONResponse(jsonable(await run_in_threadpool(world_panel)))
+
     async def api_reco(request):
         files = sorted((PROJECT_ROOT / "outputs").glob("daily-reco-*.md"))
         if not files:
@@ -582,6 +674,7 @@ def build_app():
         Route("/api/jobs", api_job_create, methods=["POST"]),
         Route("/api/jobs/{job_id}", api_job_get),
         Route("/api/holdings/health", api_health),
+        Route("/api/world", api_world),
         Route("/api/reco", api_reco),
         Mount("/static", app=StaticFiles(directory=str(STATIC_DIR)), name="static"),
     ])
