@@ -163,15 +163,12 @@ def _actions(sleeve_report: dict, moon: list, investable: float) -> list[str]:
     return out
 
 
-# Real P1 book (USD market value) from portfolio/index.md §2 (2026-05-30 snapshot).
-# Dust (<$10: CRWD/DDOG/WDAY/XYZ/WDC/NXPI/MSFT) excluded — clear, don't classify.
+# Real P1 book (USD market value) from raw/principal/2026-06-11-snapshot-p1.md.
+# 清單在 ~$202 截斷(之下未知);SIVEF/NXPX 解碼 TBD;APA 為截斷列推定。
 P1_HOLDINGS_USD = {
-    "TARK": 1515, "LABU": 585, "AAPB": 399, "NOWL": 469, "LULG": 336, "RBLU": 214,
-    "QSU": 209, "TSLL": 158, "OKLL": 178, "ONDU": 147, "HPQ": 551, "CRSR": 484,
-    "ALGM": 476, "SBIT": 476, "ENPH": 340, "STZ": 203, "AMPX": 202, "SWKS": 197,
-    "PG": 197, "PEP": 196, "UAA": 179, "VFC": 174, "CRM": 215, "LULU": 209,
-    "CRCT": 208, "APA": 207, "NKE": 205, "TSLA": 205, "VSCO": 276, "ARRY": 273,
-    "RUN": 101, "WOLF": 59, "MRNA": 54, "NOK": 149,
+    "IGV": 1279, "SIVEF": 891, "HPQ": 503, "ALGM": 482, "CRWG": 397, "ZM": 371,
+    "MSFU": 360, "PTIR": 325, "CRMG": 315, "DDD": 302, "ENPH": 280, "LULG": 278,
+    "INTU": 278, "ARRY": 224, "NXPX": 210, "APA": 203,
 }
 
 
@@ -184,7 +181,7 @@ def main() -> int:
     report = classify_portfolio(P1_HOLDINGS_USD)
     report["as_of"] = datetime.now(timezone.utc).isoformat()
     report["target_allocation_pct"] = {k: round(v * 100) for k, v in TARGET_ALLOCATION.items()}
-    report["source"] = "portfolio/index.md §2 (P1, 2026-05-30)"
+    report["source"] = "raw/principal/2026-06-11-snapshot-p1.md (P1, 2026-06-11 close)"
     out = Path("outputs") / "sleeve-classification-p1.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")

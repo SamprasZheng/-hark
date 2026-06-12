@@ -2,10 +2,13 @@
 type: synthesis
 tags: [portfolio, liquidity, tiers, flex-buffer, holdings, tax-loss-harvest, private]
 title: 倉位重整 — 實際持倉(11 張截圖消化)+ 流動性分層
-as_of_timestamp: 2026-05-31T00:00:00+08:00
+as_of_timestamp: 2026-06-12T11:10:00+08:00
 status: live
 schema_version: 1
 ---
+
+> **分段基準**:§2(P1)= 2026-06-11 美股收盤(`raw/principal/2026-06-11-snapshot-p1.md`);
+> §1 其餘容器、§3–§5 仍為 2026-05-30 快照基準,未重新截圖。
 
 # 倉位重整(實際持倉)
 
@@ -17,24 +20,34 @@ schema_version: 1
 | 容器 | 約略市值 | 角色 | 觀察 |
 |---|---|---|---|
 | **NVDA RSU/ESPP**(員工портal,未截圖) | ~$130K ≈ **NT$4,079K** | 鎖定核心 | 占總曝險 ~87%(見 [[../05_equity_monetization_schedule]]) |
-| **US 直券 P1(Individual)** | ~$11.4K ≈ **NT$357K** | 主動槓桿+現股 | ~37 檔,槓桿單股 ETF 為主 |
-| **複委託 8840(Fubon,teal app)** | TBD(小) | 主題現股籃子 | 11 檔,僅見股數無市值 |
+| **US 直券 P1(Individual)** | ≥$6.7K ≈ **NT$210K**(06-11 可見部位;清單截斷+現金不可見) | 主動槓桿+現股 | 16+ 檔;舊槓桿已清,新開 2x 單股一批 |
+| **複委託 8840(Fubon,teal app)** | ~$9.5K ≈ **NT$298K**(06-11 全帳本) | 主題現股籃子 | 24 檔;AI半導體/電力核能/太空/光子/超跌軟體 |
 | **證券 app — 台股 9A92** | **NT$42,325** | **高股息存股** | 0056/00878/00929 等,+35~50% |
 | **證券 app — 複委託(美股)** | ~$1,880 ≈ **NT$59K**(活的部分) | 投機殘骸 | 多檔 −90~−100%(見 §5)|
 | **證券 app — 海外定時定額** | **NT$19,314** | 藍籌 DCA(=「其他小存股」)| GOOG/TSLA/NFLX |
 | **台幣現金** | **NT$86,000** | Tier 0 | 7 天日常扣款 |
 | **合計(ex-RSU)** | ~**NT$563K** + 8840 | | NVDA RSU 仍壓倒性 |
 
-## §2. US 直券 P1(Individual,~$11.4K)
+## §2. US 直券 P1(Individual)— as_of 2026-06-11 收盤(截圖 06-12 10:21 TPE)
 
-槓桿單股 ETF(多列 `$hark` SELL):TARK $1,515、LABU $585、AAPB $399、NOWL $469、LULG $336、RBLU $214、QSU $209、TSLL $158、OKLL $178、ONDU $147。
-現股/品質:HPQ $551、CRSR $484、ALGM $476、SBIT $476、ENPH $340、STZ $203、AMPX $202、SWKS $197、PG $197、PEP $196、UAA $179、VFC $174、CRM $215、LULU $209、CRCT $208、APA $207、NKE $205、TSLA $205、VSCO $276、ARRY $273、RUN $101、WOLF $59、MRNA $54、NOK $149。
-**塵粉(<$10,可清):** CRWD $8.8、DDOG $8.6、WDAY $8.5、XYZ $7.8、WDC $7.7、NXPI $7.7、MSFT $7.7。
+可見部位小計 ≈ **$6,696**(清單在 ~$202 截斷,之下未知;無 % Acct 欄、現金不可見)。
 
-## §3. 複委託 8840(Fubon)— 僅股數(市值待補)
+槓桿單股 ETF(新開一批,≈28% 可見部位):CRWG $397(2x CRWV)、MSFU $360(2x MSFT)、
+PTIR $325(2x PLTR)、CRMG $315(2x CRM)、LULG $278(2x LULU)、NXPX $210(疑 2x NXPI,**TBD**)。
+ETF/現股:IGV $1,279(軟體 ETF,最大持倉)、SIVEF $891(Sivers Semi — CPO 雷射/ELS 咽喉點,微型股)、HPQ $503、
+ALGM $482、ZM $371、DDD $302、ENPH $280、INTU $278、ARRY $224、APA ~$203(截斷列推定)。
 
-AOSL 3、BLDP 100、HPQ 40、LG Display ADR 30、Intellia(NTLA)20、**Office Properties(OPI)1,000**、Oracle 2、Rivian 20、**XCF Global 500**、Turtle Beach 30、Uranium Energy(UEC)30。
-> ⚠ 待補市值(此 app 只顯示股數)→ [[../context/assumptions-and-inputs]] §4。
+vs 05-30:TARK/LABU/SBIT/NOWL/AAPB/RBLU/CRSR/VSCO 已不在 >$202 可見區間
+(與 06-07「出清槓桿/spec」指令一致);**但 2x 單股捲土重來,槓桿紀律問題未解,只是換標的**。
+舊 §2 內容(05-30 全表)見 `raw/principal/2026-05-30-snapshot-full.md`。
+
+## §3. 複委託 8840(Fubon)— as_of 2026-06-11 收盤,全帳本 24 檔 ≈ $9,482
+
+完整表(現價/股數/市值/成本≈)見 `raw/principal/2026-06-11-snapshot-8840.md`。
+前五大:ADBE $1,094、CPNG $863、VST $732、AMAT $553、RDW $513。
+vs 05-30:股數持平 9 檔(AOSL/LPL/NTLA/OPITQ/ORCL/RIVN/SAFX/TBCH/UEC);BLDP、HPQ 出;
+**新進 15 檔**(ADBE/AMAT/APPS/ARM/CPNG/FSLR/HOOD/LAC/NOW/PD/POET/RDW/SMR/VST/ZETA)。
+⚠ **OPITQ(原 OPI)1,000 股已歸零(破產 Q 尾碼)→ §5 稅損收割清單追加**。
 
 ## §4. 台股 9A92(NT$42,325)— 你的「存股 dividend sleeve」
 

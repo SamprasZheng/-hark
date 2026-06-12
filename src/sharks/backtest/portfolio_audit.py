@@ -2,7 +2,9 @@
 
 Per-ticker verdict: HOLD / TRIM / SELL with rationale.
 
-Hardcoded portfolio = P1 (32 holdings) + P2 (26 holdings) from principal screenshots 2026-05-30.
+Hardcoded portfolio = P1 (16 visible holdings) + P2 (複委託 8840, 24 holdings full book),
+both as of 2026-06-11 close. Sources: raw/principal/2026-06-11-snapshot-p1.md +
+raw/principal/2026-06-11-snapshot-8840.md.
 """
 
 from __future__ import annotations
@@ -28,71 +30,58 @@ from sharks.scoring.leveraged_etf import (
 )
 from sharks.decision import position_review as pr
 
-# ─── User's actual portfolios (2026-05-30) ───
-# Format: ticker -> {percent_of_account, decoded_name, pct_account}
+# ─── User's actual portfolios ───
+# P1 updated 2026-06-11 close (raw/principal/2026-06-11-snapshot-p1.md, 2 截圖).
+# pct = mkt_val / 可見部位小計 $6,696(清單在 ~$202 截斷,之下未知;無 % Acct 欄)。
+# 舊槓桿 (TARK/LABU/SBIT/NOWL/AAPB/RBLU) 已不在頭部,但新開一批 2x 單股。
 PORTFOLIO_1 = {
-    # Leveraged ETFs (forced SELL)
-    "TARK": {"name": "Tradr 2X Long ARKK", "pct": 13.04, "leveraged_of": "ARKK"},
-    "LABU": {"name": "Direxion 3X Biotech Bull", "pct": 5.05, "leveraged_of": "XBI"},
-    "ORCX": {"name": "GraniteShares 2x ORCL Daily", "pct": 4.53, "leveraged_of": "ORCL"},
-    "CRSR": {"name": "Corsair Gaming", "pct": 4.46, "leveraged_of": None},
-    "SBIT": {"name": "ProShares Short BTC -1x", "pct": 4.11, "leveraged_of": "BTC-USD"},
-    "RGTX": {"name": "Rigetti Computing (quantum)", "pct": 3.63, "leveraged_of": None},
-    "AAPB": {"name": "GraniteShares 2x AAPL Daily", "pct": 3.54, "leveraged_of": "AAPL"},
-    "NOWL": {"name": "Tradr 2x NOW Daily", "pct": 3.23, "leveraged_of": "NOW"},
-    "DDD":  {"name": "3D Systems", "pct": 3.11, "leveraged_of": None},
-    "ENPH": {"name": "Enphase Energy", "pct": 3.06, "leveraged_of": None},
-    "SMCL": {"name": "Direxion 2x SMCI Daily Bull", "pct": 3.02, "leveraged_of": "SMCI"},
-    "LULG": {"name": "GraniteShares 2x LULU Daily", "pct": 2.95, "leveraged_of": "LULU"},
-    "VSCO": {"name": "Victoria's Secret", "pct": 2.58, "leveraged_of": None},
-    "ARRY": {"name": "Array Technologies", "pct": 2.46, "leveraged_of": None},
-    "QBTX": {"name": "Defiance 2x Quantum Daily", "pct": 2.22, "leveraged_of": "QTUM"},
-    "NOW":  {"name": "ServiceNow (cash)", "pct": 1.91, "leveraged_of": None},
-    "QSU":  {"name": "Quantum-related (unverified)", "pct": 1.89, "leveraged_of": None},
-    "AMPX": {"name": "Amprius Technologies", "pct": 1.87, "leveraged_of": None},
-    "RBLU": {"name": "GraniteShares 2x ROBL Daily", "pct": 1.85, "leveraged_of": "RBLX"},
-    "NKE":  {"name": "Nike", "pct": 1.85, "leveraged_of": None},
-    "LULU": {"name": "Lululemon (cash)", "pct": 1.84, "leveraged_of": None},
-    "TSLA": {"name": "Tesla (cash)", "pct": 1.83, "leveraged_of": None},
-    "STZ":  {"name": "Constellation Brands", "pct": 1.82, "leveraged_of": None},
-    "CRCT": {"name": "Cricut Inc", "pct": 1.82, "leveraged_of": None},
-    "APA":  {"name": "APA Corp (oil)", "pct": 1.82, "leveraged_of": None},
-    "SWKS": {"name": "Skyworks Solutions", "pct": 1.80, "leveraged_of": None},
-    "PG":   {"name": "Procter & Gamble", "pct": 1.76, "leveraged_of": None},
-    "PEP":  {"name": "PepsiCo", "pct": 1.74, "leveraged_of": None},
-    "CRM":  {"name": "Salesforce", "pct": 1.73, "leveraged_of": None},
-    "QUBX": {"name": "Quantum-related (speculative)", "pct": 1.70, "leveraged_of": None},
-    "OKLL": {"name": "GraniteShares 2x OKLO Daily", "pct": 1.64, "leveraged_of": "OKLO"},
-    "VFC":  {"name": "VF Corp", "pct": 1.60, "leveraged_of": None},
+    "IGV":   {"name": "iShares Expanded Tech-Software ETF", "pct": 19.09, "mkt_val": 1278.56, "leveraged_of": None},
+    "SIVEF": {"name": "Sivers Semiconductors(CPO 雷射/ELS 咽喉點)", "pct": 13.31, "mkt_val": 891.00, "leveraged_of": None},
+    "HPQ":   {"name": "HP Inc", "pct": 7.51, "mkt_val": 503.03, "leveraged_of": None},
+    "ALGM":  {"name": "Allegro MicroSystems", "pct": 7.20, "mkt_val": 482.00, "leveraged_of": None},
+    "CRWG":  {"name": "GraniteShares 2x CRWV Daily", "pct": 5.93, "mkt_val": 396.88, "leveraged_of": "CRWV"},
+    "ZM":    {"name": "Zoom", "pct": 5.53, "mkt_val": 370.60, "leveraged_of": None},
+    "MSFU":  {"name": "Direxion Daily MSFT Bull 2X", "pct": 5.38, "mkt_val": 360.19, "leveraged_of": "MSFT"},
+    "PTIR":  {"name": "GraniteShares 2x PLTR Daily", "pct": 4.85, "mkt_val": 324.55, "leveraged_of": "PLTR"},
+    "CRMG":  {"name": "GraniteShares 2x CRM Daily", "pct": 4.71, "mkt_val": 315.09, "leveraged_of": "CRM"},
+    "DDD":   {"name": "3D Systems", "pct": 4.52, "mkt_val": 302.37, "leveraged_of": None},
+    "ENPH":  {"name": "Enphase Energy", "pct": 4.18, "mkt_val": 280.00, "leveraged_of": None},
+    "LULG":  {"name": "GraniteShares 2x LULU Daily", "pct": 4.15, "mkt_val": 278.00, "leveraged_of": "LULU"},
+    "INTU":  {"name": "Intuit", "pct": 4.15, "mkt_val": 277.75, "leveraged_of": None},
+    "ARRY":  {"name": "Array Technologies", "pct": 3.34, "mkt_val": 223.51, "leveraged_of": None},
+    "NXPX":  {"name": "TBD — 疑為 2x NXPI,待驗證", "pct": 3.14, "mkt_val": 210.00, "leveraged_of": None},
+    "APA":   {"name": "APA Corp (oil) — 截斷列推定,待確認", "pct": 3.02, "mkt_val": 202.55, "leveraged_of": None},
 }
 
+# P2 = 複委託 8840(Fubon)。Updated 2026-06-11 close — raw/principal/2026-06-11-snapshot-8840.md
+# (3 截圖,字母序 A→Z 完整帳本,24 檔;市值=現價×股數;總計 ≈$9,482)。
+# 舊 26 檔清單(ZM/PEP/DIS/DOCN…,05-30 來源)與本帳本幾乎無交集 — 疑為另一容器,
+# 已被本快照取代;出處待 principal 釐清(見 wiki/log 2026-06-12)。
 PORTFOLIO_2 = {
-    "ZM":   {"name": "Zoom", "pct": None},
-    "PEP":  {"name": "PepsiCo", "pct": None},
-    "DIS":  {"name": "Disney", "pct": None},
-    "LUNR": {"name": "Intuitive Machines", "pct": None},
-    "UPS":  {"name": "United Parcel", "pct": None},
-    "DOCN": {"name": "DigitalOcean", "pct": None},
-    "SHAK": {"name": "Shake Shack", "pct": None},
-    "ARRY": {"name": "Array Tech", "pct": None},
-    "RRX":  {"name": "Regal Rexnord", "pct": None},
-    "IP":   {"name": "International Paper", "pct": None},
-    "DELL": {"name": "Dell Technologies", "pct": None},
-    "ORCL": {"name": "Oracle Corp", "pct": None},
-    "UEC":  {"name": "Uranium Energy", "pct": None},
-    "TAC":  {"name": "Transalta", "pct": None},
-    "GFS":  {"name": "GlobalFoundries", "pct": None},
-    "AAPL": {"name": "Apple Inc", "pct": None},
-    "BIRK": {"name": "Birkenstock", "pct": None},
-    "PG":   {"name": "Procter & Gamble", "pct": None},
-    "ALGM": {"name": "Allegro Microsystems", "pct": None},
-    "SKYT": {"name": "SkyWater Technology", "pct": None},
-    "RELY": {"name": "Remitly Global", "pct": None},
-    "PATH": {"name": "UiPath", "pct": None},
-    "APPN": {"name": "Appian Corp", "pct": None},
-    "AESI": {"name": "Atlas Energy Solutions", "pct": None},
-    "GRPN": {"name": "Groupon", "pct": None},
-    "EXTR": {"name": "Extreme Networks", "pct": None},
+    "ADBE":  {"name": "Adobe", "pct": 11.54, "mkt_val": 1094.00, "shares": 5, "leveraged_of": None},
+    "CPNG":  {"name": "Coupang", "pct": 9.10, "mkt_val": 862.50, "shares": 50, "leveraged_of": None},
+    "VST":   {"name": "Vistra(電力;Tier A 埋伏名單)", "pct": 7.72, "mkt_val": 731.90, "shares": 5, "leveraged_of": None},
+    "AMAT":  {"name": "Applied Materials", "pct": 5.83, "mkt_val": 552.64, "shares": 1, "leveraged_of": None},
+    "RDW":   {"name": "Redwire(太空)", "pct": 5.41, "mkt_val": 512.70, "shares": 30, "leveraged_of": None},
+    "APPS":  {"name": "Digital Turbine", "pct": 5.35, "mkt_val": 507.00, "shares": 50, "leveraged_of": None},
+    "SMR":   {"name": "NuScale Power(核電 SMR)", "pct": 5.05, "mkt_val": 478.50, "shares": 50, "leveraged_of": None},
+    "LAC":   {"name": "Lithium Americas", "pct": 4.65, "mkt_val": 441.00, "shares": 100, "leveraged_of": None},
+    "PD":    {"name": "PagerDuty", "pct": 4.62, "mkt_val": 438.50, "shares": 50, "leveraged_of": None},
+    "TBCH":  {"name": "Turtle Beach", "pct": 4.24, "mkt_val": 401.70, "shares": 30, "leveraged_of": None},
+    "ZETA":  {"name": "Zeta Global", "pct": 4.23, "mkt_val": 401.20, "shares": 20, "leveraged_of": None},
+    "ORCL":  {"name": "Oracle", "pct": 3.88, "mkt_val": 368.20, "shares": 2, "leveraged_of": None},
+    "ARM":   {"name": "ARM Holdings", "pct": 3.61, "mkt_val": 342.23, "shares": 1, "leveraged_of": None},
+    "POET":  {"name": "POET Technologies(光子)", "pct": 3.56, "mkt_val": 337.50, "shares": 30, "leveraged_of": None},
+    "UEC":   {"name": "Uranium Energy", "pct": 3.36, "mkt_val": 318.90, "shares": 30, "leveraged_of": None},
+    "RIVN":  {"name": "Rivian", "pct": 3.28, "mkt_val": 310.80, "shares": 20, "leveraged_of": None},
+    "FSLR":  {"name": "First Solar", "pct": 2.86, "mkt_val": 271.17, "shares": 1, "leveraged_of": None},
+    "NTLA":  {"name": "Intellia Therapeutics", "pct": 2.60, "mkt_val": 247.00, "shares": 20, "leveraged_of": None},
+    "SAFX":  {"name": "XCF Global", "pct": 2.20, "mkt_val": 208.25, "shares": 500, "leveraged_of": None},
+    "NOW":   {"name": "ServiceNow", "pct": 2.17, "mkt_val": 206.16, "shares": 2, "leveraged_of": None},
+    "HOOD":  {"name": "Robinhood Markets", "pct": 1.95, "mkt_val": 184.46, "shares": 2, "leveraged_of": None},
+    "LPL":   {"name": "LG Display ADR", "pct": 1.43, "mkt_val": 135.90, "shares": 30, "leveraged_of": None},
+    "AOSL":  {"name": "Alpha & Omega Semiconductor", "pct": 1.37, "mkt_val": 129.99, "shares": 3, "leveraged_of": None},
+    "OPITQ": {"name": "Office Properties Income Trust(破產程序,歸零)", "pct": 0.0, "mkt_val": 0.0, "shares": 1000, "leveraged_of": None},
 }
 
 # ─── Concentration context (the elephant the audit does NOT score) ───
@@ -104,9 +93,9 @@ PORTFOLIO_2 = {
 # and wiki/12_employee_concentration.md. Update when a fresh snapshot lands.
 CONCENTRATION_CONTEXT_USD = {
     "nvda_rsu_espp": 130_000,   # unvested employer comp; next vest 2026-06-17
-    "us_broker_p1": 11_374,     # inferred from TARK 13.04% = $1,483.20 snapshot
+    "us_broker_p1": 6_696,      # 2026-06-11 可見部位小計(清單 ~$202 截斷、現金不可見 → 下限值)
     "taiwan_9a92_etf": 1_320,   # 台股 domestic ETF satellite
-    "complementary_p2": 3_000,  # 複委託 (8840) — small, not fully snapshotted; rough est
+    "complementary_p2": 9_482,  # 複委託 8840 — 2026-06-11 全帳本(24 檔,OPITQ 計 0)
 }
 
 
@@ -129,7 +118,7 @@ def build_concentration_context() -> dict:
         "exposure_share_pct": shares,
         "total_liquidish_usd": total,
         "see": "wiki/12_employee_concentration.md",
-        "as_of_basis": "raw/principal/2026-05-29-snapshot-p1.md + wiki/12_employee_concentration.md",
+        "as_of_basis": "raw/principal/2026-06-11-snapshot-p1.md (P1) + wiki/12_employee_concentration.md",
         "figures_are_estimates": True,
     }
 
@@ -245,7 +234,7 @@ def _recent_return(closes, ticker, months: int = 3):
 
 def main():
     out_dir = Path("outputs")
-    today = pd.Timestamp("2026-05-30")
+    today = pd.Timestamp.now().normalize()      # as_of = 執行日(輸出檔名隨日期,不覆寫歷史 audit)
     print(f"Portfolio audit as of {today.date()}", file=sys.stderr)
 
     # Merge tickers
@@ -266,7 +255,7 @@ def main():
     # by the underlying. They still take the forced-SELL base verdict; the review
     # decides hold-trail vs sell from the trend.
 
-    closes = fetch_monthly(list(pull_set), "2019-12-01", "2026-05-30")
+    closes = fetch_monthly(list(pull_set), "2019-12-01", str(today.date()))
     print(f"  pulled data for {len(closes.columns)} tickers", file=sys.stderr)
 
     # Audit each portfolio
