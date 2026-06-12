@@ -74,8 +74,10 @@ def fetch_quarters(ticker: str, limit: int = 20, token: Optional[str] = None) ->
     tok = token or _token()
     params = {"ticker": ticker, "timeframe": "quarterly", "limit": limit,
               "order": "desc", "apiKey": tok}
+    from sharks.data.call_log import timed_call
     for attempt in (1, 2):
-        r = requests.get(BASE, params=params, timeout=30)
+        with timed_call("polygon", "financials"):
+            r = requests.get(BASE, params=params, timeout=30)
         if r.status_code == 429 and attempt == 1:
             time.sleep(15)
             continue

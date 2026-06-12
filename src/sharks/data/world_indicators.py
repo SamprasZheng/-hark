@@ -196,8 +196,10 @@ def _stamp(series_id: str, pairs: list[tuple[str, float]]) -> list[dict]:
 def fetch_gscpi(*, opener=None, sleep=time.sleep, max_retries: int = 4,
                 timeout: float = 60.0) -> list[dict]:
     """GSCPI 月度全史 → PIT 列(單位=全史 z-score,NY Fed 定義)。"""
-    raw = _request_bytes(GSCPI_URL, opener=opener, sleep=sleep,
-                         max_retries=max_retries, timeout=timeout)
+    from sharks.data.call_log import timed_call
+    with timed_call("nyfed", "gscpi-xls"):
+        raw = _request_bytes(GSCPI_URL, opener=opener, sleep=sleep,
+                             max_retries=max_retries, timeout=timeout)
     series = parse_series_grid(_sheet_grid(raw, GSCPI_SHEET), "Date", ("GSCPI",))
     return _stamp("GSCPI", series.get("GSCPI") or [])
 
@@ -206,8 +208,10 @@ def fetch_gpr_monthly(columns: tuple[str, ...] = GPR_MONTHLY_COLS, *, opener=Non
                       sleep=time.sleep, max_retries: int = 4,
                       timeout: float = 120.0) -> dict[str, list[dict]]:
     """GPR 月度(1900+)→ {欄名: PIT 列}。GPRC_* 為該國占比分項(量綱 ≪ GPR 本體)。"""
-    raw = _request_bytes(GPR_MONTHLY_URL, opener=opener, sleep=sleep,
-                         max_retries=max_retries, timeout=timeout)
+    from sharks.data.call_log import timed_call
+    with timed_call("iacoviello", "gpr-monthly-xls"):
+        raw = _request_bytes(GPR_MONTHLY_URL, opener=opener, sleep=sleep,
+                             max_retries=max_retries, timeout=timeout)
     series = parse_series_grid(_sheet_grid(raw), "month", columns)
     return {c: _stamp(c, pairs) for c, pairs in series.items()}
 
@@ -216,7 +220,9 @@ def fetch_gpr_daily(columns: tuple[str, ...] = GPR_DAILY_COLS, *, opener=None,
                     sleep=time.sleep, max_retries: int = 4,
                     timeout: float = 120.0) -> dict[str, list[dict]]:
     """GPR 每日(1985+,約 1-3 天滯後)→ {欄名: PIT 列}。"""
-    raw = _request_bytes(GPR_DAILY_URL, opener=opener, sleep=sleep,
-                         max_retries=max_retries, timeout=timeout)
+    from sharks.data.call_log import timed_call
+    with timed_call("iacoviello", "gpr-daily-xls"):
+        raw = _request_bytes(GPR_DAILY_URL, opener=opener, sleep=sleep,
+                             max_retries=max_retries, timeout=timeout)
     series = parse_series_grid(_sheet_grid(raw), "date", columns)
     return {c: _stamp(c, pairs) for c, pairs in series.items()}

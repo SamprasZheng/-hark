@@ -321,12 +321,17 @@ def collect(budget: int = 20, max_seconds: float = 1200.0,
             try:
                 u = (f"https://api.polygon.io/v2/aggs/ticker/{t}/range/1/month/"
                      f"2005-01-01/2026-06-01")
+                from sharks.data.call_log import record
+                t_req = time.monotonic()
                 fut = pool.submit(requests.get, u,
                                   params={"adjusted": "true", "limit": 500, "apiKey": tok},
                                   timeout=30)
                 try:
                     r = fut.result(timeout=60)      # 硬上限:涓流回應也走得掉
+                    record("polygon", "aggs-delisted",
+                           latency_ms=int((time.monotonic() - t_req) * 1000))
                 except FutTimeout:
+                    record("polygon", "aggs-delisted", ok=False, note="hard-timeout-60s")
                     fh.write(json.dumps({"ticker": t, "status": "err:hard-timeout-60s"}) + "\n")
                     pool.shutdown(wait=False)        # 棄置卡住的 worker,換新池
                     pool = ThreadPoolExecutor(max_workers=1)

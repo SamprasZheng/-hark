@@ -131,6 +131,19 @@ def run_morning() -> int:
     return 0
 
 
+def _api_usage_line() -> str:
+    """當日 per-source API 計數(call_log;觀測用,DataRouter 提案的採納內核)。"""
+    try:
+        from sharks.data.call_log import summary
+        s = summary()
+        if not s:
+            return "(無記錄)"
+        return " · ".join(f"{src} {v['calls']}" + (f"(err {v['errors']})" if v["errors"] else "")
+                          for src, v in sorted(s.items()))
+    except Exception:
+        return "(無記錄)"
+
+
 def _world_insight_lines(world: dict) -> list[str]:
     """全球風險區塊的觀察層三行(行為偏差/歷史鏡頭/regime 展望)— 缺料即省略,
     全部 observe-first:文字參考,不 gate 任何 KPI/sizing。"""
@@ -279,6 +292,7 @@ def compose_position_brief() -> str:
           f"reflexivity {reflex.get('as_of_scan')} · "
           f"world {str(world.get('retrieved_at') or '—')[:10]}"
           + ("(stale)" if world.get("stale_sources") else ""),
+          f"- API 用量(今日 UTC):{_api_usage_line()}",
           "",
           f"_generated {datetime.now(timezone.utc).isoformat()}_"]
     return "\n".join(L)

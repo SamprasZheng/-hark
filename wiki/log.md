@@ -631,3 +631,7 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - 指令三項裁決:(1) **GSCPI_SPIKE 升級採納**(config/world_events.json:cap ×0.85 + 罰則 0.10→0.15,_basis 引 27 年回放;今日與 TS_HIGH 疊加後 min(0.75,0.85)=0.75 實際 sizing 不變 — 變化在 GSCPI 單獨觸發日)。**TS_HIGH 不對等下調**:歷史均值不低於基準≠尾部安全(樣本內無封鎖),衝擊錨定 ABM 尾部。標主理人晨間覆核(philosophy/08 Risk Officer 轄區);(2) **方案 B(yfinance+Stooq)不重做** — 夜間已三連否證,證據入決策文件;(3) **collect 不重啟** — 結構性阻斷不因指令消失;改交付 `reset-thin` CLI(清免費層假 too_short,付費升級日一鍵啟用重掃,+2 tests)。
 - `outputs/night-shift-summary-2026-06-12.md`:11 commit 帳 + 頭條發現 + 決策清單(A:Polygon Starter $29 單月衝刺,建議;B:已否證;C:維持上界)。
 - monitor/preopen 已用新 config 重生;全套 1155 綠。
+## 2026-06-12(u)— DataRouter 提案裁決:大抽象駁回、記帳內核採納
+- 駁回理由:(1) 提案殺手賣點「yfinance 突破下市票 2 年限制」已被當夜實測否證(0 根)— 路由層救不了數據存在性;(2) lake 已是 local-first 層 + 各 client 自帶限速/fallback,再包 DataRouter = 983+ 測試付翻修稅換零新數據(演進不翻修);(3) 提案路由表本身有誤(rally_dna 跑在 yfinance 數十年月線湖上,非 Polygon)。
+- 採納內核:`data/call_log`(per-source API 呼叫記帳,never-raise)— 接線 polygon financials/aggs-delisted、NY Fed、Iacoviello 四個受限呼叫點;brief 系統健康新增「API 用量(今日 UTC)」行。+5 tests。
+- ARCHITECTURE 新增「數據源矩陣」表(裁決記錄 + 各引擎來源/限制/fallback 一覽)。

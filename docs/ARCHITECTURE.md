@@ -23,6 +23,22 @@
 4. **狀態感知權重**:mania 態自動提高 reflexivity 權重(0.10→0.15)。
 5. **LLM-BACKTEST-PROTOCOL**:headline KPI 全 rule-based;LLM 只設計規則不進迴圈。
 
+## 數據源矩陣(DataRouter 提案裁決記錄,2026-06-12)
+
+外部顧問 DataRouter 大抽象**駁回**:lake 已是 local-first 層、各 client 自帶限速/
+fallback(pit_merger 雙源合併、liquidity/world_monitor stale-fallback);且 yfinance
+對下市票回 0 根已實證 — 路由層救不了數據存在性。採納內核 = `data/call_log`
+(per-source 呼叫記帳 → brief 系統健康顯示當日用量)。
+
+| 引擎 | 來源 | 限制 | fallback |
+|---|---|---|---|
+| 月線/日線湖 | yfinance(period=max) | 下市票無資料 | — |
+| PIT 季度 | Polygon financials(5/min) | 免費層 | yfinance 現金流回補(pit_merger) |
+| 下市票月線 | Polygon aggs | **免費層 2 年窗=結構性阻斷** | 付費升級 + reset-thin |
+| 世界指標 | NY Fed / Iacoviello xls(免 key) | 就地修訂無 vintage | lake 快照 stale-fallback |
+| 現況快照 | Finviz Elite | 無歷史快照(非真相源) | — |
+| 流動性 | FRED keyless CSV(+ALFRED vintage) | — | 上次快照 stale 標記 |
+
 ## 依賴採用準則(先讓需求長到工具的尺寸)
 
 | 工具 | 進入條件 | 現狀 |
