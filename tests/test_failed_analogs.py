@@ -178,14 +178,18 @@ def test_prioritize_missing_fields_treated_as_no_signal():
     assert out == ["BBBB", "AAAA", "CCCC"]
 
 
-def test_candidate_queue_filters_then_prioritizes():
+def test_candidate_queue_filters_then_prioritizes(tmp_path):
     # collect 的接線:fetch_fn 注入(離線)→ 過濾已收/缺 ticker/2010 前 → 重排可關
+    # curated_path 指到不存在檔 → 隔離真實 watchlist 清單(離線紀律)
+    no_curated = tmp_path / "none.yaml"
     raw = [_c("DONE", "Old Done Corp", "2018-01-01"),        # 已在 manifest → 濾掉
            _c("OLDY", "Ancient Industries", "2008-01-01"),   # 2010 前下市 → 濾掉
            _c(None, "No Ticker Corp", "2018-01-01"),         # 缺 ticker → 濾掉
            _c("SPCY", "Hot Spac Acquisition Corp", "2024-02-01"),
            _c("REAL", "Real Steel Inc", "2016-01-01")]
-    q = _candidate_queue({"DONE"}, fetch_fn=lambda: raw, prioritize=True)
+    q = _candidate_queue({"DONE"}, fetch_fn=lambda: raw, prioritize=True,
+                         curated_path=no_curated)
     assert [c["ticker"] for c in q] == ["REAL", "SPCY"]
-    q_off = _candidate_queue({"DONE"}, fetch_fn=lambda: raw, prioritize=False)
+    q_off = _candidate_queue({"DONE"}, fetch_fn=lambda: raw, prioritize=False,
+                             curated_path=no_curated)
     assert [c["ticker"] for c in q_off] == ["SPCY", "REAL"]  # 注入關閉:保留來源順序
