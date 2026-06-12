@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🦈 $hark Screener — 專屬 Finviz</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"
+        onerror="window._noECharts=true"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"
+        onerror="window._noMarked=true"></script>
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand">🦈 <b>$hark</b> Screener</div>
+  <span id="asOfChip" class="chip">as_of —</span>
+  <span id="intradayChip" class="chip warn hidden">⚠️ 盤中快照,非 EOD</span>
+  <input id="tickerJump" list="tickerList" placeholder="跳轉代號…" autocomplete="off">
+  <datalist id="tickerList"></datalist>
+  <span class="spacer"></span>
+  <button id="btnHealth" class="btn">💊 持股健檢</button>
+  <button id="btnReco" class="btn">📋 今日推薦</button>
+  <button id="btnRescan" class="btn">♻️ 離線重掃</button>
+  <button id="btnLakeRefresh" class="btn primary">🌊 刷新湖+重掃</button>
+</header>
+
+<div id="layout">
+  <aside id="sidebar">
+
+    <section class="panel">
+      <h3>⚡ 預設組合</h3>
+      <div id="presetBtns" class="chipwrap"></div>
+    </section>
+
+    <section class="panel">
+      <h3>📶 訊號(點擊循環:不限 → ✓必須 → ✗排除)</h3>
+      <div id="signalChips" class="chipwrap"></div>
+    </section>
+
+    <section class="panel">
+      <h3>🏷️ 板塊</h3>
+      <div id="sectorChips" class="chipwrap"></div>
+    </section>
+
+    <section class="panel">
+      <h3>🎚️ 範圍</h3>
+      <div class="slider-row">
+        <label>RSI <span id="rsiVal"></span></label>
+        <input type="range" id="rsiMin" min="0" max="100" value="0">
+        <input type="range" id="rsiMax" min="0" max="100" value="100">
+      </div>
+      <div class="slider-row">
+        <label>距 52w 高 % <span id="dhVal"></span></label>
+        <input type="range" id="dhMin" min="-80" max="0" value="-80">
+        <input type="range" id="dhMax" min="-80" max="0" value="0">
+      </div>
+      <div class="slider-row">
+        <label>距 52w 低 % <span id="dlVal"></span></label>
+        <input type="range" id="dlMin" min="0" max="300" value="0">
+        <input type="range" id="dlMax" min="0" max="300" value="300">
+      </div>
+      <button id="btnClearFilters" class="btn small">清除全部篩選</button>
+    </section>
+
+    <section class="panel">
+      <h3>🛰️ 主題池掃描(Discord 同款)</h3>
+      <div id="kindChips" class="chipwrap"></div>
+      <div id="scopeChips" class="chipwrap"></div>
+      <button id="btnRunScreen" class="btn primary">▶ 開掃(背景跑,分鐘級)</button>
+      <div id="jobStatus" class="muted"></div>
+    </section>
+
+    <div class="muted footer">recommend-only 研究排序 · 進場仍走 燃料閘+連續起漲+regime · 永不下單</div>
+  </aside>
+
+  <main id="main">
+    <section class="panel">
+      <h3>板塊廣度 %>MA50(點板塊 = 篩選)</h3>
+      <div id="breadthStrip"></div>
+    </section>
+
+    <section id="screenResultPanel" class="panel hidden">
+      <h3 id="screenResultTitle"></h3>
+      <div id="screenResultTable" class="tablewrap"></div>
+    </section>
+
+    <section class="panel">
+      <h3>篩選結果 <span id="rowCount" class="muted"></span></h3>
+      <div class="tablewrap"><table id="resultTable">
+        <thead><tr id="resultHead"></tr></thead>
+        <tbody id="resultBody"></tbody>
+      </table></div>
+    </section>
+  </main>
+</div>
+
+<!-- 調研 overlay -->
+<div id="research" class="overlay hidden">
+  <div class="overlay-card">
+    <header class="rs-head">
+      <h2 id="rsTitle">—</h2>
+      <span id="rsBadges"></span>
+      <span class="spacer"></span>
+      <button id="btnTickerRefresh" class="btn small">🔄 刷新此檔</button>
+      <button id="btnCloseResearch" class="btn small">✕ 關閉</button>
+    </header>
+    <div id="rsSuspect" class="banner warn hidden"></div>
+    <nav id="rsTabs" class="tabs">
+      <button data-tab="tech" class="tab active">📈 技術面</button>
+      <button data-tab="fund" class="tab">🧾 基本面</button>
+      <button data-tab="cash" class="tab">💧 現金流</button>
+      <button data-tab="chip" class="tab">🪙 資金面</button>
+      <button data-tab="local" class="tab">📡 本地訊號</button>
+    </nav>
+    <div id="rsBody">
+      <div id="tab-tech" class="tabpane active">
+        <div id="chartMain" class="echart tall"></div>
+      </div>
+      <div id="tab-fund" class="tabpane">
+        <div id="fundCards" class="cards"></div>
+        <div id="chartRevenue" class="echart"></div>
+        <div id="chartRevenueQ" class="echart"></div>
+      </div>
+      <div id="tab-cash" class="tabpane">
+        <div id="cashCards" class="cards"></div>
+        <div id="chartCashflow" class="echart"></div>
+        <div id="chartFcf" class="echart"></div>
+      </div>
+      <div id="tab-chip" class="tabpane">
+        <div id="chipCards" class="cards"></div>
+        <div id="chipNotes" class="muted"></div>
+      </div>
+      <div id="tab-local" class="tabpane">
+        <div id="localCards" class="cards"></div>
+        <div id="chartStreak" class="echart"></div>
+        <pre id="localRaw" class="raw"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 持股健檢 overlay -->
+<div id="healthOverlay" class="overlay hidden">
+  <div class="overlay-card">
+    <header class="rs-head">
+      <h2>💊 持股健檢</h2>
+      <span class="chipwrap" id="bookChips">
+        <span class="fchip on" data-book="all">全部</span>
+        <span class="fchip" data-book="p1">P1 直券</span>
+        <span class="fchip" data-book="p2">P2 複委託8840</span>
+      </span>
+      <span id="healthMeta" class="chip"></span>
+      <span class="spacer"></span>
+      <button id="btnCloseHealth" class="btn small">✕ 關閉</button>
+    </header>
+    <div id="healthCards" class="cards"></div>
+    <div id="healthTable" class="tablewrap"></div>
+    <div class="muted" style="margin-top:8px">recommend-only 健檢;換股候選是研究排序非買訊 — 進場仍走 燃料閘+連續起漲+regime,永不下單。</div>
+  </div>
+</div>
+
+<!-- 今日推薦 overlay -->
+<div id="recoOverlay" class="overlay hidden">
+  <div class="overlay-card">
+    <header class="rs-head">
+      <h2>📋 今日推薦(最新 daily-reco)</h2>
+      <span class="spacer"></span>
+      <button id="btnCloseReco" class="btn small">✕ 關閉</button>
+    </header>
+    <div id="recoBody" class="mdview"></div>
+  </div>
+</div>
+
+<div id="toast" class="hidden"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

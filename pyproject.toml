@@ -39,6 +39,18 @@ discord = [
     "discord.py>=2.3",
     "python-dotenv>=1.0",
 ]
+# Local web dashboard (src/sharks/ui/server.py) — 專屬 Finviz screener + 調研台.
+#   python -m sharks.ui.server  → http://127.0.0.1:8787
+ui = [
+    "starlette>=0.37",
+    "uvicorn>=0.29",
+]
+# Phase: Akashic memory v3 (docs/QLIB-VECTORDB-PLAN.md). Install when the plan's
+# entry criteria are met — NOT by default (heavy deps; qlib Windows support is fragile).
+akashic = [
+    "chromadb>=0.5",     # 案例向量庫(50+ 案例後啟用;目前特徵質心夠用)
+    # "pyqlib>=0.9",     # 因子工廠/回測平台 — 先在 WSL 驗證再解開(Windows 原生編譯易炸)
+]
 
 [project.scripts]
 sharks = "sharks.cli:main"
