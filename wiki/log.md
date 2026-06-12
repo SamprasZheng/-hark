@@ -567,3 +567,13 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **失敗類比進相似度池**(成功 60 + 失敗 172 同池):新規則 `axti-similar-failures`(Top3 含 ≥2 失敗 → human_review+倉位減半)。首批 fire 12 檔:**DXCM 近鄰失敗×3、ESTC ×2** — watch 名單現在自帶死亡氣味偵測。
 - **brief v2**:新倉名單帶 🚩/⚠近鄰失敗標記;新增「系統健康」區塊(存活率 CI、案例庫規模、規則觸發統計、數據新鮮度)。單筆風險 ≤1-2% 總資本寫進 sizing 行。
 - review 採納記錄:樂透型=衛星倉原則、死亡原因標註(delisted/bankruptcy/FCF 永久惡化)待 Phase 2 分母成長後加欄位。
+
+## 2026-06-12(m)— World Model v1:GSCPI/GPR 世界事件 → DNA 權重/分桶/sizing(上線首日三事件齊發)
+- 設計輸入:watchlist/plan.md(外部顧問草案,untracked)— 已全面翻譯成 repo 原生架構;其 akashic/ 路徑、Mesa ABM、LanceDB 遷移不採納/延後(裁決見 wiki/23_world_model.md §6)。命名:外部稱「Phase 3」與 ROADMAP Phase 3 撞名 → 落地統一叫 World Model,掛 ROADMAP Phase 3 item 7 延伸。
+- 新模組:`data/world_indicators.py`(GSCPI/GPR 免 key grade-A;BIFF .xls 需 xlrd → pyproject [world] extra;NY Fed 日期是文字 '31-Jan-1998' 已容)+ `regime/world_monitor.py`(metrics → config/world_events.json 數值條件求值成布林旗標;never-raise,單源失敗退 data/lake/world/ 快照標 stale)+ `scoring/global_exposure.py` + `config/world_exposure.json`(台鏈 0.9/光通訊 0.7/中國營收 0.6,靜態 git 版控=PIT 安全)。
+- 閾值=分位數定錨(1985+ n=497:GPR p95/p99=169/330;GPRC_TWN p95/p99=0.25/0.37),非外部草案的虛構量綱;每月重校。TARIFF/CYBER 無免費機讀源 → manual_flags(D/E 級不得自動觸發,CLAUDE.md §5)。
+- DNA 整合(最小侵入):`apply_world_weight_shifts`(沿 mania 先例,donor 不破 0.05、總調幅封頂 0.10)、`dna_plus × world_factor`(=1−exposure×penalty,地板 0.65;無事件=1.0 零行為差異,敏感度診斷在折減前計)、ctx_flags 進規則引擎(新規則 world-ts-high-taiwan-review / world-gscpi-deepkill-caution)、deep-kill cap 乘數在 brief 消費端套(failed-analogs 保持純存活統計)。dna-scores-log.jsonl 增 weights_effective/world_events/global_exposure/world_factor 欄。
+- 排程:morning 新增 world-monitor 步(reflexivity 之後、rally_dna 之前);position brief 插「全球風險」區塊(§2,後段重編號)+ cap 行自動顯示乘數;daily_brief 三渲染器加 🌍 區塊;CLI `sharks world-monitor`。
+- 實跑(2026-06-12):**TS_HIGH(GPRC_TWN 0.489 >p99,60月z 2.24)+ GSCPI_SPIKE(1.77,單月+1.15σ)+ GPR_ELEVATED(184.2)三事件齊發**。權重 40/30/20/10→35/30/15/20;deep-kill cap 11%×0.75=8.2%;煙測:ONTO(台鏈 0.9)70.4→54.6+human_review,UNH(0.15)63.4→61.1。
+- 回寫:wiki/23_world_model.md(新,08 槽被 forward_calendar 占用)、wiki/01_macro_state.md §4c(us_china_tension_index=elevated — universe.yaml TSM 60% cap override 正式有機器供值;編輯前已 state snapshot 05-29 版)、wiki/07 監控排程表 +1 列、ARCHITECTURE 風險登記簿 +4 列(GEOPOL_TS/GSCPI_SPIKE/TARIFF_CASCADE/vintage 缺口)+ 層表、ROADMAP item 7 延伸註記。
+- PIT:GSCPI/GPR 就地修訂無官方 vintage → 本地 vintage 自今日起前向累積 data/lake/world/(gitignored+.gitkeep);之前的回測不得用世界事件特徵。測試 +38(world_monitor 22 + global_exposure 16),全套 1037 綠。

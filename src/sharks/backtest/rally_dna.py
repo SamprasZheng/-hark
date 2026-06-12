@@ -556,11 +556,37 @@ def latest_pit_contested() -> dict[str, bool]:
     return out
 
 
+def latest_world_state() -> dict:
+    """最新 world-monitor 輸出(世界事件 → 權重微調/規則旗標/曝險折減);無檔回 {}。"""
+    files = sorted(p for p in Path("outputs").glob("world-monitor-*.json")
+                   if "intraday" not in p.name and not p.name.endswith(".bak"))
+    if not files:
+        return {}
+    try:
+        return json.loads(files[-1].read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def apply_world_weight_shifts(w: dict, world_state: Optional[dict]) -> dict:
+    """世界事件權重微調(純函式):同 mania 先例 — 從 donor 挪到受方,總和不變;
+    donor 不抽破 0.05。monitor 端已把總調幅封頂 0.10(權重=顯式先驗,事件只准微調)。"""
+    for sh in ((world_state or {}).get("impacts") or {}).get("weight_shifts") or []:
+        give, take = sh.get("give_to"), sh.get("take_from")
+        amt = float(sh.get("amount") or 0)
+        if give in w and take in w and amt > 0:
+            amt = min(amt, max(w[take] - 0.05, 0.0))
+            w[give] = round(w[give] + amt, 3)
+            w[take] = round(w[take] - amt, 3)
+    return w
+
+
 def dna_match_today(universe: list[str], top_n: int = 25,
                     centroid: Optional[dict] = None, enrich: bool = True,
                     library_cases: Optional[list[dict]] = None,
                     failed_cases: Optional[list[dict]] = None,
-                    market_state: Optional[str] = None) -> dict:
+                    market_state: Optional[str] = None,
+                    world_state: Optional[dict] = None) -> dict:
     """今天誰最像歷史贏家的起漲點:案例庫質心 z-score 最近鄰(技術/量能歷史相似度)
     + Finviz 三面(基本面/資金買盤/消息,現況)→ dna_plus 綜合分。
     門檻:近 18 個月內曾被殺 ≥30%。recommend-only。"""
@@ -636,6 +662,7 @@ def dna_match_today(universe: list[str], top_n: int = 25,
     w = dict(WEIGHTS_V21)
     if market_state == "mania":            # 狀態感知:mania 提高反身性權重(v3 藍圖 §3)
         w["reflexivity"], w["capital"] = 0.15, 0.15
+    w = apply_world_weight_shifts(w, world_state)   # 世界事件微調(無事件=不動)
     fund_pct, cap_pct = pct("fundamental"), pct("capital")
     # SHAP 式貢獻分解(可解釋性 = 信賴核心):每維 = 權重 × 百分位 × 100
     d["c_tech"] = (w["tech"] * tech_pct * 100).round(1)
@@ -653,6 +680,27 @@ def dna_match_today(universe: list[str], top_n: int = 25,
             "top10_overlap_equal_w": len(set(d.nlargest(10, "dna_plus")["ticker"])
                                          & set(d.assign(s=alt1).nlargest(10, "s")["ticker"])),
             "note": "權重=顯式先驗非擬合;評分落盤累積後做前瞻校準"}
+    # 全球曝險(world model):台鏈/供應鏈暴露 × 活躍事件 → dna_plus 乘法折減。
+    # 無事件 factor=1.0 → 與世界模型上線前行為完全相同(敏感度診斷在折減前計,口徑不變)
+    from sharks.scoring.global_exposure import exposure_for, world_factor
+    try:
+        from sharks.scoring.ma_scanner import load_sector
+    except Exception:
+        load_sector = None
+    exp_rows = []
+    for t in d["ticker"]:
+        sector = None
+        if load_sector is not None:
+            try:
+                sector = load_sector(t)
+            except Exception:
+                sector = None
+        exp_rows.append(exposure_for(t, sector))
+    d["global_exposure"] = [e["global_exposure"] for e in exp_rows]
+    d["taiwan_exposed"] = [e["taiwan_exposed"] for e in exp_rows]
+    d["world_factor"] = [world_factor(e["global_exposure"], world_state) for e in exp_rows]
+    d["dna_plus_raw"] = d["dna_plus"]
+    d["dna_plus"] = (d["dna_plus"] * d["world_factor"]).round(1)
     # 最相似 Top3 歷史案例(成功 ∪ 失敗同池 — AXTI 型風險偵測)+ 實際後續報酬
     pool = ([{**c, "kind": "win", "ret_pct": c.get("gain_24m_pct")} for c in (library_cases or [])
              if all(c.get(k) is not None for k in MATCH_FEATS)]
@@ -689,7 +737,8 @@ def dna_match_today(universe: list[str], top_n: int = 25,
     d["bucket"] = d.apply(base_bucket, axis=1)
     d = d.sort_values("dna_plus", ascending=False)
     rules, contested = load_rules(), latest_pit_contested()
-    ctx = {"market_state": market_state}
+    ctx = {"market_state": market_state,
+           **(((world_state or {}).get("impacts") or {}).get("ctx_flags") or {})}
     records = []
     for r in d.to_dict("records"):
         r["pit_fundamental_contested"] = contested.get(r["ticker"])
@@ -697,6 +746,11 @@ def dna_match_today(universe: list[str], top_n: int = 25,
     d = pd.DataFrame(records)
     return {"n_candidates": len(d), "finviz_enriched": bool(dims),
             "market_state": market_state,
+            "world_state": ({"events": [e.get("id") for e in
+                                        (world_state.get("events_triggered") or [])],
+                             "retrieved_at": world_state.get("retrieved_at"),
+                             "impacts": world_state.get("impacts")}
+                            if world_state else None),
             "case_centroid": {k: round(v, 3) for k, v in centroid.items()},
             "weights_effective": w, "thresholds": {"enter": ENTER_SCORE, "watch": WATCH_SCORE},
             "weight_sensitivity": sens,
@@ -980,10 +1034,12 @@ def main(argv: Optional[list[str]] = None) -> int:
             failed_events = json.loads(fa_files[-1].read_text(encoding="utf-8")).get("failed_events") or []
         except Exception:
             pass
+    world = latest_world_state()                                   # world model(可缺)
     match = dna_match_today(uni, centroid=library.get("centroid_all") or None,
                             library_cases=library.get("cases"),
                             failed_cases=failed_events,
-                            market_state=mc4.get("current_state"))
+                            market_state=mc4.get("current_state"),
+                            world_state=world or None)
 
     as_of = None
     if qqq is not None:
@@ -1024,9 +1080,13 @@ def main(argv: Optional[list[str]] = None) -> int:
     with (Path("outputs") / "dna-scores-log.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({"as_of": as_of, "generated_at": report["generated_at"],
                              "weights": WEIGHTS_V21,
-                             "rows": [{k: r.get(k) for k in ("ticker", "dna_plus", "dna_distance",
-                                       "fundamental", "capital", "reflexivity", "bucket",
-                                       "triggered_recent")} for r in match.get("top") or []]},
+                             "weights_effective": match.get("weights_effective"),
+                             "world_events": [e.get("id") for e in
+                                              (world.get("events_triggered") or [])],
+                             "rows": [{k: r.get(k) for k in ("ticker", "dna_plus", "dna_plus_raw",
+                                       "dna_distance", "fundamental", "capital", "reflexivity",
+                                       "bucket", "triggered_recent", "global_exposure",
+                                       "world_factor")} for r in match.get("top") or []]},
                             ensure_ascii=False) + "\n")
     print(f"wrote {out}", file=sys.stderr)
     return 0

@@ -254,6 +254,30 @@ def _cmd_liquidity(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_world_monitor(args: argparse.Namespace) -> int:
+    """World Monitor — GSCPI/GPR 感測 → 世界事件 → outputs/world-monitor-*.json.
+
+    免 key grade-A 來源(NY Fed GSCPI + Caldara-Iacoviello GPR);事件閾值住
+    config/world_events.json(分位數定錨)。RECOMMEND-ONLY:輸出是 DNA 鏈的
+    篩選/微調輸入,永不下單。單源失敗退 lake 快照標 stale。
+    """
+    from pathlib import Path
+
+    from sharks.regime.world_monitor import run_world_monitor
+
+    rep = run_world_monitor(Path(args.out_dir), write=not args.dry_run)
+    ev = "、".join(e["id"] for e in rep["events_triggered"]) or "無"
+    m = rep["metrics"]
+    print(f"world-monitor:events={ev}  live={rep['live_data']}")
+    print(f"  GSCPI={m.get('gscpi')}  GPR={m.get('gpr')}(pctile {m.get('gpr_pctile')})  "
+          f"TWN={m.get('gprc_twn')}(z60 {m.get('gprc_twn_z60')})")
+    if rep.get("stale_sources"):
+        print(f"  stale: {rep['stale_sources']}")
+    if rep.get("failed_sources"):
+        print(f"  failed (no fallback): {rep['failed_sources']}")
+    return 0
+
+
 def _cmd_postmortem(args: argparse.Namespace) -> int:
     """Attribution telemetry — classify why a closed/failed pick missed.
 
@@ -520,6 +544,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_liq.add_argument("--dry-run", action="store_true",
                        help="print L + band but do not write outputs/")
     p_liq.set_defaults(func=_cmd_liquidity)
+
+    # `sharks world-monitor` — GSCPI/GPR world events (REAL, recommend-only)
+    p_world = subparsers.add_parser(
+        "world-monitor",
+        help="GSCPI/GPR 世界事件感測(台海/供應鏈/關稅)→ DNA 權重微調 + "
+        "deep-kill cap 乘數 + 規則旗標(recommend-only)",
+    )
+    p_world.add_argument("--out-dir", default="outputs",
+                         help="dir where world-monitor-<date>.json is written")
+    p_world.add_argument("--dry-run", action="store_true",
+                         help="print events + metrics but do not write outputs/")
+    p_world.set_defaults(func=_cmd_world_monitor)
 
     # `sharks wiki` — wiki maintenance commands
     p_wiki = subparsers.add_parser("wiki", help="wiki maintenance commands")

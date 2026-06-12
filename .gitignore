@@ -64,10 +64,12 @@ raw/market_data/*.parquet
 data/lake/prices/*.parquet
 data/lake/info/*.json
 data/lake/news/*
+data/lake/world/*.json
 data/lake/manifest.csv
 !data/lake/prices/.gitkeep
 !data/lake/info/.gitkeep
 !data/lake/news/.gitkeep
+!data/lake/world/.gitkeep
 # Earnings + Discord-transcript caches (local only — cross-check / call-reduction / local-LLM)
 data/earnings/*
 data/transcripts/*

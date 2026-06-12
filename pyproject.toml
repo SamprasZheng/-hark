@@ -39,6 +39,11 @@ discord = [
     "discord.py>=2.3",
     "python-dotenv>=1.0",
 ]
+# World model (src/sharks/regime/world_monitor.py) — GSCPI/GPR 皆為 legacy BIFF .xls,
+# stdlib 解不了;xlrd 是最小工具(ARCHITECTURE.md 採用準則:先讓需求長到工具的尺寸)。
+world = [
+    "xlrd>=2.0",
+]
 # Local web dashboard (src/sharks/ui/server.py) — 專屬 Finviz screener + 調研台.
 #   python -m sharks.ui.server  → http://127.0.0.1:8787
 ui = [

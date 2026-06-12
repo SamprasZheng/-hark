@@ -1,0 +1,114 @@
+{
+  "_doc": "世界事件宣告式配置(world model,Decision & Risk Layer)。regime/world_monitor 每晨把數值條件求值成布林旗標(ctx_flags)→ 注入 rally_dna 規則引擎;weight_shifts / deepkill_cap_multiplier / exposure_penalty 由 rally_dna 與 position brief 消費。改閾值改這裡,不改程式。dna_rules.json 只吃等值旗標,數值閾值一律住在本檔。",
+  "version": 1,
+  "calibration": {
+    "as_of": "2026-06-12",
+    "basis": "GPR 月度 1985-01 起 n=497:GPR mean=104/p90=146/p95=169/p99=330;GPRC_TWN mean=0.07/p90=0.17/p95=0.25/p99=0.37;GPRD_MA30 p95=168。GSCPI 本身即 NY Fed 全史 z-score(1998+,mean≈0/sd≈1)。閾值以分位數定錨,非外部建議的虛構量綱。",
+    "review": "monthly — 每月重算分位數,漂移 >10% 才動閾值(避免 regime 內追雜訊)"
+  },
+  "manual_flags": {
+    "_doc": "無免費機讀數據源的事件由主理人手動翻旗(需 grade A/B 來源確認;CLAUDE.md §5 — D/E 級不得單獨觸發)",
+    "TARIFF_NEW": false,
+    "CYBER_TSMC": false
+  },
+  "events": [
+    {
+      "id": "TS_HIGH",
+      "name": "台海地緣風險升高(Taiwan Strait)",
+      "category": "geopolitical",
+      "severity": "high",
+      "condition": {
+        "any": [
+          {"metric": "gprc_twn_z60", "op": ">=", "value": 2.0, "_basis": "60 月滾動 z-score ≥2σ"},
+          {"metric": "gprc_twn", "op": ">=", "value": 0.25, "_basis": "p95(1985+)"}
+        ]
+      },
+      "impact": {
+        "ctx_flag": "world_event_TS_HIGH",
+        "weight_shift": {"give_to": "reflexivity", "take_from": "capital", "amount": 0.05},
+        "deepkill_cap_multiplier": 0.75,
+        "exposure_penalty": 0.25,
+        "review_groups": ["taiwan_chain"]
+      }
+    },
+    {
+      "id": "GSCPI_SPIKE",
+      "name": "全球供應鏈壓力尖峰(GSCPI)",
+      "category": "supply_chain",
+      "severity": "med-high",
+      "condition": {
+        "any": [
+          {"metric": "gscpi", "op": ">=", "value": 1.5, "_basis": "GSCPI 即 z 單位;1.5σ"},
+          {"all": [
+            {"metric": "gscpi", "op": ">=", "value": 1.0},
+            {"metric": "gscpi_delta_1m", "op": ">=", "value": 0.8, "_basis": "單月跳升 0.8σ"}
+          ]}
+        ]
+      },
+      "impact": {
+        "ctx_flag": "world_event_GSCPI_SPIKE",
+        "weight_shift": {"give_to": "reflexivity", "take_from": "tech", "amount": 0.05},
+        "exposure_penalty": 0.10,
+        "review_groups": []
+      }
+    },
+    {
+      "id": "GPR_EXTREME",
+      "name": "全球地緣風險極端(GPR ≥ p99)",
+      "category": "geopolitical",
+      "severity": "high",
+      "condition": {
+        "any": [
+          {"metric": "gpr", "op": ">=", "value": 330, "_basis": "p99(1985+)"},
+          {"metric": "gprd_ma30", "op": ">=", "value": 330, "_basis": "每日 MA30 同閾值(月度滯後時的早警)"}
+        ]
+      },
+      "impact": {
+        "ctx_flag": "world_event_GPR_EXTREME",
+        "deepkill_cap_multiplier": 0.85,
+        "exposure_penalty": 0.15,
+        "review_groups": []
+      }
+    },
+    {
+      "id": "GPR_ELEVATED",
+      "name": "全球地緣風險偏高(GPR ≥ p95)",
+      "category": "geopolitical",
+      "severity": "info",
+      "condition": {
+        "any": [
+          {"metric": "gpr", "op": ">=", "value": 169, "_basis": "p95(1985+)"},
+          {"metric": "gprd_ma30", "op": ">=", "value": 168, "_basis": "p95(每日 MA30)"}
+        ]
+      },
+      "impact": {
+        "ctx_flag": "world_event_GPR_ELEVATED"
+      }
+    },
+    {
+      "id": "TARIFF_NEW",
+      "name": "中美新一輪關稅(手動旗)",
+      "category": "trade",
+      "severity": "med-high",
+      "condition": {"metric": "manual.TARIFF_NEW", "op": "==", "value": true},
+      "impact": {
+        "ctx_flag": "world_event_TARIFF_NEW",
+        "exposure_penalty": 0.10,
+        "review_groups": ["china_revenue", "optics_cpo"]
+      }
+    },
+    {
+      "id": "CYBER_TSMC",
+      "name": "TSMC / hyperscaler 重大網攻(手動旗)",
+      "category": "tech",
+      "severity": "high",
+      "condition": {"metric": "manual.CYBER_TSMC", "op": "==", "value": true},
+      "impact": {
+        "ctx_flag": "world_event_CYBER_TSMC",
+        "deepkill_cap_multiplier": 0.85,
+        "exposure_penalty": 0.20,
+        "review_groups": ["taiwan_chain"]
+      }
+    }
+  ]
+}

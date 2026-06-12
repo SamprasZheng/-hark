@@ -1,0 +1,40 @@
+{
+  "_doc": "個股全球曝險地圖(world model)。靜態、git 版控(=PIT 安全:回測查當時 commit)。群組成員來源:watchlist/universe.yaml tier2_supply_chain + philosophy/entities/(TSM/ASML/AVGO/AMD)+ wiki/positions.md 光通訊/CPO 持倉論述(COHR/LITE/SIVEF)。曝險 = max(所屬群組權重, sector_base[sector], default)。改名單改這裡,不改程式;每月與 universe.yaml 對帳。",
+  "version": 1,
+  "as_of": "2026-06-12",
+  "groups": {
+    "taiwan_chain": {
+      "_doc": "台積電製造/台鏈組裝直接暴露 — TS_HIGH 事件的 review 對象",
+      "weight": 0.9,
+      "tickers": ["TSM", "NVDA", "AMD", "AVGO", "ARM", "MU", "AMAT", "LRCX",
+                  "ASML", "KLAC", "ONTO", "SMCI", "COHR", "LITE", "SIVEF",
+                  "AAOI", "MRVL", "ALAB", "CRDO", "QCOM"]
+    },
+    "optics_cpo": {
+      "_doc": "光通訊/CPO 供應鏈(關稅+台海雙重暴露)",
+      "weight": 0.7,
+      "tickers": ["COHR", "LITE", "SIVEF", "AAOI", "FN"]
+    },
+    "china_revenue": {
+      "_doc": "中國營收/需求暴露(關稅與報復措施第一排)",
+      "weight": 0.6,
+      "tickers": ["AAPL", "TSLA", "NKE", "SBUX", "QCOM", "TXN", "INTC",
+                  "MCHP", "ADI", "WYNN", "LVS", "CAT"]
+    }
+  },
+  "sector_base": {
+    "_doc": "無群組命中時的板塊底線曝險(lake info sector 欄,yfinance 口徑)",
+    "Technology": 0.45,
+    "Communication Services": 0.3,
+    "Consumer Cyclical": 0.35,
+    "Industrials": 0.3,
+    "Basic Materials": 0.3,
+    "Energy": 0.25,
+    "Healthcare": 0.15,
+    "Financial Services": 0.15,
+    "Consumer Defensive": 0.15,
+    "Utilities": 0.1,
+    "Real Estate": 0.1
+  },
+  "default": 0.25
+}

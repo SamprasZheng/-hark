@@ -25,6 +25,16 @@
       "id": "deep-kill-sizing-cap",
       "when": {"archetype": "deep_kill"},
       "then": {"sizing_note": "deep-kill 袖上限 11%(failed-analogs 2026-06-12 壓力版:P損30.6%×損37.2%,拖累預算2%;下市票回填後重算)、硬停損 20-25%、2 季無 FCF 改善即出"}
+    },
+    {
+      "id": "world-gscpi-deepkill-caution",
+      "when": {"world_event_GSCPI_SPIKE": true, "archetype": "deep_kill"},
+      "then": {"world_note": "GSCPI 尖峰:供應鏈壓力使 OCF 修復常順延 ~1 季 — deep-kill 進場前先驗 PIT 燃料閘"}
+    },
+    {
+      "id": "world-ts-high-taiwan-review",
+      "when": {"world_event_TS_HIGH": true, "taiwan_exposed": true},
+      "then": {"human_review": true, "world_note": "台海高風險(GPRC_TWN ≥p95 或 60月z≥2):台鏈曝險票交人工複核;分數已按 world_factor 折減,sizing 看 brief 的 cap 乘數"}
     }
   ]
 }

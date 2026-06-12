@@ -62,3 +62,4 @@ confidence: 0.55
 | 題材池 streak 密度 | `/rally` × scope(crypto/space) | 週 |
 | 板塊輪動預測 | `hotspot_backtest` | 月 |
 | 錯殺候選 | DNA broad 觸發 + `detect_flips` | 月 |
+| 世界事件(台海/GSCPI/GPR;2026-06-12 加入) | `regime/world_monitor` → [[23_world_model]] | 日 |

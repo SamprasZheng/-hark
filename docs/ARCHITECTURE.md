@@ -7,10 +7,10 @@
 
 | 層 | 職責 | 模組 |
 |---|---|---|
-| **1. Data(Raw + PIT)** | 不可變輸入、PIT 對齊 | `data/data_lake`(離線湖 + info lint)、`data/polygon_financials`(filing_date 錨點)、`data/pit_merger`(Polygon×yfinance FCF 合併)、`data/finviz_elite`(現況快照,**非歷史真相源**)、`raw/`(immutable) |
+| **1. Data(Raw + PIT)** | 不可變輸入、PIT 對齊 | `data/data_lake`(離線湖 + info lint)、`data/polygon_financials`(filing_date 錨點)、`data/pit_merger`(Polygon×yfinance FCF 合併)、`data/finviz_elite`(現況快照,**非歷史真相源**)、`data/world_indicators`(GSCPI/GPR,grade A 免 key;本地 vintage 前向累積 `data/lake/world/`)、`raw/`(immutable) |
 | **2. Feature & Memory** | 案例庫、特徵、質心 | `backtest/rally_dna.discover_bull_cases`(60+ 案例自動發掘)、`dna_features`(統一特徵尺)、`case_fingerprint`;Chroma 進入條件見 `QLIB-VECTORDB-PLAN.md` |
-| **3. Model & Scoring** | 匹配、九維、反身性 | `rally_dna.dna_match_today`(雙型質心 + SHAP 式分解 + 最相似案例)、`scoring/reflexivity`、`scoring/rally_signal`(9 維)、`scoring/fom` |
-| **4. Decision & Risk** | 規則、分桶、sizing、狀態機 | `config/dna_rules.json` + `apply_rules`(宣告式,human_review)、`regime_markov4`(四態)、健檢 `ui/server.holdings_health`、`backtest/portfolio_audit` |
+| **3. Model & Scoring** | 匹配、九維、反身性 | `rally_dna.dna_match_today`(雙型質心 + SHAP 式分解 + 最相似案例)、`scoring/reflexivity`、`scoring/global_exposure`(全球曝險 × 世界事件折減)、`scoring/rally_signal`(9 維)、`scoring/fom` |
+| **4. Decision & Risk** | 規則、分桶、sizing、狀態機 | `config/dna_rules.json` + `apply_rules`(宣告式,human_review)、`config/world_events.json` + `regime/world_monitor`(世界事件:數值閾值→布林旗標→權重微調/cap 乘數)、`regime_markov4`(四態)、健檢 `ui/server.holdings_health`、`backtest/portfolio_audit` |
 | **5. Execution & Audit** | 呈現、排程、留痕 | `ui/server`(dashboard)、`daily_dna_routine`(早晚排程 + 艙位 brief)、`outputs/dna-scores-log.jsonl`(前瞻校準)、`wiki/log.md`(裁決留痕) |
 
 ## 關鍵設計決策(與理由)
@@ -40,6 +40,15 @@
 - **MC iid 尾巴低估**:P(DD≥30%) 偏樂觀;曝險跟狀態不跟點估計。
 - **Finviz 維度 None**:消息欄未接通(權重已移除);Polygon news 為候選源。
 - **yfinance FCF 回填僅 ~6 季**:更深歷史的 FCF 需 Polygon 明細科目(標準化表無 CapEx)。
+- **GEOPOL_TS 台海斷鏈**(2026-06-12 加入,現觸發中):GPRC_TWN >p99、60月z 2.24 →
+  world_monitor TS_HIGH:台鏈曝險折減 + deep-kill cap ×0.75 + human_review;
+  防禦=sizing 而非預測。見 `wiki/23_world_model.md`。
+- **GSCPI_SPIKE 供應鏈壓力**(2026-06-12 加入,現觸發中):GSCPI 1.77(單月 +1.15σ)→
+  deep-kill OCF 修復假設順延一季驗證(燃料閘先行)。
+- **TARIFF_CASCADE 關稅連鎖**:無免費機讀源 → `config/world_events.json` manual_flags,
+  A/B 級源確認後人工翻旗;曝險名單 `china_revenue`/`optics_cpo` 已備。
+- **世界模型 vintage 缺口**:GSCPI/GPR 就地修訂、無官方 vintage → 本地前向累積自
+  2026-06-12 起;之前的回測不得用世界事件特徵。
 
 ## 審計工件(每筆裁決可回溯)
 

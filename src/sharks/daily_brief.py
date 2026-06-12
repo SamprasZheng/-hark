@@ -210,6 +210,21 @@ def load_news(out_dir: Path, date: str) -> list[str]:
     return []
 
 
+def load_world(out_dir: Path):
+    """Latest world-monitor snapshot (GSCPI/GPR 世界事件), compacted; None if absent."""
+    w = _latest(out_dir, "world-monitor")
+    if not w:
+        return None
+    m = w.get("metrics") or {}
+    return {
+        "events": [{"id": e.get("id"), "severity": e.get("severity")}
+                   for e in (w.get("events_triggered") or [])],
+        "gscpi": m.get("gscpi"), "gpr": m.get("gpr"),
+        "gprc_twn": m.get("gprc_twn"), "gprc_twn_z60": m.get("gprc_twn_z60"),
+        "stale": bool(w.get("stale_sources")),
+    }
+
+
 def load_postmortems(out_dir: Path, date: str) -> list[dict]:
     """Latest attribution-postmortem aggregate (outputs/postmortem-<date>.json),
     compacted for the evening 收盤閉環 section. Empty list if none — the brief
@@ -283,6 +298,13 @@ def render_md(ctx: dict) -> str:
     if ctx.get("news"):
         L += ["", "## 📰 隔夜頭條", ""] + [f"- {h}" for h in ctx["news"]]
     L += ["", "## 2️⃣ 速解讀(為什麼)", ""] + ([f"- {x}" for x in ctx["interp"]] or ["- (資料不足)"])
+    wd = ctx.get("world")
+    if wd:
+        ev = "、".join(f"**{e['id']}**({e['severity']})" for e in wd["events"]) or "無觸發事件"
+        L += ["", "## 🌍 全球風險(World Monitor)",
+              f"- 觸發:{ev}" + ("(資料 stale)" if wd.get("stale") else ""),
+              f"- GSCPI {wd.get('gscpi', '—')}(z;≥1.5=尖峰)· GPR {wd.get('gpr', '—')}(p95≈169)· "
+              f"台灣分項 {wd.get('gprc_twn', '—')}(60月z {wd.get('gprc_twn_z60', '—')})"]
     if ed != "midday":
         L += ["", "## 3️⃣ 類股與資金流", "",
               f"**資金流入** → {' · '.join(ctx['rot']['inflow'])}　|　**資金流出** → {' · '.join(ctx['rot']['outflow'])}", "",
@@ -365,6 +387,11 @@ def render_discord(ctx: dict) -> str:
     P = [f"🌅 **早晨財經速解讀 — {ctx['date']} {ctx['edition_label']}**  _(研究非建議)_", "",
          "**📊 速覽**", "```", tape, "```", "**🧠 速解讀**"]
     P += [f"• {x.replace('**','')}" for x in ctx["interp"][:6]]
+    wd = ctx.get("world")
+    if wd:
+        ev = "、".join(e["id"] for e in wd["events"]) or "無"
+        P += [f"**🌍 全球風險** 事件 {ev} ｜ GSCPI {wd.get('gscpi', '—')} ｜ "
+              f"GPR {wd.get('gpr', '—')} ｜ 台灣 z60 {wd.get('gprc_twn_z60', '—')}"]
     if ctx["edition"] != "midday":
         P += ["", f"**🔄 資金** 流入 {' · '.join(ctx['rot']['inflow'])} ｜ 流出 {' · '.join(ctx['rot']['outflow'])}",
               f"**🇹🇼 台股** {ctx['tw'].replace('**','')}"]
@@ -394,6 +421,14 @@ def render_html(ctx: dict) -> str:
     interp = "".join(f"<li>{x.replace('**','')}</li>" for x in ctx["interp"])
     cal = "\n".join(f"<tr><td class='nm'>{dt}</td><td>{e}</td><td>{imp}</td></tr>" for dt, e, imp in ctx["calendar"])
     news = ("<h2>📰 隔夜頭條</h2><ul>" + "".join(f"<li>{h}</li>" for h in ctx["news"]) + "</ul>") if ctx.get("news") else ""
+    wd = ctx.get("world")
+    world_block = ""
+    if wd:
+        ev = "、".join(f"<b>{e['id']}</b>({e['severity']})" for e in wd["events"]) or "無觸發事件"
+        world_block = (f"<h2>🌍 全球風險(World Monitor)</h2><div class=\"box\">觸發:{ev}"
+                       f"{'(資料 stale)' if wd.get('stale') else ''}<br>"
+                       f"GSCPI {wd.get('gscpi', '—')}(z;≥1.5=尖峰) · GPR {wd.get('gpr', '—')}(p95≈169) · "
+                       f"台灣分項 {wd.get('gprc_twn', '—')}(60月z {wd.get('gprc_twn_z60', '—')})</div>")
     rot_block = "" if ctx["edition"] == "midday" else f"""
 <h2>3️⃣ 類股與資金流</h2>
 <div class="box">資金流入 → <b>{' · '.join(ctx['rot']['inflow'])}</b>　|　流出 → <b>{' · '.join(ctx['rot']['outflow'])}</b></div>
@@ -442,7 +477,7 @@ td:not(.nm):not(.px){{text-align:left}}.up{{color:#3fb950}}.dn{{color:#f85149}}.
 <h1>🌅 早晨財經速解讀 — {ctx['date']} <span class="tag">{ctx['edition_label']}</span></h1>
 <p class="sub">仿游庭澔《早晨財經速解讀》:看盤 → 為什麼 → 類股 → 台股連結。研究/教育用途,非投資建議。</p>
 <h2>1️⃣ 速覽</h2><table><tr><th class='nm'>指標</th><th>收盤</th><th>日</th><th>週</th><th>月</th></tr>{trows(ctx['macro'])}</table>
-{news}<h2>2️⃣ 速解讀(為什麼)</h2><ul>{interp}</ul>{rot_block}
+{news}<h2>2️⃣ 速解讀(為什麼)</h2><ul>{interp}</ul>{world_block}{rot_block}
 <h2>5️⃣ 個股觀察(風向球)</h2><table><tr><th class='nm'>股</th><th>價</th><th>日</th><th>週</th><th>月</th></tr>{trows(ctx['watch'])}</table>
 <div class="box">NVDA 追蹤頁:{NVDA_TRACKER_STATUS}</div>{picks_block}{pm_block}
 <h2>📅 數據行事曆</h2><table><tr><th class='nm'>日期</th><th>事件</th><th>衝擊</th></tr>{cal}</table>
@@ -478,6 +513,7 @@ def generate(edition: str = "morning", out_dir: str = "outputs") -> dict:
         "picks": load_picks(od) if edition in ("midday", "evening") else None,
         "igv": load_igv(od) if edition in ("midday", "evening") else None,
         "postmortems": load_postmortems(od, date) if edition == "evening" else None,
+        "world": load_world(od),
     }
     md, html, disc = render_md(ctx), render_html(ctx), render_discord(ctx)
     base = f"daily-brief-{date}-{edition}"

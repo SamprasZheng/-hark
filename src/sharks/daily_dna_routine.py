@@ -70,6 +70,13 @@ def run_morning() -> int:
     except Exception:
         _log("morning: reflexivity FAILED\n" + traceback.format_exc())
     try:
+        from sharks.regime import world_monitor          # 須在 rally_dna 前(它讀本步輸出)
+        res = world_monitor.run_world_monitor()
+        _log(f"morning: world-monitor ok (events {len(res.get('events_triggered') or [])}, "
+             f"live={res.get('live_data')})")
+    except Exception:
+        _log("morning: world-monitor FAILED\n" + traceback.format_exc())
+    try:
         from sharks.backtest import rally_dna
         rally_dna.main([])
         _log("morning: rally_dna ok (scores logged)")
@@ -92,6 +99,7 @@ def compose_position_brief() -> str:
     today = datetime.now().strftime("%Y-%m-%d")
     dna = _latest("rally-dna")
     reflex = _latest("reflexivity")
+    world = _latest("world-monitor")
     try:
         from sharks.ui.server import holdings_health
         health = holdings_health("all")
@@ -121,6 +129,11 @@ def compose_position_brief() -> str:
         sw = "/".join(s["ticker"] for s in (r.get("swaps") or [])[:2])
         act.setdefault(a, []).append(f"{r['ticker']}" + (f"→{sw}" if sw and a == "換股" else ""))
 
+    wm = world.get("metrics") or {}
+    wm_events = world.get("events_triggered") or []
+    wm_line = ("、".join(f"**{e.get('id')}**({e.get('severity')})" for e in wm_events)
+               if wm_events else "(無觸發事件)")
+
     L = [f"# 開盤前艙位調整 — {today}(美股開盤前)",
          "",
          "> recommend-only;系統只建議、永不下單。執行與否是人的決定。",
@@ -130,7 +143,13 @@ def compose_position_brief() -> str:
          f"- MC 至 2027 末:中位 {((m4.get('mc_end_return_pct') or {}).get('median'))}% · "
          f"P(正) {m4.get('mc_p_end_positive')}%(iid 低估尾巴,曝險跟狀態不跟點估計)",
          "",
-         "## 2. 持倉動作(健檢自動裁決)"]
+         "## 2. 全球風險(World Monitor)",
+         f"- 觸發事件:{wm_line}",
+         f"- GSCPI {wm.get('gscpi', '—')}(z 單位;≥1.5=尖峰)· "
+         f"GPR {wm.get('gpr', '—')}(基準~100;p95≈169/p99≈330)· "
+         f"台灣分項 {wm.get('gprc_twn', '—')}(60月z {wm.get('gprc_twn_z60', '—')};p95≈0.25)",
+         "",
+         "## 3. 持倉動作(健檢自動裁決)"]
     for a in ("清倉", "換股", "減碼", "待驗證", "續抱⚠"):
         if act.get(a):
             L.append(f"- **{a}**:{'、'.join(act[a])}")
@@ -150,18 +169,27 @@ def compose_position_brief() -> str:
         for rid in r.get("rules_fired") or []:
             rules_count[rid] = rules_count.get(rid, 0) + 1
 
+    # 世界事件 cap 乘數:套在消費端(failed-analogs 保持純存活統計;出處全寫進 brief)
+    base_cap = cap.get("recommended", 11)
+    wm_cap_mult = (world.get("impacts") or {}).get("deepkill_cap_multiplier")
+    if isinstance(wm_cap_mult, (int, float)) and wm_cap_mult < 1 and isinstance(base_cap, (int, float)):
+        cap_txt = (f"{base_cap}% × {wm_cap_mult}(世界事件 "
+                   f"{'、'.join(e.get('id', '?') for e in wm_events)})= "
+                   f"**{round(base_cap * wm_cap_mult, 1)}%**")
+    else:
+        cap_txt = f"**{base_cap}%**"
     L += ["",
-          "## 3. 持倉 × 反身性斷裂交集(最高優先警示)",
+          "## 4. 持倉 × 反身性斷裂交集(最高優先警示)",
           f"- {'、'.join(held_breaks) if held_breaks else '(無 — 持倉沒有踩在斷裂名單上)'}",
           "",
-          "## 4. 新倉紀律(DNA 雙濾鏡分桶)",
+          "## 5. 新倉紀律(DNA 雙濾鏡分桶)",
           f"- 可入候補(≥85):{'、'.join(buckets.get('可入候補', [])) or '**0 檔 → 今日不開新倉**'}",
           f"- watch(≥75):{'、'.join(watch_tagged) or '—'}",
           f"- 剔除(斷裂):{'、'.join(buckets.get('剔除', [])) or '—'}",
-          f"- sizing:deep-kill 袖上限 **{cap.get('recommended', 11)}%**(資料驅動)· "
+          f"- sizing:deep-kill 袖上限 {cap_txt}(資料驅動)· "
           f"單筆風險 ≤1-2% 總資本 · 樂透型=衛星倉,主倉走淺基型",
           "",
-          "## 5. 系統健康(audit/observability)",
+          "## 6. 系統健康(audit/observability)",
           f"- deep-kill 存活率:**{fa.get('survival_rate_pct', '—')}%**"
           + (f"(bootstrap 90% CI {boot.get('ci90', ['—', '—'])[0]}–{boot.get('ci90', ['—', '—'])[1]}%)"
              if boot.get("ci90") else "")
@@ -170,7 +198,9 @@ def compose_position_brief() -> str:
           f"{len(fa.get('failed_events') or [])} 失敗類比",
           f"- 規則觸發統計(本批):{rules_count or '無'}",
           f"- 數據新鮮度:scan {health.get('as_of_scan')} · rally-dna {dna.get('as_of')} · "
-          f"reflexivity {reflex.get('as_of_scan')}",
+          f"reflexivity {reflex.get('as_of_scan')} · "
+          f"world {str(world.get('retrieved_at') or '—')[:10]}"
+          + ("(stale)" if world.get("stale_sources") else ""),
           "",
           f"_generated {datetime.now(timezone.utc).isoformat()}_"]
     return "\n".join(L)
