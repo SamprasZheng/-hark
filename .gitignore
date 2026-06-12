@@ -59,6 +59,21 @@ raw/market_data/*.csv
 raw/market_data/*.parquet
 !raw/market_data/.gitkeep
 
+# Local data lake — price/info/news cache, regenerated from free APIs.
+# Never commit (principal directive 2026-06-10: 導入本地數據不要 commit). Keep the dirs.
+data/lake/prices/*.parquet
+data/lake/info/*.json
+data/lake/news/*
+data/lake/manifest.csv
+!data/lake/prices/.gitkeep
+!data/lake/info/.gitkeep
+!data/lake/news/.gitkeep
+# Earnings + Discord-transcript caches (local only — cross-check / call-reduction / local-LLM)
+data/earnings/*
+data/transcripts/*
+!data/earnings/.gitkeep
+!data/transcripts/.gitkeep
+
 # Watchlist snapshots — committed in current form; history snapshots in
 # Phase 2+ go to watchlist/history/ which IS tracked (point-in-time integrity)
 # (no rule needed; they're kept)

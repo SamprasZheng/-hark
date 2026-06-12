@@ -1,0 +1,189 @@
+# universe_extra.txt — drop-in widener for the FOM scan universe.
+#
+# Folded into full_universe(include_extra=True) (the FOM default scan since 2026-06-10).
+# One ticker per line; text after '#' is a comment; blank lines ignored; case-insensitive.
+# full_universe() dedupes via set(), so overlaps with DEFAULT_UNIVERSE / EXTENDED_TICKERS
+# are harmless. Unknown/delisted tickers are tolerated: fetch_monthly returns no data and
+# rank_universe drops them (no crash).
+#
+# PATH TO ~1000 NAMES: paste a vendor constituent file here (S&P 1500 / Russell 1000,
+# one ticker per line) and the scan widens with NO code change. Below is a curated seed
+# batch (liquid US names not already in EXTENDED_TICKERS) to broaden coverage now.
+# Seeded 2026-06-10 per principal directive "FOM 宇宙範圍更廣 (全廣 + 邁向千檔)".
+
+# ── apparel / footwear / consumer brands (深化服飾) ──
+YETI
+BBWI
+ELF
+COTY
+NWL
+WSM
+RVLV
+FIGS
+GES
+OXM
+MOV
+CAL
+
+# ── retail / restaurants / consumer discretionary ──
+FIVE
+OLLI
+CAVA   # in EXTENDED; dedup-safe
+SG
+WEN
+JACK
+BLMN
+EAT
+PLAY
+FUN
+PLNT
+LYV
+H
+HLT
+WH
+CHH
+EXPE
+BKNG   # in EXTENDED? add anyway; dedup-safe
+
+# ── healthcare / biotech depth ──
+EXAS
+NTRA
+GH
+TDOC
+DOCS
+ALNY
+BMRN
+SRPT
+IONS
+INCY
+MRTX
+ARWR
+INSM
+CRNX
+RARE
+NBIX
+HALO
+MEDP
+RVTY
+WST
+STE
+RMD
+GMED
+PEN
+NVCR
+
+# ── financials / fintech depth ──
+IBKR
+RKT
+UWMC
+LC
+OWL
+STEP
+VIRT
+MKTX
+TW
+BGC
+JEF
+RJF
+HOOD   # in DEFAULT; dedup-safe
+FUTU
+TIGR
+PJT
+EVR
+LAZ
+
+# ── industrials / new-industrial depth ──
+AXON
+HUBB
+NVT
+AYI
+AOS
+WWD
+CR
+CSL
+BLDR
+BLD
+MAS
+ALLE
+ROL
+FIX
+POWL
+GVA
+ACM
+PWR    # in EXTENDED; dedup-safe
+J
+STRL
+
+# ── software / data depth ──
+GTLB
+S
+PATH
+APPN
+FRSH
+BRZE
+ASAN
+MNDY
+BILL
+PCTY
+PAYC
+DOCU
+ZI
+CFLT
+DT
+DBX
+BOX
+PD
+ESTC
+CYBR
+QLYS
+RPD
+TENB
+
+# ── semis / hardware depth ──
+LSCC
+CRUS
+DIOD
+MTSI
+NVMI
+ACMR
+KLIC
+UCTT
+ICHR
+AEIS
+ONTO
+CAMT
+FORM
+COHU
+SLAB
+PI
+SITM   # in DEFAULT; dedup-safe
+
+# ── energy transition / power depth ──
+FSLR
+ENPH
+SEDG
+RUN
+NXT
+SHLS
+ARRY
+CWEN
+AES
+PCG
+EIX
+BE
+GEV    # in EXTENDED; dedup-safe
+SMR    # in EXTENDED; dedup-safe
+TLN    # in EXTENDED; dedup-safe
+
+# ── REITs / real estate depth ──
+ARE
+BXP
+KIM
+REG
+FRT
+HST
+ELS
+MAA
+CPT
+UDR
+DOC
