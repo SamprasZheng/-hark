@@ -1,0 +1,15 @@
+{"date": "2026-06-12", "ticker": "AMAT", "priority": "high", "reason": "持倉 × 反身性斷裂交集", "source": "reflexivity ∩ holdings"}
+{"date": "2026-06-12", "ticker": "ESTC", "priority": "medium", "reason": "axti-similar-failures、deep-kill-sizing-cap、world-gscpi-deepkill-caution", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "DXCM", "priority": "medium", "reason": "axti-similar-failures、deep-kill-sizing-cap、world-gscpi-deepkill-caution", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "PD", "priority": "medium", "reason": "axti-similar-failures、deep-kill-sizing-cap、world-gscpi-deepkill-caution", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "UNH", "priority": "medium", "reason": "axti-similar-failures、deep-kill-sizing-cap、world-gscpi-deepkill-caution", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "PVH", "priority": "medium", "reason": "axti-similar-failures、deep-kill-sizing-cap、world-gscpi-deepkill-caution", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "KKR", "priority": "medium", "reason": "axti-similar-failures", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "ELV", "priority": "medium", "reason": "axti-similar-failures", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "COIN", "priority": "medium", "reason": "axti-similar-failures", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "SMCI", "priority": "medium", "reason": "deep-kill-sizing-cap、world-gscpi-deepkill-caution、world-ts-high-taiwan-review", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "SWKS", "priority": "medium", "reason": "axti-similar-failures", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "HUM", "priority": "medium", "reason": "break-hard-exclude、pit-overrule-human-review、deep-kill-sizing-cap、world-gscpi-deepkill-caution", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "S", "priority": "medium", "reason": "axti-similar-failures", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "PINS", "priority": "medium", "reason": "axti-similar-failures、deep-kill-sizing-cap、world-gscpi-deepkill-caution", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}
+{"date": "2026-06-12", "ticker": "JEF", "priority": "medium", "reason": "axti-similar-failures", "source": "dna_match_today", "world_events": ["TS_HIGH", "GSCPI_SPIKE", "GPR_ELEVATED"]}

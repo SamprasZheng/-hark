@@ -65,6 +65,7 @@ data/lake/prices/*.parquet
 data/lake/info/*.json
 data/lake/news/*
 data/lake/world/*.json
+data/lake/failed/*
 data/lake/manifest.csv
 !data/lake/prices/.gitkeep
 !data/lake/info/.gitkeep
