@@ -50,7 +50,7 @@ GPRC_TWN p90/p95/p99 = 0.17/0.25/0.37。每月重算,漂移 >10% 才動閾值。
 | 事件 | 條件(any) | 衝擊 |
 |---|---|---|
 | **TS_HIGH**(high) | GPRC_TWN 60月z ≥2 或 ≥p95(0.25) | reflexivity 權重 +0.05(從 capital 挪)、deep-kill cap ×0.75、台鏈曝險折減 25%、taiwan_chain 票 human_review |
-| **GSCPI_SPIKE**(med-high) | GSCPI ≥1.5σ 或(≥1.0 且單月 +0.8) | reflexivity +0.05(從 tech 挪)、曝險折減 10%、deep-kill 加註 OCF 順延警語 |
+| **GSCPI_SPIKE**(med-high) | GSCPI ≥1.5σ 或(≥1.0 且單月 +0.8) | reflexivity +0.05(從 tech 挪)、**cap ×0.85 + 曝險折減 15%(2026-06-12 夜回放升級:唯一跑輸基準事件,§4a)**、deep-kill 加註 OCF 順延警語 |
 | **GPR_EXTREME**(high) | GPR ≥p99(330) | deep-kill cap ×0.85、曝險折減 15% |
 | **GPR_ELEVATED**(info) | GPR ≥p95(169) | 旗標 + brief 顯示,不動分 |
 | TARIFF_NEW / CYBER_TSMC | 手動旗(`manual_flags`,需 A/B 級源確認) | 曝險折減 / cap 乘數 / review |

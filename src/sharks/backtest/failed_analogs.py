@@ -352,6 +352,27 @@ def collect(budget: int = 20, max_seconds: float = 1200.0,
             "elapsed_s": round(time.monotonic() - t0, 1)}
 
 
+def reset_thin_manifest(manifest: Optional[Path] = None) -> dict:
+    """付費層升級日專用:清掉 manifest 的免費層假象條目(too_short/err)讓其重掃,
+    只保留 ok(已有 parquet 的真收穫)。被清條目封存到 failed-manifest.archive-<date>.jsonl
+    (審計鏈)。免費層下執行=明天起重燒同一批 API,所以不排程、只手動。"""
+    manifest = manifest or (FAILED_DIR / "failed-manifest.jsonl")
+    if not manifest.exists():
+        return {"kept": 0, "archived": 0, "note": "no manifest"}
+    keep, drop = [], []
+    for ln in manifest.read_text(encoding="utf-8").splitlines():
+        try:
+            (keep if json.loads(ln).get("status") == "ok" else drop).append(ln)
+        except Exception:
+            drop.append(ln)
+    if drop:
+        arch = manifest.parent / f"failed-manifest.archive-{datetime.now().strftime('%Y-%m-%d')}.jsonl"
+        with arch.open("a", encoding="utf-8") as fh:
+            fh.write("\n".join(drop) + "\n")
+    manifest.write_text(("\n".join(keep) + "\n") if keep else "", encoding="utf-8")
+    return {"kept": len(keep), "archived": len(drop)}
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     args = sys.argv[1:] if argv is None else argv
     if args and args[0] == "collect":
@@ -359,6 +380,11 @@ def main(argv: Optional[list[str]] = None) -> int:
         res = collect(budget)
         print(f"collected {res['collected']} delisted tickers "
               f"(dir total {res['total_in_dir']})", file=sys.stderr)
+        return 0
+    if args and args[0] == "reset-thin":
+        res = reset_thin_manifest()
+        print(f"reset-thin: kept {res['kept']} ok, archived {res['archived']} "
+              f"(paid-tier rescan enabled)", file=sys.stderr)
         return 0
     rep = analyze()
     p = Path("outputs") / f"failed-analogs-{datetime.now().strftime('%Y-%m-%d')}.json"

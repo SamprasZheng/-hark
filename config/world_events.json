@@ -48,8 +48,10 @@
       "impact": {
         "ctx_flag": "world_event_GSCPI_SPIKE",
         "weight_shift": {"give_to": "reflexivity", "take_from": "tech", "amount": 0.05},
-        "exposure_penalty": 0.10,
-        "review_groups": []
+        "deepkill_cap_multiplier": 0.85,
+        "exposure_penalty": 0.15,
+        "review_groups": [],
+        "_basis": "2026-06-12 夜班回放升級(synthetic-revised,QQQ 1999+ n=327):GSCPI_SPIKE 是唯一明確跑輸基準的事件(6m 中位 -0.18% vs +8.37%,n=27)→ 升 cap×0.85 + 罰則 0.10→0.15。TS_HIGH 不對等下調:歷史均值不低於基準≠尾部安全(樣本內無封鎖事件),其衝擊錨定 ABM 尾部情境。主理人晨間覆核。"
       }
     },
     {

@@ -7,7 +7,29 @@ import pandas as pd
 
 from sharks.backtest.failed_analogs import (_candidate_queue, cap_recommendation,
                                             classify_outcome, deepkill_ledger,
-                                            prioritize_candidates)
+                                            prioritize_candidates, reset_thin_manifest)
+
+
+class TestResetThinManifest:
+    def test_keeps_ok_archives_rest(self, tmp_path):
+        import json as _json
+        m = tmp_path / "failed-manifest.jsonl"
+        lines = [_json.dumps({"ticker": "GOOD", "status": "ok", "bars": 120}),
+                 _json.dumps({"ticker": "ABMD", "status": "too_short"}),
+                 _json.dumps({"ticker": "XERR", "status": "err:http 500"}),
+                 "not-json-garbage"]
+        m.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        res = reset_thin_manifest(m)
+        assert res == {"kept": 1, "archived": 3}
+        kept = [_json.loads(x) for x in m.read_text(encoding="utf-8").splitlines()]
+        assert [k["ticker"] for k in kept] == ["GOOD"]
+        arch = list(tmp_path.glob("failed-manifest.archive-*.jsonl"))
+        assert len(arch) == 1
+        assert "ABMD" in arch[0].read_text(encoding="utf-8")
+
+    def test_missing_manifest_noop(self, tmp_path):
+        res = reset_thin_manifest(tmp_path / "nope.jsonl")
+        assert res["kept"] == 0 and res["archived"] == 0
 
 
 def _fwd(vals):

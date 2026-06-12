@@ -627,3 +627,7 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **結構性阻斷實證(夜間三連probe)**:(1) Polygon 免費層對 ABMD(Abiomed,2022-12 被併下市)aggs 回 **0 根**(status OK / resultsCount 0 — 免費 ~2 年窗 + 下市票無資料);(2) yfinance 對 ABMD/AAWW 回 0(Yahoo 清空下市票);(3) Stooq 有 JS 反爬牆。→ **48 根月線門檻在免費層永遠達不到,Phase 2 collect 照原設計不可能成功**。今晚 570 個 too_short 全是免費層假象(含真公司)。
 - **處置**:夜間批次停止(再掃只是燒 API);失能原因寫進模組 docstring + 風險登記簿;**manifest 毒化警告**已記(付費升級後須清 too_short 條目重掃,否則永久跳過可用票)。
 - **待主理人裁決**:deep-kill 真實存活率需要付費數據 — Polygon Starter $29/mo(5 年史)或 Sharadar 級 survivorship-free 源;這正是 plan.md「偶爾付費驗證」的標準場景。在此之前 74.1% 維持倖存者宇宙上界、cap 11% 取悲觀端、collect 排程保留(升級即自動恢復作用)。
+## 2026-06-12(t)— 主理人「全部跑」指令裁決 + GSCPI_SPIKE 規則升級 + 晨間決策文件
+- 指令三項裁決:(1) **GSCPI_SPIKE 升級採納**(config/world_events.json:cap ×0.85 + 罰則 0.10→0.15,_basis 引 27 年回放;今日與 TS_HIGH 疊加後 min(0.75,0.85)=0.75 實際 sizing 不變 — 變化在 GSCPI 單獨觸發日)。**TS_HIGH 不對等下調**:歷史均值不低於基準≠尾部安全(樣本內無封鎖),衝擊錨定 ABM 尾部。標主理人晨間覆核(philosophy/08 Risk Officer 轄區);(2) **方案 B(yfinance+Stooq)不重做** — 夜間已三連否證,證據入決策文件;(3) **collect 不重啟** — 結構性阻斷不因指令消失;改交付 `reset-thin` CLI(清免費層假 too_short,付費升級日一鍵啟用重掃,+2 tests)。
+- `outputs/night-shift-summary-2026-06-12.md`:11 commit 帳 + 頭條發現 + 決策清單(A:Polygon Starter $29 單月衝刺,建議;B:已否證;C:維持上界)。
+- monitor/preopen 已用新 config 重生;全套 1155 綠。
