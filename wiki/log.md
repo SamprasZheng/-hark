@@ -602,3 +602,17 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **修補**(`failed_analogs.collect`):(a) `max_seconds` 牆鐘預算(預設 20 分,晨間鏈永遠走得完);(b) 每筆抓取包 thread+future 硬性 60s,涓流也走得掉(超時棄置 worker 換新池);(c) 回傳加 `elapsed_s`。Live 驗證:budget=3/240s → 248.2s 乾淨退出,manifest 384→402 穿過卡點。
 - **觀察**:manifest 402 行全為 too_short/err — 2010 後下市且 ≥48 根月線的票在字母序前段極稀,**failed-analogs 的下市票分母至今 = 0**,每日 20 分預算下會慢慢養;存活率 74.1% 仍是湖內倖存者宇宙上界(已知偏差,docs 已標)。
 - 案例庫 re-sync(212 筆,吃進今晨新 rally-dna norms);全套 1090 綠。
+
+## 2026-06-12(r)— [09:18 ET] recommendation | 首份 live 日度 10-signal(6/10 槽,mania 防守日)
+- 產出:`wiki/05_recommendations/2026-06-12.md` + `outputs/picks-2026-06-12.json`(as_of 13:10:04Z = 09:10 ET 盤前,沿用 preopen brief 聚合時點;訊號依 PIT 規則於 09:30 開盤成交)。05-29 之後首份、新版管線(DNA+World Model+audit)下第一份正式日度輸出。
+- **槽位**:long_new ×2 = null(mania + DNA 可入候補 0 檔;ESTC 87.1 被 world_factor 壓到 77.3)、short_new ×2 = null(無空頭真跌確認;FOMC 06-17 窗內)、followup ×6 全滿:AMAT trim25%(斷裂交集+bubble_guard −40)、CRWG trim34%+8%trail(held-winner 覆核)、INTU exit(趨勢破線)、MSFU/PTIR/CRMG exit(sleeve 不留槓桿)。
+- **overflow(槽滿未入,仍有效)**:LULG exit、OPITQ 清倉 — 新欄位 `followup_overflow` 入 JSON,markdown §5 同步,確保不丟單。
+- Risk Officer 同 session 切換覆核:無填充、全減碼方向與 mania+三世界事件一致、confidence 0.65–0.75 無虛高 — passed。Discarded 8 組含換股腿(MSFT/ASML/PLTR/CRM…一律走未來 long_new 過 DNA 濾鏡)。
+- 跟進:followup 執行後 positions.md 須按 audit 結果更新;LULG/OPITQ overflow 若明日仍未執行應重新佔槽。
+## 2026-06-12(r)— 夜班 wave1:時間旅行回放 + regime 轉移表 + 行為偏差層(plan2 裁決執行)
+- plan2.md(94KB 外部草案)裁決:採納 歷史回填/短週期時間旅行(關鍵洞察:每次下載含全史 → 可離線重建任意過去時點的事件求值,vintage=synthetic-revised 誠實標注)、行為偏差分數、損失厭惡旗標;**LightGBM regime 預測改為先建經驗計數基線**(340 月樣本上 ML 是過擬合邀請函;未來模型必須先打贏這張表);LanceDB 索引優化再次駁回(Chroma/numpy,212 筆)。
+- **頭條發現(backfill,QQQ 1999+ n=327)**:GSCPI_SPIKE 月份前向 3m +1.35%/6m **-0.18%** vs 基準 +4.16%/+8.37% — **唯一明確跑輸的事件**;TS_HIGH 46 個月不低於基準(地緣恐懼≠賣訊);GPR_EXTREME 僅 3 個月(911/伊拉克,軼事)。轉移表:GPR elevated 砍熊市出場機率 1/3;mania 在 GSCPI spike 下更黏;26 年唯一 bear→crisis 在 spike 下。
+- **行為偏差層**(scoring/behavioral_bias,純函數顯式先驗):今日實時 **8.5/10**(TS_HIGH+GSCPI+TWN_Z60+VOL_PANIC+BREADTH_BREAK 全組件)→ **mania 過度自信警語在真實數據開火**進 brief。損失厭惡旗標已備,但 holdings_health 無 pnl/holding_days 欄(上游 entry TBD)→ 誠實緩接,不發明數據。
+- **整合**:world_monitor 增 behavioral 區段(QQQ vol ratio + reflexivity 斷裂數自動取)+ 空快照防護(_payload_empty);brief §2 增三行(行為偏差/歷史鏡頭/下月態展望 — 全 observe-first);週六 gated 增 backfill+transitions 週更。
+- **數據事故記錄(supersession)**:`data/lake/world/gscpi-2026-06-12.json` 為日期解析修復前寫入的空序列(首寫不可變)→ 依 CLAUDE.md §2 以 `gscpi-2026-06-12.v2.json` 接替(341 列,1998-01→2026-05;glob 排序自動選用);防護已加,此類事故不再。
+- 測試 +48(backfill 13/transitions 19/bias 16),全套 1142 綠。commit ba84b4a(模組)+ 本條目隨整合 commit。

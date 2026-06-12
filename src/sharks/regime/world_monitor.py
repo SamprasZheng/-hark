@@ -183,7 +183,19 @@ def aggregate_impacts(fired: list[dict]) -> dict:
 
 # ── lake 前向 vintage 史(不可變,首寫為準 — 同 state/snapshot 精神)──
 
+def _payload_empty(payload) -> bool:
+    """空序列防護(2026-06-12 事故:日期解析修復前寫入空 gscpi 快照,
+    首寫不可變 → 當日 vintage 報廢,須 .v2 接替)。空 payload 不落快照。"""
+    if not payload:
+        return True
+    if isinstance(payload, dict):
+        return all(not v for v in payload.values())
+    return False
+
+
 def _lake_snapshot(name: str, payload, today: str, lake_dir: Path) -> None:
+    if _payload_empty(payload):
+        return
     lake_dir.mkdir(parents=True, exist_ok=True)
     p = lake_dir / f"{name}-{today}.json"
     if p.exists():
@@ -250,6 +262,44 @@ def run_world_monitor(out_dir: Path = Path("outputs"), *, today: Optional[str] =
     fired, degraded = evaluate_events(config, metrics)
     impacts = aggregate_impacts(fired)
 
+    # 行為偏差分數(observe-first;scoring/behavioral_bias 顯式先驗)— 任何缺料降級
+    behavioral = None
+    try:
+        from sharks.scoring.behavioral_bias import (behavioral_deviation_score,
+                                                    mania_overconfidence_note)
+        vol_ratio = None
+        regime_state = None
+        try:
+            from sharks.backtest.rally_dna import classify_states4, load_monthly
+            qqq = load_monthly("QQQ")
+            if qqq is not None and len(qqq) > 72:
+                vol6 = qqq["Close"].pct_change().rolling(6).std()
+                base = float(vol6.tail(60).mean())
+                if base > 0:
+                    vol_ratio = round(float(vol6.iloc[-1]) / base, 3)
+                regime_state = str(classify_states4(qqq["Close"]).iloc[-1])
+        except Exception:
+            pass
+        breaks = None
+        try:
+            rf_files = sorted(p for p in out_dir.glob("reflexivity-*.json")
+                              if "intraday" not in p.name)
+            if rf_files:
+                rows = json.loads(rf_files[-1].read_text(encoding="utf-8")).get("rows") or []
+                breaks = sum(1 for r in rows if r.get("verdict") == "斷裂警告")
+        except Exception:
+            pass
+        behavioral = behavioral_deviation_score(
+            world_events=[e["id"] for e in fired],
+            gprc_twn_z60=metrics.get("gprc_twn_z60"), gscpi=metrics.get("gscpi"),
+            qqq_vol_ratio=vol_ratio, breadth_break_count=breaks)
+        note = mania_overconfidence_note(regime_state, behavioral.get("score") or 0)
+        if note:
+            behavioral["mania_note"] = note
+        behavioral["regime_state"] = regime_state
+    except Exception:
+        behavioral = None
+
     report = {
         "as_of": {"gscpi": metrics.get("gscpi_date"),
                   "gpr_monthly": metrics.get("gpr_date"),
@@ -262,6 +312,7 @@ def run_world_monitor(out_dir: Path = Path("outputs"), *, today: Optional[str] =
         "metrics": metrics,
         "events_triggered": fired,
         "impacts": impacts,
+        "behavioral": behavioral,
         "degraded_metrics": degraded,
         "config_version": config.get("version"),
         "source_grades": {"gscpi": "A(NY Fed)", "gpr": "A(Caldara-Iacoviello 官方)"},

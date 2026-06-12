@@ -110,6 +110,14 @@ def run_morning() -> int:
             _log("morning: failed-analogs survival recompute ok")
         except Exception:
             _log("morning: failed-analogs recompute FAILED\n" + traceback.format_exc())
+        try:                                    # 世界史回填 + regime 轉移表(週更,皆可再生)
+            from sharks.regime import world_backfill
+            world_backfill.main([])
+            from sharks.backtest import regime_transitions
+            regime_transitions.main([])
+            _log("morning: world-backfill + regime-transitions ok")
+        except Exception:
+            _log("morning: backfill/transitions FAILED\n" + traceback.format_exc())
     if now.day == 1:                            # 每月 1 日:世界閾值重校建議(人工套用)
         try:
             from sharks.regime import world_monitor
@@ -121,6 +129,39 @@ def run_morning() -> int:
             _log("morning: world recalibrate FAILED\n" + traceback.format_exc())
     _log("morning: done")
     return 0
+
+
+def _world_insight_lines(world: dict) -> list[str]:
+    """全球風險區塊的觀察層三行(行為偏差/歷史鏡頭/regime 展望)— 缺料即省略,
+    全部 observe-first:文字參考,不 gate 任何 KPI/sizing。"""
+    L: list[str] = []
+    bv = world.get("behavioral") or {}
+    if bv.get("score") is not None:
+        L.append(f"- 行為偏差分數:**{bv['score']}/10**(顯式先驗;"
+                 f"組件 {'+'.join(sorted((bv.get('components') or {}).keys())) or '—'})"
+                 + (f" — {bv['mania_note']}" if bv.get("mania_note") else ""))
+    bf = _latest("world-backfill")
+    study = (bf.get("event_forward_study") or {})
+    spike = (study.get("events") or {}).get("GSCPI_SPIKE") or {}
+    base = study.get("base_rate") or {}
+    if spike.get("fwd") and base.get("fwd"):
+        def med(d, h):
+            v = ((d.get("fwd") or {}).get(h) or {}).get("median_pct")
+            return v if v is not None else "—"
+        L.append(f"- 歷史鏡頭(1999+,synthetic-revised vintage):GSCPI_SPIKE 月份 QQQ 前向 "
+                 f"3m {med(spike, '3m')}% / 6m {med(spike, '6m')}% vs 基準 "
+                 f"{med(base, '3m')}% / {med(base, '6m')}% — 唯一明確跑輸基準的事件;"
+                 f"TS_HIGH 月份歷史上不低於基準(恐懼≠賣訊,實質供應鏈壓力才是)")
+    rt = _latest("regime-transitions")
+    ol = rt.get("current_outlook") or {}
+    dist = ol.get("next_month_probs") or {}
+    if dist:
+        top = sorted(dist.items(), key=lambda kv: -kv[1])[:3]
+        L.append(f"- 下月態展望(經驗計數,observe-first):"
+                 + " / ".join(f"{k} {v:.0%}" for k, v in top)
+                 + f"(條件層級 {ol.get('used_level', '?')},n={ol.get('n', '?')}"
+                 + (";低樣本" if ol.get("low_n") else "") + ")")
+    return L
 
 
 def compose_position_brief() -> str:
@@ -184,6 +225,7 @@ def compose_position_brief() -> str:
             f"{abm.get('deepkill_survival_delta_pct', '—')}pp"
             f"(TS_HIGH 條件式 {((abm.get('per_scenario_loss') or {}).get('TS_HIGH') or {}).get('survival_delta_pct_conditional', '—')}pp;"
             f"與 cap 乘數不疊乘)"] if abm else []),
+         *_world_insight_lines(world),
          "",
          "## 3. 持倉動作(健檢自動裁決)"]
     for a in ("清倉", "換股", "減碼", "待驗證", "續抱⚠"):

@@ -68,6 +68,26 @@ GPRC_TWN p90/p95/p99 = 0.17/0.25/0.37。每月重算,漂移 >10% 才動閾值。
 (地板 0.65;**無事件 = 1.0,平時零行為差異**,保住既有前瞻校準連續性)。
 `dna_plus_raw`、`global_exposure`、`world_factor` 全部落 `outputs/dna-scores-log.jsonl`。
 
+## 4a. 歷史鏡頭(夜班 wave1,synthetic-revised vintage;1999-03→2026-05,n=327 月)
+
+事件 × QQQ 前向報酬(中位數;`outputs/world-backfill-*.json` event_forward_study):
+
+| 事件 | 月份數 | fwd 1m | fwd 3m | fwd 6m | 讀法 |
+|---|---|---|---|---|---|
+| 基準(全月份) | 327 | +1.51% | +4.16% | +8.37% | — |
+| **GSCPI_SPIKE** | 29 | +1.79% | **+1.35%** | **−0.18%** | **唯一明確跑輸基準的事件** — 實質供應鏈壓力才是賣訊 |
+| TS_HIGH | 46 | +2.94% | +5.22% | +12.05% | 地緣恐懼本身≠賣訊(不低於基準) |
+| GPR_ELEVATED | 21 | +3.74% | +10.64% | +16.64% | 中位高但均值低 — 右偏尾,恐慌底反彈混入 |
+| GPR_EXTREME | 3 | +16.96% | +18.61% | +24.43% | n=3(911/伊拉克)— 軼事非統計 |
+
+regime 轉移表(318 月計數,`outputs/regime-transitions-*.json`):GPR elevated 下熊市
+月出場機率 .190 vs calm .279(**砍 1/3**);mania 在 GSCPI spike 下更黏(.727 vs .581);
+26 年唯一一次 bear→crisis 發生在 GSCPI spike 下(n=7 低樣本)。今日展望(mania,
+elevated+spike 條件層 n 太薄 → 退回無條件 n=44):mania 64% / bull 27% / bear 9%。
+
+> vintage 誠實聲明:兩來源就地修訂、無官方 vintage — 上表是「今日修訂值回放今日
+> 事件定義」的描述統計,不是可交易回測;月末可見性假設帶輕微 lookahead。
+
 ## 4. 當前狀態(as_of 2026-06-12)— 上線首日三事件齊發
 
 - **TS_HIGH**:GPRC_TWN = 0.489(**>p99**,60月z 2.24)、GPRC_CHN = 1.55(>p99)。
