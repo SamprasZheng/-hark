@@ -780,3 +780,10 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **Layer 3**(`simulation/layer3_potential.py`):0-100 七維潛力評分(產業趨勢 25% · **護城河 20% 真實=`fom.IP_DEFENSIBILITY`** · 資本配置 15% proxy · FCF 15% proxy · **估值 10% 真實 Finviz P/E** · 經營層 10% proxy · 地緣 5% curated)→ Top 30。**今日 Top 10:MSFT 71.8、NOC、NVDA、TSM、ASML、LMT、QCOM、GOOGL、RTX、CRM**(大型科技 + 國防 + 半導體);分 `core_long_term` / `high_growth_high_risk` 兩桶。**誠實:7 維中 3 維(資本配置/FCF/經營)為中性 proxy,待真實財報接線**。
 - **編碼修正**:cp950 box 上 print 中文會亂碼 → L1 中文 readout 改寫 UTF-8 `.md`、console 只印 ASCII 摘要;L3 console driver/risk 改 ASCII(中文框架在 chat 呈現)。
 - recommend-only、never-raise;import-smoke 綠。**L2 優化待辦**:每季 reset、風險調整 fitness、cross-style 公平比較。
+
+## 2026-06-13(n)— feat | Layer 2 嚴謹化:分散持股(≤10檔 80/20 上限)+ cross-style 公平 fitness(review A+B)
+- cross-review 評比賽可信度=中(方向可信、量級不可信),首要修「單股暴漲帶飛」+「跨風格不公平」。兩項全做。
+- **A 分散持股**(`_diversified_quarter_return`):每月持 **≤10 檔**、**80% 大型 / 20% 小型**、單股上限 **12%/6%**、long-only。取代舊 top-3 集中。`LARGE_CAP` curated 穩定大型股集(歷史市值不在湖,curated 近似)。**效果:冠軍累積 +231× → +18.5×**(LT_BALANCED)—— 通膨式數字砍掉 ~12 倍,單股暴漲帶飛消失。
+- **B 跨風格公平 fitness**(`_fair_fitness`):第二張排行榜按 風險調整 + regime-aware composite(40% 季 Sharpe + 30% 正規化累積 + 30% 回撤控制)排序,並報各 trader 牛季/熊季平均報酬 + 命中率。**Fair 冠軍 = LT_BALANCED**(Sharpe 1.50、命中 77%、maxDD -16%、**熊季近持平 -0.1%**)——與 raw 冠軍一致 = 其勝出是風險調整後的真本事、非單股運氣。**發現:LT_TREND 是唯一熊季正報酬(+2.8%);RISK_OFFICER 回撤控制最佳(-12.2%)但牛市墊底**。
+- **2026 H2 預測**改由更穩健的 LT_BALANCED(mom/lb4)產出;regime=MEAN_REVERSION、§10 防禦 floor 35% 仍綁。`COMPETITION_FRAMEWORK.md` L2 段更新(優化完成);輸出加 `fair_leaderboard_risk_adjusted` + `fair_champion`。
+- recommend-only、long-biased(分散書 long-only;放空仍鎖 HARD_DEFENSE 簡單路徑);import-smoke 綠。**待辦**:真實 Capex/FCF/ROIC 提升選股品質、多 regime out-of-sample 驗證。

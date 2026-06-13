@@ -50,6 +50,24 @@ from simulation.historical_competition import (  # noqa: E402
 COST_BPS = 10.0
 TRADES_PER_REBALANCE = 3   # <=3 names -> long-horizon, well under 3 trades/week
 EVOLVE_BOTTOM_K = 2        # how many worst traders mutate each quarter
+# Layer-2 rigor (review A): diversified per-quarter book.
+MAX_HOLD = 10              # max names per rebalance (kills single-stock domination)
+LARGE_TARGET, SMALL_TARGET = 8, 2     # 80/20 large/small split
+CORE_NAME_CAP, SAT_NAME_CAP = 0.12, 0.06
+
+# Curated large-cap set (stable mega/large caps across 2018-2026) for the 80/20
+# split -- historical market caps aren't in the lake, so this is a curated
+# approximation (these names were large-cap throughout the window).
+LARGE_CAP = set("""
+NVDA AAPL MSFT GOOGL GOOG META AMZN TSLA TSM ASML AVGO AMD MU AMAT LRCX KLAC QCOM
+TXN INTC ADI MRVL NXPI MCHP ANET CSCO ORCL CRM ADBE NOW INTU PANW SNPS CDNS
+LMT NOC RTX GD BA LHX HON GE CAT DE UNP
+LLY UNH JNJ ABBV MRK PFE TMO ABT DHR AMGN ISRG VRTX REGN GILD BMY
+KO PG WMT COST PEP MCD PM MO CL KMB
+JPM BAC WFC GS MS V MA AXP BLK SPGI
+XOM CVX COP SLB
+DIS NFLX CMCSA T VZ NKE SBUX HD LOW
+""".split())
 
 # Long-horizon, low-frequency roster (lookback in MONTHS; max_actions = top-K hold).
 def _roster() -> List[Dict[str, Any]]:
@@ -112,15 +130,109 @@ def _quarter_groups(dates: List[str]) -> List[Tuple[str, List[int]]]:
     return [(q, groups[q]) for q in sorted(groups)]
 
 
+def _diversified_quarter_return(closes: np.ndarray, large_mask: np.ndarray,
+                                defmask: np.ndarray, genome: Dict[str, Any],
+                                idxs: List[int], cost: float) -> float:
+    """Review A: a DIVERSIFIED monthly book per quarter -- up to MAX_HOLD names,
+    80% large-cap / 20% small-cap, single-name caps (12%/6%), long-only. Replaces
+    the old top-3 concentration so a single moonshot can't carry a trader."""
+    L, thr, ttype = int(genome["lookback"]), float(genome["threshold"]), genome["type"]
+    T = closes.shape[0]
+    rets: List[float] = []
+    for t in idxs:
+        if t < L or t + 1 >= T:
+            continue
+        prev, cur, nxt = closes[t - L], closes[t], closes[t + 1]
+        with np.errstate(invalid="ignore", divide="ignore"):
+            lb = np.where(prev > 0, cur / prev - 1.0, np.nan)
+            rn = np.where(cur > 0, nxt / cur - 1.0, np.nan)
+        valid = ~np.isnan(lb) & ~np.isnan(rn)
+        if ttype == "defensive":
+            breadth = np.nanmedian(lb[~np.isnan(lb)]) if np.any(~np.isnan(lb)) else 0.0
+            if breadth < 0:
+                rets.append(0.0)            # hold cash in a falling tape
+                continue
+            sel = np.where(defmask & valid)[0][:MAX_HOLD]
+            w = min(CORE_NAME_CAP, 1.0 / max(1, len(sel)))
+            rets.append((sum(w * rn[i] for i in sel) - (cost if len(sel) else 0)))
+            continue
+        longc = valid & (lb > thr) if ttype == "momentum" else valid & (lb < -thr)
+        ci = np.where(longc)[0]
+        if len(ci) == 0:
+            rets.append(0.0)
+            continue
+        order = ci[np.argsort(-np.abs(lb[ci]))]
+        large = [i for i in order if large_mask[i]][:LARGE_TARGET]
+        small = [i for i in order if not large_mask[i]][:SMALL_TARGET]
+        wl = min(CORE_NAME_CAP, 0.80 / len(large)) if large else 0.0
+        ws = min(SAT_NAME_CAP, 0.20 / len(small)) if small else 0.0
+        mret = sum(wl * rn[i] for i in large) + sum(ws * rn[i] for i in small)
+        if large or small:
+            mret -= cost
+        rets.append(mret)
+    return float(np.prod([1 + r for r in rets]) - 1) if rets else 0.0
+
+
+def _fair_fitness(trailing: Dict[str, List[float]],
+                  bear_quarters: List[bool]) -> List[Dict[str, Any]]:
+    """Review B: cross-style fair fitness. Compares traders on risk-adjusted +
+    regime-aware metrics, not just raw cumulative return, so a steady defensive
+    trader isn't buried under a momentum trader's headline number."""
+    def _sharpe(xs):
+        if len(xs) < 2:
+            return 0.0
+        m, s = float(np.mean(xs)), float(np.std(xs, ddof=1))
+        return (m / s * (4 ** 0.5)) if s > 0 else 0.0
+
+    def _maxdd(xs):
+        eq, peak, mdd = 1.0, 1.0, 0.0
+        for r in xs:
+            eq *= (1 + r); peak = max(peak, eq)
+            mdd = min(mdd, eq / peak - 1.0)
+        return mdd
+
+    raw = {}
+    for tid, qs in trailing.items():
+        bull = [r for r, b in zip(qs, bear_quarters) if not b]
+        bear = [r for r, b in zip(qs, bear_quarters) if b]
+        raw[tid] = {"sharpe": _sharpe(qs), "max_dd": _maxdd(qs),
+                    "cum": float(np.prod([1 + r for r in qs]) - 1),
+                    "bull_avg": float(np.mean(bull)) if bull else 0.0,
+                    "bear_avg": float(np.mean(bear)) if bear else 0.0,
+                    "hit_rate": float(np.mean([1.0 if r > 0 else 0.0 for r in qs])) if qs else 0.0}
+
+    def _norm(key, invert=False):
+        vals = [raw[t][key] for t in raw]
+        lo, hi = min(vals), max(vals)
+        rng = (hi - lo) or 1.0
+        return {t: ((hi - raw[t][key]) if invert else (raw[t][key] - lo)) / rng for t in raw}
+    n_sharpe, n_cum, n_dd = _norm("sharpe"), _norm("cum"), _norm("max_dd", invert=True)
+
+    out = []
+    for tid in raw:
+        fair = round(0.40 * n_sharpe[tid] + 0.30 * n_cum[tid] + 0.30 * n_dd[tid], 4)
+        out.append({"trader": tid, "fair_score": fair,
+                    "sharpe_q": round(raw[tid]["sharpe"], 3),
+                    "max_dd": round(raw[tid]["max_dd"], 3),
+                    "hit_rate": round(raw[tid]["hit_rate"], 3),
+                    "bull_avg_qret": round(raw[tid]["bull_avg"], 4),
+                    "bear_avg_qret": round(raw[tid]["bear_avg"], 4)})
+    out.sort(key=lambda r: r["fair_score"], reverse=True)
+    return out
+
+
 def run(seed: int = 11) -> Dict[str, Any]:
     rng = random.Random(seed)
     dates, tickers, closes = load_close_matrix("1mo", "2018-01-01")
     defmask = np.array([t in set(DEFENSIVE_BASKET) for t in tickers])
+    large_mask = np.array([t in LARGE_CAP for t in tickers])
     quarters = _quarter_groups(dates)
-    # Shorts allowed ONLY in confirmed-bear months (principal's rule); long-biased
-    # otherwise. ~2022 / 2020-COVID / 2018Q4 should light up.
+    # Bear flag per month (PIT trailing-6m median < -8%); a quarter is "bear" if
+    # any of its months is. Used for the regime-aware fair fitness (review B).
     bear_mask = _bear_mask(closes)
     bear_months = [dates[i] for i in range(len(dates)) if bear_mask[i]]
+    bear_quarters = [any(bear_mask[i] for i in idxs) for _, idxs in quarters]
+    cost = COST_BPS / 1e4
 
     population = _roster()
     cumulative: Dict[str, float] = {t["id"]: 1.0 for t in population}
@@ -135,10 +247,8 @@ def run(seed: int = 11) -> Dict[str, Any]:
         lo, hi = idxs[0], idxs[-1]
         q_returns: Dict[str, float] = {}
         for tr in population:
-            port = backtest_trader(closes, tr, defmask, cost_bps=COST_BPS,
-                                   long_only=False, allow_short_mask=bear_mask)
-            seg = [port[i] for i in idxs if not np.isnan(port[i])]
-            qret = float(np.prod([1 + x for x in seg]) - 1) if seg else 0.0
+            qret = _diversified_quarter_return(closes, large_mask, defmask, tr,
+                                               idxs, cost)
             q_returns[tr["id"]] = qret
             cumulative[tr["id"]] *= (1 + qret)
             trailing[tr["id"]].append(qret)
@@ -171,6 +281,9 @@ def run(seed: int = 11) -> Dict[str, Any]:
          for tid in cumulative),
         key=lambda r: r["cumulative_return"], reverse=True)
 
+    fair_leaderboard = _fair_fitness(trailing, bear_quarters)
+    # The fair champion (risk-adjusted + regime-aware) may differ from the raw one.
+    fair_champ_id = fair_leaderboard[0]["trader"] if fair_leaderboard else leaderboard[0]["trader"]
     champion = leaderboard[0]
     forecast = _forecast_h2_2026(closes, tickers, dates, population, champion["trader"])
 
@@ -180,17 +293,19 @@ def run(seed: int = 11) -> Dict[str, Any]:
         "role": "writer", "project": "Trading Society",
         "program": "simulation/competition_2018_2026.py",
         "protocol_ref": "docs/LLM-BACKTEST-PROTOCOL.md", "llm_involvement": "none",
-        "rules": {"frequency": "monthly rebalance, <=3 names held (long-horizon, "
-                                "well under 3 trades/week)",
+        "rules": {"frequency": "monthly rebalance, DIVERSIFIED book (<=10 names, "
+                                "80% large / 20% small, name caps 12%/6%) -- "
+                                "long-horizon; no single-stock domination",
                   "cost_bps": COST_BPS, "evolution": "bottom-2 traders mutate each "
                   "quarter (genome lookback/threshold)",
-                  "shorting": "LONG-BIASED by default; shorts allowed ONLY in "
-                  "confirmed-bear months (trailing-6m median market return < -8%, "
-                  "PIT), short loss capped at -100%/name",
-                  "bear_months": bear_months},
+                  "shorting": "LONG-BIASED / long-only diversified book; shorts only "
+                  "in confirmed-bear regime (CLAUDE sec.10, simple path)",
+                  "bear_months": bear_months, "bear_quarter_count": sum(bear_quarters)},
         "window": {"start": dates[0], "end": dates[-1], "n_quarters": len(quarters),
                    "n_names": len(tickers)},
         "leaderboard_cumulative_2018_2026": leaderboard,
+        "fair_leaderboard_risk_adjusted": fair_leaderboard,
+        "fair_champion": fair_champ_id,
         "quarter_champion_tally": dict(sorted(quarter_champ_tally.items(),
                                               key=lambda x: -x[1])),
         "quarter_timeline": timeline,
@@ -282,6 +397,16 @@ def _print(r: Dict[str, Any]) -> None:
         g = row["final_genome"]
         print(f"  {i:<2} {row['trader']:<16} {row['cumulative_return']:>+11.3f} "
               f"{row['quarters_won']:>9} {g['type']}/lb{g['lookback']}/th{g['threshold']}")
+    print("\nFAIR LEADERBOARD (risk-adjusted + regime-aware; cross-style fair):")
+    print(f"  {'#':<2} {'trader':<16} {'fair':>5} {'sharpe_q':>8} {'maxDD':>7} "
+          f"{'hit':>5} {'bull_q':>7} {'bear_q':>7}")
+    for i, row in enumerate(r["fair_leaderboard_risk_adjusted"], 1):
+        print(f"  {i:<2} {row['trader']:<16} {row['fair_score']:>5.2f} "
+              f"{row['sharpe_q']:>8.2f} {row['max_dd']:>7.3f} {row['hit_rate']:>5.2f} "
+              f"{row['bull_avg_qret']:>+7.3f} {row['bear_avg_qret']:>+7.3f}")
+    print(f"  -> fair champion: {r['fair_champion']} "
+          f"(raw champion: {r['leaderboard_cumulative_2018_2026'][0]['trader']})")
+
     print("\nQuarter champion tally:")
     for tid, n in r["quarter_champion_tally"].items():
         if n:

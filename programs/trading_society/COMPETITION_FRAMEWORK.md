@@ -37,11 +37,23 @@ allocation:
 
 ## Layer 2 — mid-term evolving competition
 
-`competition_2018_2026.py` — long-horizon (monthly rebalance, ≤3 names),
-quarter-by-quarter evolution, long-biased (shorts only in confirmed-bear months).
-**Optimization TODO** (principal): per-quarter reset + rebalance, risk-adjusted
-fitness (Sharpe + MDD + recovery), cross-style fairness (compare each style within
-its best regime), per-quarter performance report.
+`competition_2018_2026.py` — long-horizon, quarter-by-quarter evolution.
+
+**Rigor upgrades (review A + B):**
+- **Diversified per-quarter book (A):** each trader holds a **≤10-name** monthly
+  book, **80% large-cap / 20% small-cap**, single-name caps **12% / 6%** — no more
+  top-3 concentration, so a single moonshot can't carry a trader. (`LARGE_CAP` is a
+  curated stable-large-cap set; historical market caps aren't in the lake.)
+- **Cross-style fair fitness (B):** a second leaderboard ranks by a risk-adjusted +
+  regime-aware composite (40% quarterly Sharpe + 30% normalized cumulative + 30%
+  drawdown control), and reports each trader's bull-quarter vs bear-quarter average
+  return + hit rate. So a steady defensive trader isn't buried under a momentum
+  trader's headline number. The **fair champion** is reported alongside the raw one.
+- Long-biased (long-only diversified book); shorts remain gated to HARD_DEFENSE in
+  the simple path + live portfolio (CLAUDE §10).
+
+Still TODO: real fundamentals (Capex/FCF/ROIC) for selection quality; multi-regime
+out-of-sample validation.
 
 ## Layer 3 — 10-year potential scorecard
 
