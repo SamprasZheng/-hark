@@ -227,6 +227,39 @@ def regime_stability(regime_metrics: Dict[str, Dict[str, float]],
     return _clip(1.0 - cv)
 
 
+def bubble_risk_score(
+    buffett_indicator: Optional[float] = None,
+    dalio_bubble_flag: bool = False,
+    vix: Optional[float] = None,
+    breadth_pct: Optional[float] = None,     # % of names above their 200d (lower = narrower)
+    dist_from_high_pct: Optional[float] = None,  # index distance from ATH (0 = at highs)
+) -> float:
+    """
+    Transparent 0..1 bubble-risk composite (NOT a learned model). Higher = more
+    bubble-like. Used to tilt ranking/reflection toward protection in stretched
+    tapes (Step 3). Components that are None are skipped and the score is
+    renormalized over the components actually supplied.
+    """
+    parts: List[float] = []
+    if buffett_indicator is not None:
+        # 130% -> 0, 230% -> 1
+        parts.append(_clip((buffett_indicator - 130.0) / 100.0))
+    if dalio_bubble_flag:
+        parts.append(1.0)
+    if vix is not None:
+        # complacency adds bubble risk: VIX 12 -> high, VIX 30 -> low
+        parts.append(_clip((22.0 - vix) / 12.0))
+    if breadth_pct is not None:
+        # narrow breadth (few names carrying) is bubble-like
+        parts.append(_clip((55.0 - breadth_pct) / 35.0))
+    if dist_from_high_pct is not None:
+        # pinned at highs is more bubble-like than well off them
+        parts.append(_clip(1.0 - abs(dist_from_high_pct) / 15.0))
+    if not parts:
+        return 0.0
+    return round(sum(parts) / len(parts), 4)
+
+
 @dataclass
 class FitnessResult:
     score: float

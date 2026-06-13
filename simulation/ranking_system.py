@@ -47,6 +47,14 @@ HORIZON_WEIGHTS: Dict[str, Dict[str, float]] = {
                "turnover_discipline": 0.05, "niche_purity": 0.05},
 }
 
+# Step 3: in a high-valuation regime, reward capital preservation + cross-regime
+# robustness and de-emphasize raw hit quality (CLAUDE.md sec.10 spirit). Niche
+# purity gets extra weight so the dedicated hedger / risk-off voices count more.
+HIGH_VALUATION_WEIGHTS: Dict[str, float] = {
+    "risk_adjusted": 0.20, "regime_stability": 0.28, "drawdown_control": 0.30,
+    "hit_quality": 0.05, "turnover_discipline": 0.07, "niche_purity": 0.10,
+}
+
 
 @dataclass
 class RankRow:
@@ -80,11 +88,16 @@ class RankingSystem:
         self.niches = niches or {}
         self._prev: Dict[str, Dict[str, int]] = {h: {} for h in HORIZONS}
 
-    def rank(self, tracker: PerformanceTracker, horizon: str = "monthly"
-             ) -> List[RankRow]:
+    def rank(self, tracker: PerformanceTracker, horizon: str = "monthly",
+             regime: Optional[str] = None) -> List[RankRow]:
         if horizon not in HORIZONS:
             raise ValueError(f"horizon must be one of {HORIZONS}")
-        weights = HORIZON_WEIGHTS[horizon]
+        # In a high-valuation regime, override the horizon tilt with the
+        # capital-preservation weighting (Step 3).
+        if regime == "high_valuation":
+            weights = HIGH_VALUATION_WEIGHTS
+        else:
+            weights = HORIZON_WEIGHTS[horizon]
         scored = []
         for aid in tracker.records:
             f: FitnessResult = tracker.fitness_for(aid, weights=weights)

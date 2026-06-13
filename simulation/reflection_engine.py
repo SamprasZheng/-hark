@@ -101,37 +101,60 @@ class ReflectionReport:
         }
 
 
+# Step 3: structured dot-com analog appended when an agent is bleeding on the
+# capital-preservation axes during a high-valuation regime.
+_DOTCOM_TEMPLATE = (
+    " [dot-com analog] In a high-valuation regime this failure mode mirrors "
+    "1999-2000: chasing extended, narrative-driven names into a repricing. "
+    "Stress-test the thesis against a 30-50% drawdown and prefer protection over "
+    "participation."
+)
+_DOTCOM_WEAK = {"risk_adjusted", "drawdown_control", "regime_stability"}
+
+
 def reflect_one(agent_id: str, fitness: float,
-                components: Dict[str, float]) -> ReflectionReport:
-    """Diagnose the single weakest fitness component and propose a fix."""
+                components: Dict[str, float],
+                regime: Optional[str] = None) -> ReflectionReport:
+    """Diagnose the single weakest fitness component and propose a fix.
+
+    In a high-valuation regime a dot-com structured analog is appended to the
+    cause + prompt when the weak axis is a capital-preservation one (Step 3).
+    """
     if not components:
         weakest, val = "risk_adjusted", 0.0
     else:
         weakest = min(components, key=components.get)
         val = components[weakest]
     play = COMPONENT_PLAYBOOK.get(weakest, COMPONENT_PLAYBOOK["risk_adjusted"])
+    cause = play["cause"]
+    prompt_delta = play["prompt_delta"]
+    if regime == "high_valuation" and weakest in _DOTCOM_WEAK:
+        cause = cause + _DOTCOM_TEMPLATE
+        prompt_delta = prompt_delta + " Add a dot-com 30-50% drawdown stress test."
     # Confidence in the diagnosis scales with how clearly one component is worst.
     sorted_vals = sorted(components.values()) if components else [0.0, 0.0]
     gap = (sorted_vals[1] - sorted_vals[0]) if len(sorted_vals) > 1 else 0.0
     confidence = round(0.5 + min(0.4, gap), 3)
     return ReflectionReport(
         agent_id=agent_id, fitness=fitness, weakest_component=weakest,
-        weakest_value=val, cause=play["cause"],
-        param_delta=dict(play["param_delta"]), prompt_delta=play["prompt_delta"],
+        weakest_value=val, cause=cause,
+        param_delta=dict(play["param_delta"]), prompt_delta=prompt_delta,
         confidence=confidence,
     )
 
 
-def reflect_bottom(ranking_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def reflect_bottom(ranking_rows: List[Dict[str, Any]],
+                   regime: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Given ranking rows (from ranking_system.report()['ranking'], already the
     bottom set or full set), produce a reflection report for each.
-    Each row needs: agent_id, fitness, components.
+    Each row needs: agent_id, fitness, components. Pass regime="high_valuation"
+    to attach the dot-com analog where relevant (Step 3).
     """
     reports = []
     for row in ranking_rows:
         comps = row.get("components", {})
-        rep = reflect_one(row["agent_id"], row.get("fitness", 0.0), comps)
+        rep = reflect_one(row["agent_id"], row.get("fitness", 0.0), comps, regime)
         reports.append(rep.to_dict())
     return reports
 

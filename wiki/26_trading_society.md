@@ -108,6 +108,57 @@ force-injected back in. Personas are recommend-only (`proposed_actions` always
 empty). Context (Buffett Indicator, bubble flag, yields) will be fed by the
 Step-2 Macro Sentinel (TODO); today it is passed in / synthetic.
 
+## Live result — real-universe competition (2026-06-13)
+
+First run on REAL lake prices (not synthetic): `simulation/universe_competition.py`
+ran 6 trader genomes over a 130-name FOM-screened universe + the SpaceX sleeve,
+window 2026-02-04..2026-06-12 (90 trading days), PIT, `llm_involvement=none`.
+Artifact: `outputs/trading-society-competition-2026-06-13.json`.
+
+| # | trader | fitness | return* | Sharpe | maxDD | win |
+|---|---|---|---|---|---|---|
+| 1 | MEAN_REVERSION | 0.717 | +1.02 | 2.96 | -0.17 | 0.51 |
+| 2 | REVERSION_FAST | 0.694 | +0.73 | 2.46 | -0.21 | 0.52 |
+| 3 | MOMENTUM_FAST | 0.279 | -0.50 | -2.04 | -0.57 | 0.49 |
+| 4 | BREAKOUT_HUNTER | 0.276 | -0.60 | -2.96 | -0.61 | 0.49 |
+| 5 | MOMENTUM_SWING | 0.276 | -0.64 | -4.03 | -0.66 | 0.43 |
+| 6 | TREND_RIDER | 0.275 | -0.64 | -3.57 | -0.68 | 0.46 |
+
+**Finding:** over this window mean-reversion (fade dips) decisively beat momentum
+(chase breakouts); every momentum trader lost. **`*` Magnitudes are NOT realistic
+P&L** — no transaction costs, no slippage, no position sizing, naive next-bar
+scoring, 267 trades. The numbers **rank** traders relative to each other; they do
+not promise returns. Adding costs/sizing is the next refinement.
+
+**Internal tension (the whole point of a society):** the backtest champion is a
+dip-buyer whose "today" picks (DXYZ/ASTS/RKLB — beaten-down space names) are
+exactly the falling-knife behavior the persona Risk-Officer layer flags as
+dangerous in a high-valuation regime (dot-com analog). The human + Risk Officer
+adjudicate between the empirical champion and the defensive persona consensus.
+
+### SpaceX handling (private)
+
+SpaceX is **private — no ticker, no price; monitor-only** (honors
+`watchlist/spacex_ipo_2026_event.md`). The society trades the SpaceX **theme** via
+public proxies in the lake: **DXYZ** (Destiny Tech100 NAV proxy, fetched
+2026-06-13), **RKLB** (purest launch comparable), ASTS / PL / LUNR / STRL / IRDM /
+GSAT, and LMT / NOC / BA. No SpaceX price is ever fabricated.
+
+## Evolution + competition (演化 + 競賽)
+
+- `simulation/strategy_agent.py` — parameterized genome (lookback, entry_threshold,
+  momentum_tilt, ...) so mutation actually changes backtest behavior.
+- `simulation/tournament.py` — cross-regime competition (bull/bear/chop); ranks by
+  a blend of average AND **worst-regime** fitness (worst-regime is half the score)
+  to penalize curve-fitting.
+- `simulation/evolution/evolution_engine.py` — generational loop: compete → select
+  elites → reflection-mutate the worst → breed offspring → novelty-inject empty
+  niches → next generation → evolution log. Multi-regime mandatory; every promotion
+  human-gated. Demo: an offspring lifted the champion 0.630 → 0.683 across 3 gens.
+- `simulation/macro_data_provider.py` (Step 2) — Macro Sentinel feeding
+  `MarketContext` (Buffett Indicator, bubble flag, yields, net-liquidity proxy,
+  TW/US spread); synthetic default, optional FRED (never-raise), PIT-flagged.
+
 ## Fitness (multi-dimensional, anti curve-fit)
 
 `performance_tracker.compute_fitness` blends: risk-adjusted return (Calmar/Sortino)

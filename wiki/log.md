@@ -698,3 +698,15 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **端到端自測**(全綠):高估值 tape(BI 225%, bubble on)→ 4 防禦 vs 1 參與 → **防禦共識:停手新倉 + 攜 5 條 mandated hedge**;lone-bull roster → TailRisk 被強制注回;normal regime → partial、無強制。8 模組 self-test 全綠、wiki lint OK。
 - **溶入憲法**:`CLAUDE.md §10` 新增「高估值強制避險條文」+ persona 工件入 canonical 清單。`DEBATE_PROGRAM.md` 新增 §6b(roster + 強制規則 + entry `run_persona_debate`);`multi_round_debate/SKILL.md` 補 personas input;`wiki/26` 補 persona 段。
 - **下一步(Risk Officer 路線圖,未做)**:Step 2 `macro_data_provider.py`(US 10Y/2Y/real yield、WALCL/TGA/RRP 流動性 proxy、台美估值 spread,嚴格 PIT)→ 餵 `MarketContext`;Step 3 bubble risk score + dot-com 類比反省模板 + 高估值 regime 給 hedging/niche 更高排名權重。
+
+## 2026-06-13(d)— feat | 演化引擎 + 競賽 + Step 2/3 + 真實 FOM 宇宙競賽(含 SpaceX sleeve)
+- 主理人指令:「繼續做(Step 2/3)然後開始演化跟競賽」+「讓交易員在我的 FOM 全宇宙選股看績效排名,一定要納入 SpaceX」。
+- **演化substrate**:`simulation/strategy_agent.py`(參數化 genome:lookback/entry_threshold/momentum_tilt/max_actions → 行為隨基因變,突變才有意義);`mutator.py` 加 `mutate_random`(seeded、有界)+ genome bounds。
+- **競賽**:`simulation/tournament.py`(bull/bear/chop 多 regime,排名 = 0.5×平均 + 0.5×**最差 regime** fitness,結構性懲罰 curve-fit)。
+- **演化引擎**:`simulation/evolution/evolution_engine.py`(世代循環:compete→選 elites→對最差者 reflection-mutate→繁殖 offspring→空 niche 注入新血→演化日誌;多 regime 強制、promotion 一律 human-gate;demo:offspring 把冠軍 0.630→0.683)。
+- **Step 2**:`simulation/macro_data_provider.py`(Buffett Indicator/bubble flag/10Y-2Y-real yield/WALCL-TGA-RRP 淨流動性/台美估值 spread → `MarketContext`;synthetic 預設、FRED 選用 never-raise、`is_point_in_time` 誠實標注:synthetic 非 PIT、歷史回放須 ALFRED vintage)。
+- **Step 3**:`performance_tracker.bubble_risk_score`(透明 0..1 composite,非學習模型);`ranking_system` 加 `HIGH_VALUATION_WEIGHTS`(高估值 regime 重 drawdown/regime-stability/niche、輕 hit-quality)+ `rank(regime=)`;`reflection_engine` 高估值 regime 對資本保全弱軸附 dot-com 30-50% 回撤壓測模板。
+- **真實宇宙競賽(主菜)**:`simulation/universe_competition.py` — 6 trader genome 在 **130 檔 FOM 篩選宇宙 + SpaceX sleeve**、湖內 PIT 價、window 2026-02-04..06-12(90 交易日)、`llm=none`(規則策略 KPI-eligible)。**結果**(`outputs/trading-society-competition-2026-06-13.json`):**MEAN_REVERSION 奪冠 fit 0.717**、REVERSION_FAST 次;3 個 momentum trader 全虧(MOMENTUM_FAST/BREAKOUT/SWING/TREND_RIDER fit ~0.28)。**發現:此窗逢低承接完勝追突破**。冠軍今日訊號(recommend-only):DXYZ/ADBE/BLDP long;SpaceX sleeve:DXYZ/ASTS/RKLB long。
+- **誠實警示(重要)**:報酬量級(+1.02 等)**非真實 P&L**(無手續費/滑價/部位 sizing、267 筆、next-bar naive 計分)——只作 trader **相對排名**,不承諾報酬。且冠軍=逢低承接,其 SpaceX 選股(DXYZ/ASTS/RKLB 皆深跌)正是 persona 避險層警告的「高估值接刀」——**社會內部張力本身就是價值**,由 human + Risk Officer 裁決。recommend-only,不取代 canonical 10-signal 與 Risk Officer 閘。
+- **SpaceX 處理**:私有公司=monitor-only(不捏造 ticker/價,honors `watchlist/spacex_ipo_2026_event.md`);今日拉入 DXYZ(556)/IRDM(1256)/GSAT(1256)入湖(湖 gitignored);可交易 proxy = DXYZ/RKLB/ASTS/PL/LUNR/STRL/IRDM/GSAT/LMT/NOC/BA。
+- 12 模組 self-test 全綠;wiki/26 增「Live result + 演化/競賽 + SpaceX」段;EVOLUTION_PROGRAM status 更新。

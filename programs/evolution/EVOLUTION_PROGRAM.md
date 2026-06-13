@@ -66,11 +66,19 @@ This is the Phase-3 destination. Phase-2 ships the **base** mutator
 
 ## 4. Implementation status
 
-- DONE (base): `simulation/evolution/mutator.py` -- bounded reversible mutation +
-  niche-aware novelty injection, human-gated, deterministic.
+- DONE (base): `simulation/evolution/mutator.py` -- bounded reversible mutation
+  (`apply_reflection` + `mutate_random`) + niche-aware novelty injection,
+  human-gated, deterministic.
 - DONE (feeders): `simulation/ranking_system.py`, `simulation/reflection_engine.py`.
-- TODO (Phase 3 full): `EvolutionEngine` orchestrating the 7-step cycle on a
-  monthly schedule; multi-regime re-test harness wiring; evolution log format
-  in `wiki/` (research) with lineage diagrams.
+- DONE (substrate): `simulation/strategy_agent.py` -- parameterized genome so
+  mutation changes backtest behavior; `simulation/tournament.py` -- cross-regime
+  competition ranked by avg + worst-regime fitness.
+- DONE (engine): `simulation/evolution/evolution_engine.py` -- the generational
+  cycle (compete -> elites -> reflect-mutate worst -> breed -> novelty-inject ->
+  evolution log). Multi-regime mandatory; promotion human-gated; nothing active.
+- DONE (real run): `simulation/universe_competition.py` -- traders compete on the
+  REAL FOM universe + SpaceX sleeve on lake PIT prices; ranked leaderboard.
+- TODO: monthly schedule wiring; transaction-cost / position-sizing realism in the
+  scorer; lineage diagrams in `wiki/`; FRED-vintage PIT macro for historical replay.
 
 **End of Evolution Program design. All impl work restates the four PPST layers.**

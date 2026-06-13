@@ -26,17 +26,25 @@ import copy
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-# Safe bounds for the tunable params a Reflection proposal may touch.
+# Safe bounds for the tunable params a Reflection proposal may touch, plus the
+# strategy-genome params the Evolution/Tournament layers perturb.
 PARAM_BOUNDS: Dict[str, tuple] = {
     "position_size_scale": (0.25, 2.0),
     "stop_tightness": (0.0, 1.0),
     "regime_filter_strictness": (0.0, 1.0),
-    "entry_threshold": (0.0, 1.0),
+    "entry_threshold": (0.0, 0.10),
     "trail_exit": (0.0, 1.0),
     "min_holding_periods": (0, 30),
     "max_concurrent": (1, 20),
     "niche_lock": (0, 1),
+    # strategy genome (simulation/strategy_agent.py)
+    "lookback": (1, 20),
+    "momentum_tilt": (-1.0, 1.0),
+    "max_actions": (1, 5),
 }
+# Params that are integers (rounded after perturbation).
+_INT_PARAMS = {"min_holding_periods", "max_concurrent", "niche_lock",
+               "lookback", "max_actions"}
 # Max fractional change applied per mutation step (controlled evolution).
 MAX_STEP = 0.25
 
@@ -119,6 +127,34 @@ def _default_for(name: str) -> float:
     if name in ("max_concurrent",):
         return 5
     return round((lo + hi) / 2.0, 4)
+
+
+def mutate_random(config: AgentConfig, rng, magnitude: float = 0.20,
+                  n_params: int = 2) -> "AgentConfig":
+    """
+    Produce a CANDIDATE offspring by perturbing up to n_params genome params
+    within bounds, using the supplied seeded rng (random.Random) for
+    reproducibility. Bounded (controlled evolution). Returns a new AgentConfig
+    (active state is the caller's concern; nothing here is capital-active).
+    """
+    cand = config.clone()
+    tunable = [k for k in cand.params.keys() if k in PARAM_BOUNDS] or \
+        ["entry_threshold", "lookback"]
+    rng.shuffle(tunable)
+    for name in tunable[:max(1, n_params)]:
+        lo, hi = PARAM_BOUNDS[name]
+        old = cand.params.get(name, _default_for(name))
+        span = (hi - lo)
+        delta = rng.uniform(-magnitude, magnitude) * span
+        new = _clamp(name, old + delta)
+        if name in _INT_PARAMS:
+            new = int(round(new))
+        else:
+            new = round(new, 4)
+        cand.params[name] = new
+    cand.version = config.version + 1
+    cand.lineage = config.lineage + [config.agent_id]
+    return cand
 
 
 def propose_novelty_injection(filled_niches: List[str],
