@@ -144,6 +144,37 @@ public proxies in the lake: **DXYZ** (Destiny Tech100 NAV proxy, fetched
 2026-06-13), **RKLB** (purest launch comparable), ASTS / PL / LUNR / STRL / IRDM /
 GSAT, and LMT / NOC / BA. No SpaceX price is ever fabricated.
 
+## grok2.md integration — real data sources + regime guardrails (溶入憲法)
+
+**Data-source probe (2026-06-14):** which sources can actually fetch?
+
+| source | status | what it gives the society |
+|---|---|---|
+| **FRED** | ✅ live | macro composite (credit/curve/VIX/M2/liquidity) + **real Buffett Indicator** = NCBEILQ027S / GDP ≈ **218.5%** (`simulation/macro_risk.py`); ALFRED `vintage_date` for true PIT |
+| **Finviz Elite** | ✅ live (key OK) | **real industry sectors** for the concentration cap (NVDA→Semiconductors, KLAC→Semiconductor Equipment, LMT→Aerospace & Defense) + valuation (median P/E 25.4) (`simulation/finviz_data.py`) |
+| **Polygon** | ✅ prices; ⚠ capex | prices fine; free-tier financials have **no capex line item** for many names → capex stays a flagged proxy (`simulation/capex_provider.py`) |
+| **Finnhub** | ❌ | key is an empty placeholder in `.env` |
+
+The portfolio now runs on real data: real Buffett Indicator 218.5, 6 live FRED
+series, and the sector cap binds on **real Finviz industries** (Semiconductor
+Equipment & Materials capped at exactly 35%, separate from Semiconductors at 9%).
+
+**Regime guardrails** (`simulation/regime_filter.py`, governed by [[../CLAUDE]] §10):
+grok2.md's `evaluate_market_regime()` + the Regime_Filter hard cases —
+
+- **HARD_DEFENSE** (liquidity draining + gold > BTC): small-cap allocation cap = 0,
+  defensive floor ≥60%, strict winsorization.
+- **PARADIGM_BREAKTHROUGH** (capex > 25% + risk appetite): **Momentum Decoupling
+  Lock** — reverse-shorts on AI leaders (NVDA/SMCI/AVGO/ASML/TSM/ORCL) blocked
+  (anti-Gamma-squeeze).
+- **MEAN_REVERSION** otherwise; valuation floor still applies.
+
+Plus the **3 Ground-Truth invariants** (small-cap right-to-zero truncation;
+sovereign/geopolitical-immunity guardrail; paradigm-squeeze short-block) and the
+**century regime matrix 1900-2026** (`simulation/data/century_regimes.json`,
+Grade-D reference). The live regime today classifies **MEAN_REVERSION** (liquidity
+not draining, capex strong but BTC/gold neutral).
+
 ## Stage 1 — historical competition: Risk Officer as a trader (2018–2026)
 
 `simulation/historical_competition.py` runs 7 traders — including a **RISK_OFFICER

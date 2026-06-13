@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "title": "Century-scale macro regime matrix 1900-2026 (7 phases, US/EU/Asia x large/small cap)",
+    "source": "grok2.md lines ~280-530 (principal-provided 'Ground Truth' ML training matrix)",
+    "ingested_by": "Trading Society / regime_filter",
+    "as_of_timestamp": "2026-06-14",
+    "grade": "D",
+    "caveats": [
+      "Grade-D historical synthesis (LLM-generated), designated by the principal as ML ground truth / regime reference.",
+      "Many names are delisted, private, asset classes, or non-US (illustrative regime exemplars, NOT tradeable tickers). Never leak into outputs/picks-*.",
+      "Used for regime CHARACTER + the derived guardrails, not as a tradeable universe.",
+      "The durable value is the regime taxonomy + the hard rules in regime_filter.py, not the symbols."
+    ]
+  },
+  "phases": [
+    {"phase": 1, "years": "1900-1928", "label": "industrial_steel_hegemony_ww1_roaring20s",
+     "macro": "Globalization 1.0, gold standard, 2nd industrial revolution, WWI, credit-fueled exuberance",
+     "leaders": ["X", "RDS", "RCA(early)", "Mitsui/Mitsubishi"],
+     "laggards": ["Imperial Russian bonds(->0, 1917)", "1910 Shanghai/HK rubber shells(->0)", "Florida land bubble shells"],
+     "lesson": "Small-cap melt-ups (1910 rubber, 1920s radio) end in liquidity-lock right-to-zero."},
+    {"phase": 2, "years": "1929-1945", "label": "great_depression_goldstandard_collapse_ww2",
+     "macro": "1929 crash, tariff protectionism, Keynesianism, total war",
+     "leaders": ["HDG(Homestake gold, 1933 revaluation)", "defense aviation(early Grumman)", "IG Farben"],
+     "laggards": ["RCA(-90%)", "GM(-85%)", "~9000 bankrupt local banks", "South Manchuria Railway(->0)"],
+     "lesson": "Liquidity shock -> gold + sovereign defense win; leveraged/financials go to zero."},
+    {"phase": 3, "years": "1946-1969", "label": "bretton_woods_coldwar_nifty_fifty",
+     "macro": "USD-gold peg, baby boom, Marshall Plan, space race",
+     "leaders": ["XRX", "IBM", "Polaroid(Nifty Fifty)", "SONY", "Toyota", "VW"],
+     "laggards": ["Pennsylvania Railroad", "1962 Tronics-boom small caps(-80%)", "old Shanghai stocks(1949->delisted)"],
+     "lesson": "Tronics boom/bust: themed '-onics/Space' small caps round-trip; 1949 China = sovereign zero."},
+    {"phase": 4, "years": "1970-1981", "label": "stagflation_oil_crises_volcker",
+     "macro": "Bretton Woods collapse, twin oil crises, great stagflation, Volcker violent hikes",
+     "leaders": ["XOM", "Mobil", "SLB", "0001.HK(Cheung Kong)", "Total"],
+     "laggards": ["Nifty Fifty(XRX/Polaroid/Avon -70%+ in 1973-74)", "British Leyland(nationalized->0)", "Hang Seng -91% 1973-74"],
+     "lesson": "Stagflation -> energy is the only inflation hedge; prior-era darlings de-rate -70%."},
+    {"phase": 5, "years": "1982-1999", "label": "pc_revolution_great_moderation_dotcom",
+     "macro": "Inflation tamed, globalization 2.0, component standardization, internet ignition",
+     "leaders": ["MSFT", "CSCO", "VOD", "9984(SoftBank)", "DELL", "AMZN(early)"],
+     "laggards": ["IBM", "Yamaichi Securities(1997 bankruptcy)", "Pets.com(->0)", "1997 Asian-crisis high-debt financials"],
+     "lesson": "Paradigm breakthrough (PC/Netscape) -> leaders melt up; no-profit small caps round-trip to zero."},
+    {"phase": 6, "years": "2000-2019", "label": "capital_rebalance_qe_fang_monopoly",
+     "macro": "Dot-com bust, GFC, QE era, FANG platform monopoly, smartphone",
+     "leaders": ["ASML", "MC(LVMH)", "TSM", "0700.HK(Tencent)", "FANG"],
+     "laggards": ["Nokia(post-iPhone)", "DB", "Wirecard(2020 fraud->0)", "Sharp/Toshiba", "2015 China-concept small caps"],
+     "lesson": "Platform monopoly + QE -> mega-cap dominance; Wirecard = extreme small-cap fat-tail fraud."},
+    {"phase": 7, "years": "2020-2026", "label": "everything_bubble_highrate_washout_genai",
+     "macro": "Infinite QE -> high-rate washout -> generative AI landing; concentration at 1930s extreme",
+     "leaders": ["NVDA", "LLY", "ASML", "TSM", "SMCI(early)", "MSTR", "AVGO", "ORCL"],
+     "laggards": ["INTC", "tariff-hit EU manufacturing", "China high-leverage property(Evergrande->0)", "no-profit SPAC shells"],
+     "lesson": "AI paradigm + extreme crowding -> Momentum Decoupling Lock (block reverse shorts on NVDA/SMCI-early); only hard cash-flow + physical moats are priced."}
+  ]
+}

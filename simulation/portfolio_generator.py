@@ -100,6 +100,17 @@ def sector_of(ticker: str) -> str:
     return SECTOR_OF.get(ticker, "other")
 
 
+def _finviz_industry_map(tickers: List[str]) -> Dict[str, str]:
+    """Real Finviz Elite industry labels for the candidate names; {} on failure."""
+    if not tickers:
+        return {}
+    try:
+        from simulation.finviz_data import get_sector_map
+        return get_sector_map(tickers, use_industry=True)
+    except Exception:
+        return {}
+
+
 # ---------------------------------------------------------------------------
 # Matrix helper
 # ---------------------------------------------------------------------------
@@ -173,9 +184,9 @@ def _weights_with_champion_boost(fitness: Dict[str, float]) -> Dict[str, Any]:
 # Steps 4-6: macro + capex -> defensive ratio
 # ---------------------------------------------------------------------------
 def macro_risk_score(as_of: Optional[str] = None,
-                     buffett_indicator: float = 225.0) -> Dict[str, Any]:
-    """Real FRED-based macro risk (review item B). Valuation (buffett_indicator)
-    is still an override input (no clean free FRED source) and is flagged."""
+                     buffett_indicator: Optional[float] = None) -> Dict[str, Any]:
+    """Real FRED-based macro risk (review item B). Valuation now uses a REAL
+    Buffett Indicator (FRED NCBEILQ027S / GDP) when buffett_indicator is None."""
     r = real_macro_risk(as_of=as_of, pit=bool(as_of), buffett_indicator=buffett_indicator)
     bi = r["inputs"].get("buffett_indicator", buffett_indicator)
     return {"score_0_100": r["score_0_100"], "posture": r["posture"],
@@ -219,11 +230,15 @@ def defensive_leg_ratio(macro_0_100: float, capex_0_100: float,
 # Steps 7-8: assemble portfolio
 # ---------------------------------------------------------------------------
 def _core_growth_leg(longs: Dict[str, List[str]], weights: Dict[str, float],
-                     growth_ratio: float, max_names: int = 14
+                     growth_ratio: float, max_names: int = 14,
+                     sector_fn=None
                      ) -> Tuple[List[Dict[str, Any]], float, Dict[str, float]]:
     """Society-weighted vote -> growth leg, with single-name and single-sector
     concentration caps (review item). Returns (leg, realized_weight, sector_mix).
-    Weight clipped away by caps is reported so the caller routes it to cash."""
+    Weight clipped away by caps is reported so the caller routes it to cash.
+    sector_fn(ticker)->label defaults to the hardcoded map; pass a real Finviz
+    industry map for a finer, data-driven sector cap."""
+    sec = sector_fn or sector_of
     score: Dict[str, float] = {}
     backers: Dict[str, List[str]] = {}
     for tr in TRADERS:
@@ -244,17 +259,17 @@ def _core_growth_leg(longs: Dict[str, List[str]], weights: Dict[str, float],
     # cap 2: single sector -- scale an over-weight sector's names down
     sec_sum: Dict[str, float] = {}
     for t, w in wt.items():
-        sec_sum[sector_of(t)] = sec_sum.get(sector_of(t), 0.0) + w
-    for sec, s in sec_sum.items():
+        sec_sum[sec(t)] = sec_sum.get(sec(t), 0.0) + w
+    for sname, s in sec_sum.items():
         if s > MAX_SECTOR_WEIGHT and s > 0:
             scale = MAX_SECTOR_WEIGHT / s
             for t in wt:
-                if sector_of(t) == sec:
+                if sec(t) == sname:
                     wt[t] *= scale
     realized = sum(wt.values())
     leg = []
     for t in sorted(wt, key=wt.get, reverse=True):
-        leg.append({"ticker": t, "weight": round(wt[t], 4), "sector": sector_of(t),
+        leg.append({"ticker": t, "weight": round(wt[t], 4), "sector": sec(t),
                     "n_backers": len(backers[t]), "backers": backers[t][:4]})
     sector_mix = {}
     for c in leg:
@@ -288,8 +303,32 @@ def generate_portfolio(horizon: str, lookback_days: int,
     high_val = bool(macro["bubble_flag"] or macro["buffett_indicator"] > 200)
     dleg = defensive_leg_ratio(macro["score_0_100"], capex["score_0_100"], high_val)
 
+    # grok2.md regime guardrail (veto-class). HARD_DEFENSE raises the defensive
+    # floor; PARADIGM_BREAKTHROUGH locks reverse-shorts on AI leaders.
+    regime = None
+    try:
+        from simulation.regime_filter import from_live as _regime_from_live
+        regime = _regime_from_live(macro, capex).to_dict()
+        floor = regime.get("defensive_floor", 0.0)
+        if floor > dleg["defensive_ratio"]:
+            dleg = {**dleg, "defensive_ratio": round(floor, 3),
+                    "core_growth_ratio": round(1 - floor, 3),
+                    "regime_floor_applied": regime["regime"]}
+    except Exception:
+        regime = None
+
+    # Real Finviz industry map for the candidate names -> finer concentration cap;
+    # fall back to the hardcoded sector map where Finviz has no label.
+    candidate_names = sorted({t for tr in TRADERS if tr["type"] != "defensive"
+                              for t in longs.get(tr["id"], [])})
+    finviz_map = _finviz_industry_map(candidate_names)
+    sector_source = "finviz_industry" if finviz_map else "hardcoded"
+
+    def _sec(t: str) -> str:
+        return finviz_map.get(t) or sector_of(t)
+
     core, realized_growth, sector_mix = _core_growth_leg(
-        longs, wb["weights"], dleg["core_growth_ratio"])
+        longs, wb["weights"], dleg["core_growth_ratio"], sector_fn=_sec)
     # weight clipped by concentration caps is routed to cash (conservative)
     cap_shortfall = round(max(0.0, dleg["core_growth_ratio"] - realized_growth), 4)
     defensive = _defensive_leg(tickers, dleg["defensive_ratio"] + cap_shortfall)
@@ -313,9 +352,11 @@ def generate_portfolio(horizon: str, lookback_days: int,
         "transaction_cost_bps": TRANSACTION_COST_BPS,
         "macro_risk_environment": macro,
         "capex_momentum": capex,
+        "regime_guardrail": regime,
         "defensive_decision": dleg,
         "concentration_caps": {"max_name": MAX_NAME_WEIGHT,
                                "max_sector": MAX_SECTOR_WEIGHT,
+                               "sector_source": sector_source,
                                "realized_growth_weight": realized_growth,
                                "cap_shortfall_to_cash": cap_shortfall,
                                "sector_mix": sector_mix},
@@ -354,11 +395,12 @@ def main() -> int:
         "disclaimer": (
             "Stage 2 forward portfolio. Recommend-only RESEARCH. Not a capital order; "
             "does not replace the canonical 10-signal pipeline or the Risk-Officer "
-            "gate. Macro = real FRED composite (valuation input still an override); "
-            "weights include a 10bps round-trip cost; single-name <=10% and single-"
-            "sector <=35% caps enforced. Capex is real (polygon) when a cache exists, "
-            "else a flagged price-momentum proxy. Promotion to capital use requires "
-            "human selection + Risk-Officer gate + cross-review."),
+            "gate. Macro = real FRED composite incl. a real Buffett Indicator "
+            "(NCBEILQ027S/GDP); sector cap uses real Finviz industries; weights "
+            "include a 10bps round-trip cost; single-name <=10% / single-sector "
+            "<=35% caps; grok2.md regime guardrail applied (HARD_DEFENSE floor / "
+            "Momentum-Decoupling-Lock). Capex is real (polygon) when cached, else a "
+            "flagged price proxy. Promotion needs human + Risk-Officer gate + review."),
     }
 
     out = REPO / "outputs" / f"trading-society-portfolio-{result['as_of_timestamp'][:10]}.json"
@@ -383,6 +425,12 @@ def _print_summary(r: Dict[str, Any]) -> None:
               f"{mr['n_live_series']} live FRED series; BI {mr['buffett_indicator']})")
         cx = p["capex_momentum"]
         print(f"  Capex momentum: {cx['score_0_100']}/100 (source={cx['source']})")
+        rg = p.get("regime_guardrail")
+        if rg:
+            lock = " MOM-DECOUPLING-LOCK" if rg.get("momentum_decoupling_lock") else ""
+            print(f"  Regime guardrail: {rg['regime']} "
+                  f"(smallcap_cap={rg['smallcap_allocation_cap']}, "
+                  f"floor={rg['defensive_floor']}, winsor={rg['winsorization']}){lock}")
         dd = p["defensive_decision"]
         cc = p["concentration_caps"]
         print(f"  Posture: {dd['posture']} -> defensive {dd['defensive_ratio']:.0%} / "

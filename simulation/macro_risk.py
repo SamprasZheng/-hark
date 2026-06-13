@@ -29,8 +29,19 @@ Run: python simulation/macro_risk.py   (live FRED pull; falls back per-series)
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Load .env so the (public) FRED CSV calls + any keyed calls work in a bare run.
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+try:
+    import simulation._env  # noqa: F401
+except Exception:
+    pass
 
 # Core FRED series -> the reliable risk gauges (credit/curve/vix/m2/liquidity).
 FRED = {
@@ -96,6 +107,17 @@ def _fetch_series(series_id: str, start: str, vintage: Optional[str]):
         return []
 
 
+def real_buffett_indicator(vintage: Optional[str] = None) -> Optional[float]:
+    """Real Buffett Indicator from FRED = nonfinancial corporate equities
+    (NCBEILQ027S, Z.1, $mn) / GDP ($bn) x 100. Both quarterly + lagged -> no
+    lookahead. Returns None if FRED unavailable."""
+    equities = _fetch("NCBEILQ027S", vintage)   # millions USD
+    gdp = _fetch("GDP", vintage)                # billions USD
+    if equities and gdp and gdp > 0:
+        return round((equities / 1e3) / gdp * 100.0, 1)  # equities->bn, /gdp_bn
+    return None
+
+
 def gather_macro_inputs(as_of: Optional[str] = None, pit: bool = True,
                         buffett_indicator: Optional[float] = None) -> MacroInputs:
     vintage = as_of if (pit and as_of) else None
@@ -147,7 +169,19 @@ def gather_macro_inputs(as_of: Optional[str] = None, pit: bool = True,
     if btc is not None:
         mi.values["btc"] = btc
         mi.sources["btc"] = live
-    put("buffett_indicator", buffett_indicator, "override" if buffett_indicator else "fallback")
+    # Valuation: prefer a real Buffett Indicator (FRED NCBEILQ027S / GDP) over an
+    # override; fall back to override, then a flagged constant.
+    if buffett_indicator is not None:
+        mi.values["buffett_indicator"] = buffett_indicator
+        mi.sources["buffett_indicator"] = "override"
+    else:
+        real_bi = real_buffett_indicator(vintage)
+        if real_bi is not None:
+            mi.values["buffett_indicator"] = real_bi
+            mi.sources["buffett_indicator"] = "fred-derived(NCBEILQ027S/GDP)"
+        else:
+            mi.values["buffett_indicator"] = FALLBACK["buffett_indicator"]
+            mi.sources["buffett_indicator"] = "fallback"
     return mi
 
 
