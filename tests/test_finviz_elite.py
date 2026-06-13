@@ -92,6 +92,15 @@ def test_resolve_target_universe():
     assert FE.resolve_target("fom")[0] == "universe"
 
 
+def test_resolve_target_stage_filters_local_not_finviz_codes():
+    # supercycle/uptrend are LOCAL stage filters (not Finviz f= codes that could 11k)
+    kind, flt, tks = FE.resolve_target("supercycle")
+    assert kind == "stage" and flt == "supercycle" and tks is None
+    assert FE.STAGE_FILTERS["supercycle"] == ("🌊",)
+    assert "supercycle" not in FE.PRESETS          # removed the broken f= preset
+    assert "🚀" in FE.STAGE_FILTERS["rally_stage"]
+
+
 def test_write_scan_recommendation(tmp_path):
     from sharks.scoring import rally_signal as RS
     sigs = [RS.assess("AAA", {"technical": 70, "capital": 65, "fundamental": 75}, prior_streak=3),
@@ -124,6 +133,48 @@ def test_resolve_target_scope_vs_filters():
     assert kind == "filters" and tks is None and flt == FE.PRESETS["dipbuy"]
     kind, flt, tks = FE.resolve_target("ta_alltime_b30h") # raw f=
     assert kind == "filters" and flt == "ta_alltime_b30h"
+
+
+def test_dimension_columns_is_comprehensive():
+    # all columns 0..70 requested → robust to id↔column mapping (fixes growth/52W gaps)
+    ids = FE.DIMENSION_COLUMNS.split(",")
+    assert "0" in ids and "70" in ids and len(ids) >= 60
+
+
+def test_trend_stage_supercycle_and_3mo():
+    sup = {"Perf Month": "8%", "Perf Quart": "20%", "Perf Half Y": "40%",
+           "Perf Year": "120%", "SMA50": "10%", "SMA200": "35%"}
+    assert FE.trend_stage(sup).startswith("🌊")          # sustained + stack + big year
+    three = {"Perf Month": "5%", "Perf Quart": "12%", "Perf Half Y": "8%",
+             "Perf Year": "10%", "SMA50": "6%", "SMA200": "4%"}
+    assert "月線三連陽" in FE.trend_stage(three)          # sustained + stack, modest year
+    # reclaimed 50MA but still below 200MA (deep base) → 醞釀/即將起漲 (more precise than 🚀)
+    early = {"Perf Month": "6%", "Perf Quart": "-3%", "SMA50": "2%", "SMA200": "-5%"}
+    assert FE.trend_stage(early).startswith("🌱")
+    # above BOTH MAs but not yet sustained (quarter flat) → 起漲
+    rising = {"Perf Month": "6%", "Perf Quart": "-3%", "SMA50": "4%", "SMA200": "3%"}
+    assert FE.trend_stage(rising).startswith("🚀")
+    chop = {"Perf Month": "-4%", "Perf Quart": "-2%", "SMA50": "-3%", "SMA200": "-8%"}
+    assert "震盪" in FE.trend_stage(chop)
+    assert FE.trend_stage({"Ticker": "X"}) == ""          # no perf data → blank
+
+
+def test_trend_stage_pre_ignition_predict():
+    # reclaimed 50MA, still below 200MA (deep base), month flat/up → 醞釀/即將起漲
+    r = {"Perf Month": "1%", "Perf Quart": "-8%", "SMA50": "3%", "SMA200": "-18%"}
+    assert FE.trend_stage(r).startswith("🌱")
+    assert FE.STAGE_FILTERS["pre_ignition"] == ("🌱",)
+    assert FE.resolve_target("pre_ignition")[0] == "stage"
+
+
+def test_liquid_filter_drops_microcaps():
+    real = {"Price": "12", "Avg Volume": "1.5M", "Market Cap": "3B", "ROE": "15%"}
+    assert FE._liquid(real) is True                                       # real, liquid company
+    assert FE._liquid({"Price": "0.8", "Avg Volume": "2M", "ROE": "5%"}) is False   # penny
+    assert FE._liquid({"Price": "20", "Avg Volume": "50K", "ROE": "5%"}) is False   # illiquid
+    assert FE._liquid({"Price": "20", "Avg Volume": "2M", "Market Cap": "40M", "ROE": "5%"}) is False  # microcap
+    assert FE._liquid({"Price": "20", "Avg Volume": "2M"}) is False       # 基– (no fundamental) = 墓園型 junk
+    assert FE._liquid({"Price": "20", "Avg Volume": "2M"}, require_fundamental=False) is True
 
 
 def test_build_url_custom_view_and_columns():

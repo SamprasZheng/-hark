@@ -52,6 +52,42 @@ PRESETS: dict[str, str] = {
                         "sh_price_o5,fa_sales5years_pos,fa_grossmargin_pos"),
 }
 
+# 趨勢階段過濾(LOCAL,不靠 Finviz screener 碼)— 抓精選池 → 用 trend_stage 在本地篩。
+# Finviz 的 f= 過濾碼格式易錯(錯碼會被忽略、回傳整個市場),所以這類「型態」一律本地過濾。
+STAGE_FILTERS: dict[str, tuple[str, ...]] = {
+    "supercycle": ("🌊",),              # 只要 supercycle候選(站上50&200+月/季/半年漲+年漲≥30%)
+    "uptrend_3mo": ("🌊", "📈"),        # 月線三連陽級別(多頭排列+持續)
+    "monthly3": ("🌊", "📈"),
+    "pre_ignition": ("🌱",),            # **預測**:醞釀/底部翻揚,深跌有空間、剛站回 50 線、即將起漲
+    "predict": ("🌱",),
+    "rally_stage": ("🌊", "📈", "🚀", "🌱"),  # 含起漲/醞釀
+}
+
+
+def _liquid(row: dict, *, min_price: float = 5.0, min_avgvol: float = 500_000,
+            min_mktcap: float = 300e6, require_fundamental: bool = True) -> bool:
+    """中高 beta、可交易、真公司:價格 + 均量 + 市值門檻 + 要有基本面欄位(濾掉 KEEX/MMA
+    那種『基–』的微型垃圾與墓園型)。"""
+    price = _num(row, "Price")
+    if price is not None and price < min_price:
+        return False
+    avgvol = _num(row, "Avg Volume", "Average Volume")
+    if avgvol is not None and avgvol < min_avgvol:
+        return False
+    mktcap = _num(row, "Market Cap")
+    if mktcap is not None and mktcap < min_mktcap:
+        return False
+    if require_fundamental:                     # 真公司:至少有一個基本面欄位(墓園型多為 基–)
+        if all(_num(row, c) is None for c in ("ROE", "Gross Margin", "P/E", "Profit Margin")):
+            return False
+    return True
+
+
+# Finviz Index filter codes (best-effort; verify in the Finviz UI). src=sp500 / src=r2k
+# restrict the whole-market scan to those indices = quality, near S&P500/Russell-2000.
+_INDEX_FILTER = {"sp500": "idx_sp500", "r2k": "idx_rut", "russell2000": "idx_rut",
+                 "midcap": "idx_sp400"}
+
 _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
 
 # To get the 9 dimensions, the export must include the technical/fundamental/ownership
@@ -62,8 +98,10 @@ _TOKEN_ENV = "FINVIZ_ELITE_API_KEY"
 # superset works. If the rally dims come back mostly None, open your Finviz Custom
 # view, pick those columns, and pass the URL's v=/c= via `view=`/`cols=` overrides.
 DIMENSION_VIEW = "152"
-DIMENSION_COLUMNS = ("1,2,3,7,9,10,18,21,22,23,27,29,30,33,35,38,39,41,"
-                     "43,44,48,50,53,54,57,59,62,63,64,65")
+# Request ALL columns (0..70) so every dim's source column is present — robust to the
+# exact id↔column mapping (finviz_row_to_dims matches by HEADER NAME). Fixes the
+# growth / 52W-High coverage gaps from narrow id guesses.
+DIMENSION_COLUMNS = ",".join(str(i) for i in range(71))
 # The 9 evaluation dims finviz_row_to_dims produces (for coverage reporting).
 DIMS9 = ("technical", "capital", "fundamental", "valuation", "growth",
          "risk", "analyst", "dist_ath_pct", "news")
@@ -454,8 +492,35 @@ def flags_coverage(flags_by_ticker: Optional[dict]) -> dict:
             "dark": sorted(k for k, c in fields.items() if c == 0)}
 
 
+def trend_stage(row: dict) -> str:
+    """Classify long-term uptrend stage from Finviz multi-period perf + MA stack
+    (snapshot proxy for 月線三連陽 / 大浪; true monthly-candle counting needs price
+    history). Returns 🌊 supercycle候選 / 📈 月線三連陽(多頭排列)/ 🚀 起漲 / 〰️ 震盪."""
+    pm = _num(row, "Perf Month", "Performance (Month)")
+    pq = _num(row, "Perf Quart", "Perf Quarter", "Performance (Quarter)")
+    ph = _num(row, "Perf Half Y", "Perf Half", "Performance (Half Year)")
+    py = _num(row, "Perf Year", "Performance (Year)")
+    s50 = _num(row, "SMA50", "SMA50 (Relative)")
+    s200 = _num(row, "SMA200", "SMA200 (Relative)")
+    if pm is None and pq is None:
+        return ""
+    stack = (s50 is not None and s50 > 0) and (s200 is not None and s200 > 0)  # 站上 50 & 200
+    sustained = (pm or 0) > 0 and (pq or 0) > 0 and (ph is None or ph > 0)      # 多月持續
+    if stack and sustained and (py or 0) >= 30:
+        return "🌊 supercycle候選"
+    if stack and sustained:
+        return "📈 月線三連陽(多頭排列)"
+    # 醞釀/底部翻揚:站回 50 線、但仍在 200 線下(深跌有空間)、月線剛轉 → 預測「即將三連陽」
+    if (s50 is not None and s50 > 0) and (s200 is not None and s200 < 0) and (pm or 0) >= -2:
+        return "🌱 醞釀(底部翻揚·即將起漲)"
+    if (pm or 0) > 0 and (s50 or -1) > 0:
+        return "🚀 起漲"
+    return "〰️ 震盪/整理"
+
+
 def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz",
-                              flags_by_ticker: Optional[dict] = None):
+                              flags_by_ticker: Optional[dict] = None,
+                              stages: Optional[dict] = None):
     """Write the data-driven re-recommendation to outputs/finviz-scan-<date>.json
     (ranked, with the buy-consider shortlist) — the Finviz analog of FOM's output."""
     import json
@@ -465,10 +530,12 @@ def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz",
     outputs_dir.mkdir(parents=True, exist_ok=True)
     date = datetime.now().strftime("%Y-%m-%d")
     flags_by_ticker = flags_by_ticker or {}
+    stages = stages or {}
     def row(s):
         d = {"ticker": s.ticker, "composite": s.composite, "dna_match": s.dna_match,
              "streak": s.streak, "conviction": s.conviction,
-             "buy_consider": s.buy_consider, "has_fuel": s.has_fuel, "dims": s.dims}
+             "buy_consider": s.buy_consider, "has_fuel": s.has_fuel,
+             "trend_stage": stages.get(s.ticker, ""), "dims": s.dims}
         f = flags_by_ticker.get(s.ticker)
         if f:
             d["flags"] = f
@@ -553,6 +620,8 @@ def resolve_target(arg: str) -> tuple[str, Optional[str], Optional[str]]:
         pass
     if arg in ("universe", "fom", "fomuniverse", "全宇宙"):
         return "universe", None, None
+    if arg in STAGE_FILTERS:
+        return "stage", arg, None            # local trend-stage filter over the universe
     return "filters", resolve_filters(arg), None
 
 
@@ -671,14 +740,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     except Exception:
         pass
     argv = list(sys.argv[1:] if argv is None else argv)
-    # optional overrides: view=152  cols=1,2,3,...  (paste from your Finviz Custom URL)
+    # overrides: view=152  cols=1,2,3,...  src=market|universe  (src=market = 全市場掃 + 本地濾)
     view_override = cols_override = None
+    src = "universe"
     pos: list[str] = []
     for a in argv:
         if a.startswith("view="):
             view_override = a.split("=", 1)[1]
         elif a.startswith(("cols=", "columns=")):
             cols_override = a.split("=", 1)[1]
+        elif a.startswith("src="):
+            src = a.split("=", 1)[1].strip().lower()
         else:
             pos.append(a)
     mode = "tickers"
@@ -687,6 +759,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     if not pos:
         print("用法(全程 Finviz,不用 yfinance):\n"
               "  python -m sharks.data.finviz_elite rally universe   # 重掃 FOM 全宇宙→9維→排名+推薦JSON\n"
+              "  python -m sharks.data.finviz_elite rally pre_ignition src=sp500  # **預測** 即將起漲(限 S&P500,已砍墓園)\n"
+              "  python -m sharks.data.finviz_elite rally pre_ignition src=r2k    # 限 Russell 2000\n"
+              "  python -m sharks.data.finviz_elite rally supercycle src=sp500    # S&P500 🌊supercycle候選\n"
+              "  python -m sharks.data.finviz_elite rally uptrend_3mo # 池內篩 月線三連陽(加 src=market 擴全市場)\n"
               "  python -m sharks.data.finviz_elite rally space      # 題材池→Finviz t= 抓→9維→rally\n"
               "  python -m sharks.data.finviz_elite rally dipbuy      # preset(f= 過濾)\n"
               "  python -m sharks.data.finviz_elite '<scope|preset|f=>'   # 只驗證+代號清單\n"
@@ -707,6 +783,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         offline = os.environ.get("FINVIZ_OFFLINE", "").strip().lower() in ("1", "true", "yes")
 
         if arg.startswith("csv:"):
+            kind = None      # explicit CSV feed: no resolve_target → graveyard filter stays off
             # 外部 CSV 直餵(Wallmine / TradingView / 手動匯出);finviz_row_to_dims 以 header 名比對,
             # 所以任何欄位名對得上的免費 CSV 都能走同一條管線(無 Finviz 時的主路)。
             csv_path = Path(arg[4:])
@@ -725,10 +802,20 @@ def main(argv: Optional[list[str]] = None) -> int:
             try:
                 if offline:
                     raise RuntimeError("FINVIZ_OFFLINE set — skipping live pull")
-                if kind == "universe":
-                    uni = fom_universe()
-                    print(f"全宇宙掃描:{len(uni)} 檔(Finviz 批次拉取,無 yfinance)…", file=sys.stderr)
-                    rows = fetch_universe(uni, view=view, columns=columns)
+                if kind in ("universe", "stage"):
+                    if src in ("market", "sp500", "r2k", "russell2000", "midcap"):
+                        idxf = _INDEX_FILTER.get(src, "")     # sp500/r2k → Finviz index filter
+                        label = src if idxf else "全市場"
+                        print(f"{label} 掃描(Finviz → 本地濾流動性/真公司/型態)…", file=sys.stderr)
+                        rows = [r for r in fetch_screen(idxf, view=view, columns=columns) if _liquid(r)]
+                    else:
+                        uni = fom_universe()
+                        print(f"全宇宙掃描:{len(uni)} 檔(Finviz 批次拉取,無 yfinance)…", file=sys.stderr)
+                        rows = fetch_universe(uni, view=view, columns=columns)
+                    if kind == "stage":                      # keep only rows in the target stage(s)
+                        keep = STAGE_FILTERS[arg]
+                        rows = [r for r in rows if trend_stage(r).startswith(keep)]
+                        print(f"型態過濾後:{len(rows)} 檔({arg} = {''.join(keep)})", file=sys.stderr)
                 else:
                     rows = fetch_screen(flt or "", view=view, columns=columns, tickers=tks)
                 # 趁有訂閱:把原始 Finviz 匯出存 point-in-time CSV(離線回測 / 沒訂閱時 fallback)
@@ -750,12 +837,17 @@ def main(argv: Optional[list[str]] = None) -> int:
         outdir = settings.outputs_dir
         prior = RS.load_prior_streaks(outdir)
         sigs = signals_from_finviz(rows, prior_streaks=prior)
+        if kind in ("universe", "stage") or src != "universe":   # 大範圍掃 → 砍墓園型,留有料的
+            sigs = [s for s in sigs if not s.conviction.startswith("🚫")]
         flags = {}
         for r in rows:
             t = (r.get("Ticker") or r.get("ticker") or "").strip().upper()
             if t:
                 flags[t] = finviz_row_to_flags(r)
-        scan_path = write_scan_recommendation(outdir, sigs, source=arg, flags_by_ticker=flags)
+        stages = {(r.get("Ticker") or r.get("ticker") or "").strip().upper(): trend_stage(r)
+                  for r in rows}
+        scan_path = write_scan_recommendation(outdir, sigs, source=arg,
+                                              flags_by_ticker=flags, stages=stages)
         # dims coverage — so you can tell if the export is missing columns
         dims_list = [finviz_row_to_dims(r) for r in rows]
         n = len(rows) or 1
@@ -783,13 +875,18 @@ def main(argv: Optional[list[str]] = None) -> int:
             mark = ("".join(m for m, on in ((" ⚠️E", f.get("earnings_blackout")),
                                             (" 🔥sq", f.get("squeeze_watch")),
                                             (" ⛔乖離", f.get("overshoot_200d"))) if on))
-            print(f"  {s.ticker:<6} C{s.composite:>4.0f} 連{s.streak} {dstr}{mark} · {s.conviction}")
+            st = stages.get(s.ticker, "")
+            print(f"  {s.ticker:<6} C{s.composite:>4.0f} 連{s.streak} {dstr}{mark} {st} · {s.conviction}")
         blackout = [t for t, fl in flags.items() if fl.get("earnings_blackout")]
         squeeze = [t for t, fl in flags.items() if fl.get("squeeze_watch")]
         if blackout:
             print(f"⚠️ 財報黑窗(≤{EARNINGS_BLACKOUT_DAYS}日,減倉/不開新倉):{', '.join(sorted(blackout))}")
         if squeeze:
             print(f"🔥 軋空預警(Short Float≥{SQUEEZE_SHORT_FLOAT_MIN:.0f}%＋高內部人持股):{', '.join(sorted(squeeze))}")
+        # supercycle / 月線三連陽 shortlist (the 大浪 candidates)
+        wave = [s.ticker for s in sigs if stages.get(s.ticker, "").startswith(("🌊", "📈"))]
+        if wave:
+            print(f"🌊 大浪/月線三連陽候選({len(wave)}):" + ", ".join(wave[:25]))
         print(f"📄 推薦清單已寫入:{scan_path}")
         print("recommend-only · 連續起漲跨日累計(rally-state)· 永不下單")
         return 0

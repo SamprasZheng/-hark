@@ -54,6 +54,27 @@ python -m sharks.data.finviz_elite rally mis_killed_2022
 內部人/法人** → 餵 FOM 的 quality/valuation 維度 + dipbuy 的 quality + rally 的基本面,
 **取代手寫先驗**。(實作需在有 Finviz API 的主機跑+驗證。)
 
+## 五之二、月線三連陽 / supercycle(大浪)偵測 — 找下一個 NVDA/MU
+從「起漲(第一波)」升級到「**持續性大浪(第三浪/supercycle)**」。Finviz 快照用**多週期表現
++ 均線排列**近似月線結構(真月線 K 計數需價格歷史,見下方倉儲計畫):
+- `trend_stage(row)` 分級:
+  - **🌊 supercycle候選** = 站上 50&200 線(多頭排列)+ 月/季/半年皆漲(持續)+ 年漲≥30%
+  - **📈 月線三連陽(多頭排列)** = 站上 50&200 + 月/季/半年皆漲(年漲溫和)
+  - **🚀 起漲** = 月漲 + 剛站上 50 線(早期)· **〰️ 震盪/整理** = 其餘
+- **全市場 screener(擴大範圍、找「下一個輪到誰」)**——不限既有池:
+  - `uptrend_3mo`:多頭排列 + 季線級別上漲(月線三連陽級別)
+  - `supercycle`:多頭排列 + 半年級別上漲 + 5y 營收成長≥15% + 毛利+(找 NVDA/MU 早期形態)
+  - 跑:`python -m sharks.data.finviz_elite rally supercycle`(全美股掃,非僅 233 池)
+- **「下一個 supercycle」= 🌊 候選 ∩ 有燃料(高成長/高毛利)∩ 尚未拋物線(RSI<75、年漲非極端)**。
+  scan 會印「🌊 大浪/月線三連陽候選」清單 + 寫進 `outputs/finviz-scan-<date>.json` 的 `trend_stage`。
+
+## 五之三、真月線 K(三連陽精確計數)— 本地倉儲計畫(下一步,主機)
+Finviz 快照給不了「連續三根月 K 收紅」的精確序列。要精確抓需**價格歷史**:
+- 依你貼的方案:**yfinance(EOD)+ DuckDB + Parquet 本地倉儲**,增量更新(只補差額、防 IP 鎖)。
+- 用 `pandas_ta` 在本地算:月線三連陽、Elliott 第三浪、TD-9、布林寬度、MACD 背離。
+- 這是 yfinance 的**正當用途**(EOD/low 模式),非付費串流。**Finviz 管基本面/買盤/篩選,
+  yfinance 管價格歷史/波型** → 兩者互補。(需在主機跑;這環境無網路。)
+
 ## 六、嚴格篩選紀律(2026 非 2021)
 1. **燃料閘第一**:沒真盈利/真題材 → 不追(這是「嚴格」的核心)。
 2. **連續起漲**:單根不算,≥3 期 + composite≥62 才考慮。

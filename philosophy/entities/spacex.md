@@ -30,7 +30,7 @@ Designs, manufactures and launches rockets (Falcon 9, Starship) and operates Sta
 
 - **Musk ecosystem proxy**: TSLA and SPCX share the same sentiment driver — Elon Musk news, policy shifts (DOGE, tariffs), social-media cycles. A sharp SPCX move is a leading indicator of TSLA sentiment rotation.
 - **Nasdaq mega-cap event**: SpaceX IPO was the largest US IPO in history ($75B raised, exceeding Saudi Aramco's 2019 ~$29B). Its inclusion reshapes Nasdaq index composition and could affect QQQ/XLK weightings.
-- **AI convergence signal**: xAI merger + Starlink orbital data-centers thesis positions SPCX as an AI infrastructure play adjacent to the AI supply-chain tracked in [[../01-overview]]. If the thesis gains traction, it competes for the same capital pool as MSFT/GOOGL/AMZN hyperscaler AI capex names.
+- **AI convergence signal**: xAI merger + Starlink orbital data-centers thesis positions SPCX as an AI infrastructure play adjacent to the AI supply-chain tracked in [[../concepts/supply-chain-bottleneck]]. If the thesis gains traction, it competes for the same capital pool as MSFT/GOOGL/AMZN hyperscaler AI capex names.
 - **Competitor pressure gauge**: RKLB (Rocket Lab) and other pure-play space names face direct capital-displacement from SPCX. Monitor correlation inversion.
 
 ## Key financial facts (as of IPO, FY2025 estimates)
@@ -77,7 +77,7 @@ After blackout lifts (2026-10-08), the Compiler should check:
 
 ## Cross-references
 
-- [[../tesla]] — Musk-ecosystem sentiment co-movement; TSLA is the nearer-term Musk-proxy trade
+- [[tesla]] — Musk-ecosystem sentiment co-movement; TSLA is the nearer-term Musk-proxy trade
 - [[../../wiki/08_forward_calendar]] — 90-day blackout and re-evaluation window
 - [[../06-exclusions]] — post-IPO blackout rule
 - [[../03-long-short-taxonomy]] — short-side gating once blackout lifts
