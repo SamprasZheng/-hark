@@ -75,6 +75,18 @@ After blackout lifts (2026-10-08), the Compiler should check:
 4. S&P 500 / Nasdaq-100 inclusion decision timeline
 5. Lock-up expiry schedule and insider selling disclosures
 
+## Observed post-debut dynamics (2026-06-13, researcher)
+
+On listing day (2026-06-12) the dominant market transmission was a **capital siphon** out of listed space proxies (RKLB, ASTS, RDW, SPCE etc.) into SPCX once the marquee name became directly investable. Pre-IPO anticipation had lifted proxies (RKLB cited strong premarket +6% and multi-hundred-percent YTD runs on "substitute / validator" narrative); post-open they reversed sharply (RKLB −10–17%, ASTS −10–14%, SPCE −24–37% intraday per contemporaneous reporting and market observers). This exactly matches the "利好出盡" displacement scenario already encoded in [[../wiki/07_sector_handoff]] §3 as the falsifiable test for space-sector handoff.
+
+Musk-ecosystem split also visible: TSLA exhibited the expected modest halo (+1.8% per day-of synthesis) while SPCX became the higher-beta pure-play vehicle. Pre-IPO warnings of retail attention/capital diversion from TSLA to the "new baby" are now live data.
+
+Valuation context reinforced: ~94x trailing 2025 revenue at pricing on operating losses (Forbes pre-IPO, Damodaran intrinsic ~$1.25–1.3T vs. market $1.77T+ close). See full channels and sourced claims in the extended synthesis [[../../wiki/inbox/2026-06-13-spacex-ipo-market-impact#deep-dive-capital-rotation-musk-ecosystem-split-valuation-regime-test-as_of-2026-06-13-researcher-extension]].
+
+Options trading begins 2026-06-16 (gamma amplification risk on low float); QQQ inclusion remains the primary future mechanical-flow catalyst once profitability gates are cleared.
+
+These observations are time-stamped and do not alter the 90-day blackout or tier assignment.
+
 ## Cross-references
 
 - [[tesla]] — Musk-ecosystem sentiment co-movement; TSLA is the nearer-term Musk-proxy trade

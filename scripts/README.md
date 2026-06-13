@@ -38,6 +38,25 @@ Or use the Task Scheduler GUI:
 
 ## Note on Compiler agent collaboration
 
-The daily scripts **stage TODO files** for the human's next chat session with the Compiler agent. The system does NOT autonomously scrape news (Phase 2 will add this via Finnhub + RSS). Until then, the human + Compiler agent process each day's TODO file manually each session.
+The daily scripts **stage TODO files** for the human's next chat session with the Compiler agent. ...
 
 This is **the deliberate slow-loop design** — automation handles quant; humans + LLM handle qualitative news synthesis. Per [[../CLAUDE]] §2 SAFETY boundaries, the system never auto-trades.
+
+## Cross-review + RAG (Risk Officer guardrail)
+
+`cross-review.ps1` is the bridge for Claude (orchestrator) ↔ Grok/local (Risk Officer).
+
+New flags (2026-06 RAG upgrade):
+- `-Reviewer grok|local|codex`  (default grok)
+- `-UseRag` — calls `scripts/rag_retriever.py` (LlamaIndex/Chroma + nomic-embed-text via Ollama, or keyword fallback). Injects `rag-data/contracts/disclosures.json` (tail +500% winsorization + TD-9 sell hard-disable) + PIT/raw rules into every prompt.
+- Always uses `--prompt-file` (the only reliable path through PS→WSL).
+
+Example (from Windows, Claude-driven):
+```powershell
+.\scripts\cross-review.ps1 src\sharks\scoring\fom.py -UseRag -Task "對照 disclosures.json 檢查 tail risk 與 TD-9 sell 禁令" -Effort high
+.\scripts\cross-review.ps1 -Reviewer local -UseRag -Target "working"
+```
+
+The retriever is the concrete implementation of the "本地 RAG 知識庫 + 雙軌隔離 + 唯讀審查閘" steel guardrail described in the long 2026-06 evolution log. It prevents the Finviz DNA / FOM from being overfitted by future Aider or LLM automation.
+
+See also: `rag-data/contracts/disclosures.json`, `scripts/rag_retriever.py`, `wiki/25_cross_tool_agent_orchestration.md`, previous `outputs/cross-review/`.

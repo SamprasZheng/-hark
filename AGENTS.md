@@ -75,6 +75,8 @@ This is the only genuinely *new* content here — rules for running several agen
 
 - **Tooling — `scripts/cross-review.ps1`.** The Main Orchestrator initiates a cross-review by running this script, which sends a target (a file / commit / git range / the working tree) to Grok headless (`grok --prompt-file`, read-only) and writes a timestamped report to `outputs/cross-review/`. Grok plays the Risk Officer reviewer; it never writes, commits, or trades. Usage: `.\scripts\cross-review.ps1 <target> [-Task "..."] [-Json] [-Effort high]` (default target `working`). This is the **read-only** path; it does **not** authorise a write-loop. See `wiki/25_cross_tool_agent_orchestration.md` for the fuller integration taxonomy.
 
+- **Tooling — `scripts/grok-kol.ps1`.** Researcher-role pull of recent X/KOL chatter on a topic via Grok headless with web/X search on (`--permission-mode auto` — `default` blocks the search tool). Writes a **Grade-D** immutable capture to `raw/kol_signals/x-kol-<slug>-<date>.md` carrying `source_first_visible_at` + `ingested_at`. Value is **event detection + sentiment extremes only** — it can inform a watchlist but **never** triggers or sizes a position (CLAUDE.md §5; grade D never opens a position alone). `.\scripts\grok-kol.ps1 <topic> [-UseKolIndex] [-DryRun]`.
+
 ---
 
 ## 4. Frequency mode is set by market state, not the calendar

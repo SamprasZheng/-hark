@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "version": "2026-06-13",
+    "source": "Finviz 20-year backtest + DNA formula review (Grok Risk Officer + principal insights)",
+    "type": "overfitting-guard-contract",
+    "purpose": "RAG-retrievable steel guardrail. Must be surfaced by any local retriever (LlamaIndex/Chroma/Aider) or cross-review prompt when touching scoring, backtest, DNA, fom, rally_signal, or signal generators. Prevents survivor bias, tail overfitting, and invalid top-calling in automated evolution of the system.",
+    "core_philosophy": "不抄最低點、買修復確認、破月線就降槓桿、靠觸發不靠信仰。Dynamic model + probability, evidence-gated, no subjective prediction."
+  },
+  "overfitting_guards": [
+    {
+      "id": "tail-winsorization-2026-06",
+      "severity": "P0",
+      "title": "Single-position max realized gain smoothing (Winsorization) for EV and scoring",
+      "rule": "In any FOM / DNA / backtest expectation calculation or optimizer, cap the contribution of any single ticker's realized gain at +500%. Extreme tails (examples from history: AXTI ~+4907%, RKLB ~+2214%) must be clipped for robustness testing.",
+      "rationale": "System +20.5% avg per trade was almost entirely supported by two lotto-style tail events. This is classic survivor / tail bias. Without clipping, future optimizers (Aider, RL, or manual) will chase the exact features of those two names and overfit.",
+      "enforcement_points": [
+        "src/sharks/scoring/fom.py (post-score or EV aggregation)",
+        "backtest/ code and any fom-backtest-*.json generators",
+        "dna_* routines or config/dna_rules.json consumers",
+        "Any script that computes '超額收益' or strategy expectancy"
+      ],
+      "rag_retrieval_tags": ["tail-risk", "winsorize", "survivor-bias", "axTI", "rklb", "overfit", "dna", "fom"],
+      "test": "Re-run the 20y Finviz DNA recipe with +500% cap — does win-rate and expectancy remain positive and stable?"
+    },
+    {
+      "id": "td9-sell-hard-disable-2026-06",
+      "severity": "P0",
+      "title": "TD-9 (magic nine) asymmetry — BUY only, SELL forbidden",
+      "rule": "TD-9 / Demark TD-9 SELL (or 'sell-9', 'nine sell setup') signals are HARD DISABLED everywhere. No code path may generate a short or exit signal purely from TD-9 sell count. Exit / de-risk logic may ONLY use: rejection bar (price action confirmation) + break of monthly moving average (e.g. monthly MA10 or equivalent trailing confirmation) + the existing '破月線就降槓桿' rule.",
+      "rationale": "Backtest data confirms buy-9 (抄底) delivers ~2x baseline EV. sell-9 (逃頂) is ineffective or noise. Any sell-9 trigger is anti-reflexive top-guessing and violates the '靠觸發不靠信仰' + no subjective prediction principle.",
+      "enforcement_points": [
+        "src/sharks/scoring/deep_research.py",
+        "src/sharks/scoring/evidence_card.py",
+        "src/sharks/scoring/rally_signal.py and any TD-9 usage",
+        "fom_alpha, ma_scanner, or custom signal modules",
+        "All wiki/05_recommendations and outputs/picks-*.json generation paths"
+      ],
+      "rag_retrieval_tags": ["td9", "sell9", "magic-nine", "demark", "asymmetric", "exit-logic", "no-top-call"],
+      "test": "Grep entire src/ + wiki/ for any 'TD-9.*SELL' or 'sell.*9' trigger that is not wrapped in a disabled comment or routed exclusively to rejection+MA logic."
+    }
+  ],
+  "additional_rag_contracts": [
+    "Always surface philosophy/09-point-in-time.md and raw/ immutability rule on any data-layer or backtest review.",
+    "Cross-review reports (outputs/cross-review/) and wiki/log.md entries are first-class retrieval sources for historical discipline.",
+    "When reviewing Finviz / DNA / fom changes, the retriever MUST pull this file + the two guards above.",
+    "Enforce 03-long-short-taxonomy.md four-quadrant routing on every signal: 2 long_new (genuine bull only), 2 short_new (genuine bear or sentiment-bull via Put-only), 6 position_followup. No padding.",
+    "TD-9 (concepts/td-9-sequential.md) volume-validation guard is mandatory: volume contracting + sentiment peak = true exhaustion (short/trim); volume expanding + fundamental validation = continuation (hold/ignore TD-9).",
+    "No p-hacking: LLM strategy generation must be constrained to hyperparameter ranges only; never rewrite core quant logic. Validation must use Combinatorial Purged Cross-Validation (CPCV), not single-axis walk-forward. Any backtest-driven rewrite loop is forbidden.",
+    "Crypto high-freq (weekend or mode-switch) MUST use ccxt_client.py (public Websocket/REST, read-only, no keys) for orderbook + OHLCV. yfinance/Polygon/Finnhub are insufficient for crypto L2/orderbook imbalance."
+  ],
+  "retrieval": {
+    "preferred_sources": [
+      "rag-data/contracts/disclosures.json",
+      "philosophy/09-point-in-time.md",
+      "CLAUDE.md",
+      "AGENTS.md",
+      "sharks.md",
+      "wiki/log.md (recent entries)",
+      "outputs/cross-review/*.md",
+      "docs/finviz_screening_recipe.md",
+      "docs/rally_catcher_model.md",
+      "src/sharks/scoring/fom.py"
+    ],
+    "index_dirs": ["wiki", "philosophy", "docs", "outputs/cross-review", "rag-data", "src/sharks/scoring"],
+    "embed_model": "nomic-embed-text",
+    "llm": "qwen2.5-coder:32b (local) or grok (cloud reviewer)"
+  }
+}

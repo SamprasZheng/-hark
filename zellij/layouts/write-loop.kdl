@@ -1,0 +1,61 @@
+// zellij/layouts/write-loop.kdl
+// 3-Pane Isolation Write-Loop Layout for $hark
+// Orchestrator (Claude/main) + Writer (Aider + local LLM in worktree) + Risk Officer (cross-review.ps1 -UseRag)
+//
+// Per AGENTS.md §3 and wiki/25 §3b:
+// - Every agent loads sharks.md + CLAUDE.md + AGENTS.md + philosophy/09-point-in-time.md in its worktree first.
+// - Writer ONLY works inside a fresh dated worktree (never on main).
+// - Small commits with role tags: [writer], [risk], etc.
+// - Risk Officer review (via cross-review.ps1 -UseRag) is MANDATORY before any merge.
+// - No direct writes to main or review worktree.
+// - RAG (disclosures.json) is automatically pulled on every Risk Officer invocation to protect DNA from overfitting.
+//
+// Usage (in WSL/Linux where Zellij is installed):
+//   1. (One-time) mkdir -p ~/.config/zellij/layouts
+//   2. cp zellij/layouts/write-loop.kdl ~/.config/zellij/layouts/
+//   3. Setup worktree from main repo:
+//        git worktree add ../$hark-write-20260613 -b write-loop/2026-06-13
+//   4. Launch:
+//        zellij --layout write-loop
+//        or zellij --layout ~/.config/zellij/layouts/write-loop.kdl
+//
+// Inside the session:
+// - Orchestrator pane: plan, tell Writer what to do, after Writer is done run the Risk review command.
+// - Writer pane: cd to your worktree dir, run aider with local model.
+// - Risk Officer pane: run the cross-review (it will use -UseRag to pull the contracts).
+// Switch panes with Alt + arrow or your Zellij keys.
+// To exit layout: Ctrl+q (or your configured quit).
+//
+// When done:
+// - Risk Officer produces report in outputs/cross-review/
+// - Human (orchestrator) reviews the report.
+// - If clean: human merges from the worktree branch.
+// - Discard: git worktree remove ../$hark-write-... && git branch -D write-loop/...
+
+layout {
+    default_tab "write-loop" {
+        // Top pane: Orchestrator (Claude Code / main human + AI coordinator)
+        pane name="orchestrator" size="28%" {
+            command "clear; printf '\n=== ORCHESTRATOR (Claude / Main) ===\n\n1. FIRST: cat sharks.md CLAUDE.md AGENTS.md philosophy/09-point-in-time.md\n2. Plan the change (small scope).\n3. Instruct Writer pane (give exact task + worktree path).\n4. After Writer commits small [writer] changes, dispatch Risk Officer:\n     cd /mnt/d/DOT/\$hark   # or your repo\n     ./scripts/cross-review.ps1 <target> -UseRag -Reviewer local -Task \"fidelity to rag-data/contracts/disclosures.json + worktree rules\"\n   (or -Reviewer grok for cloud leg)\n5. Read the report in outputs/cross-review/. Gate or request fix.\n6. Only human merges after clean gate.\n\nShared memory = sharks.md + CLAUDE.md only. No lookahead.\n'; exec $SHELL"
+            border_enabled true
+        }
+
+        // Bottom split: Writer (left) + Risk Officer (right)
+        pane split_direction="vertical" {
+            // Writer: Aider + local LLM, working exclusively in an isolated worktree
+            pane name="writer" {
+                command "clear; printf '\n=== WRITER (Aider + Local LLM in WORKTREE) ===\n\n*** NEVER EDIT ON MAIN ***\n\nSetup (run once outside or here):\n  git worktree add ../$hark-write-$(date +%Y%m%d-%H%M) -b write-loop/2026-06-13\n  cd ../$hark-write-...\n\nThen run Aider (example with Ollama Qwen2.5-Coder):\n  aider --model ollama:qwen2.5-coder:32b \\\n        --no-git --watch-files \\\n        --message \"[writer] small focused change per orchestrator task. Load rules first.\"\n\nCommit discipline:\n  git commit -m \"[writer] short description\"\n\nAfter done, tell Orchestrator the branch/diff.\nUse RAG retriever manually if needed:\n  python3 scripts/rag_retriever.py --query \"my task context\" --simple\n\nAlways respect point-in-time and raw/ boundaries.\n'; exec $SHELL"
+                border_enabled true
+            }
+
+            // Risk Officer: ready to execute the guarded cross-review (the new RAG-enabled one)
+            pane name="risk-officer" {
+                command "clear; printf '\n=== RISK OFFICER (cross-review.ps1 + RAG) ===\n\nThis pane is pre-loaded for the read-only gate.\n\nRecommended invocation (with RAG pulling disclosures.json + PIT + TD-9/tail guards):\n  ./scripts/cross-review.ps1 <target-or-diff> \\\n      -UseRag \\\n      -Reviewer local \\\n      -Task \"對照 rag-data/contracts/disclosures.json 檢查 tail-winsorization 與 td9-sell-hard-disable + worktree isolation + point-in-time fidelity\"\n\nFor cloud leg (higher effort):\n  ./scripts/cross-review.ps1 <target> -UseRag -Reviewer grok -Effort high\n\nAlways run from repo root so AGENTS.md §0 loads.\nReport lands in outputs/cross-review/\n\nIf clean: tell Orchestrator \"gate passed\".\nIf issues: list exact violations with line cites.\n\nRemember: you have veto power. No padding, no raw/ writes, no lookahead.\n'; exec $SHELL"
+                border_enabled true
+            }
+        }
+    }
+}
+
+// Optional: add a status bar or tab bar if desired in your Zellij config.
+// This layout focuses on isolation and the exact commands that embed the RAG guardrails.

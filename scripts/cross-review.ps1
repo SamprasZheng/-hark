@@ -1,61 +1,66 @@
 <#
 .SYNOPSIS
-  Cross-review a file, commit, or diff with Grok (headless) as a Risk Officer reviewer.
+  Cross-review a file, commit, or diff with Grok (headless) OR local LLM as Risk Officer reviewer.
+  Supports RAG-augmented context from local Chroma/LlamaIndex (rag_retriever.py).
 
 .DESCRIPTION
   scripts/cross-review.ps1 -- the quality-control layer for the Sharks multi-agent setup.
-  Sends a target (a file / a git commit / a git range / the working tree) to Grok Build
-  running headless in WSL, captures the review, and writes a timestamped report.
+  Sends a target to the chosen reviewer (Grok cloud / local Ollama / codex) running headless,
+  optionally injects saturated RAG context (wiki/ + philosophy/ + cross-review reports +
+  rag-data/contracts/disclosures.json), and writes a timestamped report.
 
-  READ-ONLY by design: Grok only reads the repo and emits text -- it never writes, never
-  commits, never trades. This is the "Main Orchestrator initiates cross-review" step from
-  wiki/grok.md; Grok plays the Risk Officer cross-reviewer (AGENTS.md sections 2 and 3).
-  A WRITE-loop (Grok editing in a worktree) is deliberately OUT OF SCOPE here -- that needs
-  worktree isolation plus the Risk Officer merge gate.
+  The RAG path pulls the contractualized overfitting guards (tail winsorization + TD-9 sell
+  hard-disable) so that future AI automation of the Finviz DNA / FOM cannot chase survivor
+  bias or invalid top-calling.
 
-  Mechanism (see memory grok-headless-cross-review):
-    - Grok is invoked via `grok --prompt-file <rel>`. The inline `-p "..."` form gets
-      TRUNCATED to its first word through the PowerShell -> wsl -> bash quoting layers, so
-      we always pass the prompt as a file (referenced by a relative, '$'-free path).
-    - It runs INSIDE the repo so Grok auto-loads sharks.md / CLAUDE.md / AGENTS.md
-      (AGENTS.md first-action protocol). Bare dirs (/tmp) produce empty output.
+  READ-ONLY by design. This is the Main Orchestrator → Risk Officer cross-review step from
+  wiki/grok.md + the RAG injection pattern described in the 2026-06 evolution log.
+
+  Mechanism:
+    - Always uses --prompt-file (inline -p truncates through PS→WSL→bash).
+    - Runs inside repo so AGENTS.md §0 + sharks.md/CLAUDE.md load.
+    - -UseRag calls scripts/rag_retriever.py (LlamaIndex/Chroma/Ollama or keyword fallback)
+      and prepends a 【RAG 檢索之專案歷史與契約上下文】 block.
 
 .PARAMETER Target
   What to review (default "working"). One of:
-    <path>      a file (absolute, or relative to repo root) -> review its content
-    working     uncommitted working-tree changes            -> git diff
-    staged      staged changes                              -> git diff --cached
-    <sha>       a single commit                             -> git show <sha>
-    <a>..<b>    a commit range                              -> git diff <a>..<b>
+    <path>      a file ... | working | staged | <sha> | <a>..<b>
+
+.PARAMETER Reviewer
+  "grok" (default, cloud), "local" (Ollama qwen2.5-coder:32b or similar), "codex".
+
+.PARAMETER UseRag
+  Call scripts/rag_retriever.py first and inject 【RAG ...】 context block containing
+  disclosures.json (tail winsorization + TD-9 sell disable), PIT rules, etc.
 
 .PARAMETER Task
-  Extra focus instruction appended to the default review rubric. Optional.
+  Extra focus for the reviewer (e.g. "對照 disclosures.json 檢查 tail risk").
 
 .PARAMETER Json
-  Request --output-format json from Grok (best-effort parse; raw is saved either way).
+  Request json output (best effort).
 
 .PARAMETER Model
-  Optional Grok model id (passed as -m).
+  Model override (for grok: -m; for local may be passed to ollama).
 
 .PARAMETER Effort
-  Optional reasoning effort: low | medium | high | xhigh | max.
+  Reasoning effort for grok.
 
 .PARAMETER MaxTurns
-  Max Grok agent turns (default 12).
+  Max turns (default 12 for grok).
 
 .PARAMETER KeepPrompt
-  Keep the temp prompt file under .scratch/ for debugging.
+  Keep the generated prompt under .scratch for debugging.
 
 .EXAMPLE
-  .\scripts\cross-review.ps1
-  .\scripts\cross-review.ps1 HEAD
-  .\scripts\cross-review.ps1 main..HEAD
-  .\scripts\cross-review.ps1 AGENTS.md -Task "Check fidelity vs CLAUDE.md"
-  .\scripts\cross-review.ps1 src\sharks\scoring\fom.py -Effort high -Json
+  .\scripts\cross-review.ps1 -UseRag -Task "檢查 fom.py 的 tail winsorization 與 TD-9 sell 硬禁"
+  .\scripts\cross-review.ps1 src\sharks\scoring\fom.py -Reviewer local -UseRag
+  .\scripts\cross-review.ps1 -Target "main..HEAD" -Reviewer grok -Effort high
 #>
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)] [string]$Target = "working",
+    [ValidateSet("grok", "local", "codex")][string]$Reviewer = "grok",
+    [switch]$UseRag,
     [string]$Task = "",
     [switch]$Json,
     [string]$Model = "",
@@ -94,10 +99,31 @@ else {
     throw "Unexpected repo path '$repoRoot' (expected a drive path like D:\...)."
 }
 
+# --- WSL python / ollama presence (for RAG and local reviewer) -------------
+$pythonBin = (wsl -e bash -lc "command -v python3 2>/dev/null || command -v python 2>/dev/null" | Out-String).Trim()
+$ollamaBin = (wsl -e bash -lc "command -v ollama 2>/dev/null" | Out-String).Trim()
+
+# --- RAG context injection (if -UseRag) ------------------------------------
+$ContextBlock = ""
+if ($UseRag) {
+    Write-Host "🔍 [RAG] 正在調用 Chroma + LlamaIndex 檢索合規上下文 (disclosures.json + PIT + 契約)..." -ForegroundColor Cyan
+    $ragCmd = "cd '$repoWsl' && python3 scripts/rag_retriever.py --query `"$Task`" --k 6"
+    if ($Model) { $ragCmd += " --model `"$Model`"" }
+    $ragRaw = (wsl -e bash -lc $ragCmd 2>&1 | Out-String).Trim()
+    if ($ragRaw) {
+        $ContextBlock = "`n【RAG 檢索之專案歷史與契約上下文】`n$ragRaw`n"
+    } else {
+        $ContextBlock = "`n【RAG】檢索無回傳或失敗，繼續使用純提示。`n"
+    }
+}
+
 # --- grok present on WSL PATH? ---------------------------------------------
 $grokBin = (wsl -e bash -lc "command -v grok 2>/dev/null" | Out-String).Trim()
-if ([string]::IsNullOrWhiteSpace($grokBin)) {
-    throw "grok not found on the WSL PATH. Install Grok Build in WSL first (curl -fsSL https://x.ai/cli/install.sh | bash)."
+if ($Reviewer -eq "grok" -and [string]::IsNullOrWhiteSpace($grokBin)) {
+    throw "grok not found on the WSL PATH (needed for -Reviewer grok). Install first."
+}
+if ($UseRag -and [string]::IsNullOrWhiteSpace($pythonBin)) {
+    Write-Host "[RAG] Warning: python3 not found in WSL; RAG may have fallen back to keyword mode." -ForegroundColor Yellow
 }
 
 # --- gather the target content ---------------------------------------------
@@ -144,7 +170,7 @@ function Get-TargetBlock {
 
 $tb = Get-TargetBlock -t $Target
 
-# --- build the prompt (double-quoted here-string: escape the literal $hark) -
+# --- build the prompt (double-quoted here-string) ----------------------------
 $rubric = @"
 This is a COMPLETE, self-contained, READ-ONLY task. You have everything you need.
 Do NOT ask for clarification. Do NOT defer to a human. Do NOT say the task is underspecified.
@@ -154,6 +180,14 @@ You are the Risk Officer cross-reviewer for the Sharks (`$hark) project (AGENTS.
 You have already loaded sharks.md, CLAUDE.md and AGENTS.md per the AGENTS.md first-action protocol;
 apply those rules.
 
+核心 DNA 護欄（來自 rag-data/contracts/disclosures.json，RAG 必須強制 surfaced）：
+- 單筆最大收益平滑閘門（Winsorization）：任何 EV / FOM / backtest 計算中，單一 ticker 實現收益上限 +500%。
+  尾部事件 (AXTI ~+4907%, RKLB ~+2214%) 不得主導系統期望值。
+- TD-9 / magic nine SELL 訊號硬禁：完全閹割 sell-9 觸發。逃頂只允許「拒絕棒 + 破月線 MA（例如 monthly MA10）」移動停利。
+  買 9 有效，賣 9 無效。嚴禁任何「猜頂」的反身性預測。
+
+$ContextBlock
+
 REVIEW TARGET -- $($tb.kind)
 ------------------------------------------------------------------------------
 $($tb.body)
@@ -162,8 +196,9 @@ $($tb.body)
 Review the target above. Produce EXACTLY these numbered sections, then stop:
 
 1. CORRECTNESS - logic errors, bugs, or claims that do not hold. Cite line/section, or write NONE.
-2. CONTRACT FIDELITY - any violation or drift vs sharks.md, CLAUDE.md, AGENTS.md, or the philosophy
-   layer (roles, source grading A-E, the 10-signal contract). Cite the rule, or write NONE.
+2. CONTRACT FIDELITY - any violation or drift vs sharks.md, CLAUDE.md, AGENTS.md, rag-data/contracts/disclosures.json,
+   philosophy/09-point-in-time, or the philosophy layer (roles, source grading, 10-signal contract, raw/ immutability).
+   Cite the rule, or write NONE.
 3. POINT-IN-TIME - any lookahead, missing as_of_timestamp, or backtest-integrity risk
    (philosophy/09-point-in-time). Write NONE if clean.
 4. RISK DISCIPLINE - exclusion-list, position/sector-cap, or max-DD concerns
@@ -178,17 +213,42 @@ if (-not [string]::IsNullOrWhiteSpace($Task)) {
 # write prompt as UTF-8 without BOM so grok parses it cleanly
 [System.IO.File]::WriteAllText($promptWin, $rubric, (New-Object System.Text.UTF8Encoding($false)))
 
-# --- build + run the grok command ------------------------------------------
+# --- write prompt (UTF-8 no BOM, required for reliable parse) ---------------
+[System.IO.File]::WriteAllText($promptWin, $rubric, (New-Object System.Text.UTF8Encoding($false)))
+
+# --- dispatch by reviewer --------------------------------------------------
 $fmt = "plain"; if ($Json) { $fmt = "json" }
-$bash = "cd '$repoWsl' && grok --prompt-file '$promptRel' --output-format $fmt --permission-mode default --max-turns $MaxTurns --no-memory --disable-web-search --no-alt-screen"
-if (-not [string]::IsNullOrWhiteSpace($Model))  { $bash += " -m '$Model'" }
-if (-not [string]::IsNullOrWhiteSpace($Effort)) { $bash += " --reasoning-effort '$Effort'" }
+$reviewerLabel = $Reviewer
+$raw = ""
 
-Write-Host "[cross-review] target : $($tb.kind)"
-Write-Host "[cross-review] grok   : $grokBin (mode=$fmt, max-turns=$MaxTurns)"
-Write-Host "[cross-review] running headless review (this spends Grok credits, read-only)..."
+if ($Reviewer -eq "local") {
+    Write-Host "⚡ [local] 啟動本地開源模型進行扛量審查 (ollama)..." -ForegroundColor Green
+    if ([string]::IsNullOrWhiteSpace($ollamaBin)) {
+        throw "ollama not found in WSL. Run setup_local_llm.ps1 or 'ollama serve' first."
+    }
+    $localModel = if ($Model) { $Model } else { "qwen2.5-coder:32b" }
+    # Pipe the already-written prompt file (more reliable than huge inline)
+    $bashLocal = "cd '$repoWsl' && cat '$promptRel' | ollama run $localModel"
+    Write-Host "[cross-review] target : $($tb.kind) | local model=$localModel"
+    $raw = (wsl -e bash -lc $bashLocal | Out-String)
+    $reviewerLabel = "local ($localModel)"
+}
+elseif ($Reviewer -eq "codex") {
+    Write-Host "[codex] (placeholder) routing to codex-style local or other; falling back to grok behavior for now." -ForegroundColor Yellow
+    $Reviewer = "grok"   # fallthrough
+}
 
-$raw = (wsl -e bash -lc $bash | Out-String)
+if ($Reviewer -eq "grok") {
+    $bash = "cd '$repoWsl' && grok --prompt-file '$promptRel' --output-format $fmt --permission-mode default --max-turns $MaxTurns --no-memory --disable-web-search --no-alt-screen"
+    if (-not [string]::IsNullOrWhiteSpace($Model))  { $bash += " -m '$Model'" }
+    if (-not [string]::IsNullOrWhiteSpace($Effort)) { $bash += " --reasoning-effort '$Effort'" }
+
+    Write-Host "[cross-review] target : $($tb.kind)"
+    Write-Host "[cross-review] grok   : $grokBin (mode=$fmt, max-turns=$MaxTurns, rag=$UseRag)"
+    Write-Host "[cross-review] running headless review (this spends Grok credits, read-only)..."
+
+    $raw = (wsl -e bash -lc $bash | Out-String)
+}
 
 # --- best-effort JSON extraction -------------------------------------------
 $reviewText = $raw
@@ -210,17 +270,39 @@ if ([string]::IsNullOrWhiteSpace($reviewText)) {
     $reviewText = "(no output returned by grok -- re-run with -KeepPrompt and inspect $promptRel)"
 }
 
+# --- best-effort JSON extraction (for grok json mode) -----------------------
+$reviewText = $raw
+if ($Json) {
+    try {
+        $obj = $raw | ConvertFrom-Json -ErrorAction Stop
+        foreach ($f in @("result", "response", "text", "content", "message")) {
+            if (($obj.PSObject.Properties.Name -contains $f) -and $obj.$f) {
+                $reviewText = [string]$obj.$f; break
+            }
+        }
+    }
+    catch {
+        Write-Host "[cross-review] JSON parse failed; keeping raw output." -ForegroundColor Yellow
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($reviewText)) {
+    $reviewText = "(no output returned by reviewer -- re-run with -KeepPrompt and inspect $promptRel)"
+}
+
 # --- write the report ------------------------------------------------------
 $gitBranch = (git -C $repoRoot rev-parse --abbrev-ref HEAD 2>$null | Out-String).Trim()
 $gitHead   = (git -C $repoRoot rev-parse --short HEAD       2>$null | Out-String).Trim()
+$ragNote = if ($UseRag) { " + RAG (disclosures + PIT)" } else { "" }
 $report = @"
 # Cross-review report
 
 - generated : $stamp (local)
 - target    : $($tb.kind)
 - repo      : $repoRoot @ $gitBranch ($gitHead)
-- reviewer  : Grok headless ($grokBin), mode=$fmt, max-turns=$MaxTurns
-- note      : READ-ONLY -- Grok did not write to the repo. Recommend-only; verify before acting.
+- reviewer  : $reviewerLabel ($grokBin), mode=$fmt, max-turns=$MaxTurns$ragNote
+- note      : READ-ONLY -- reviewer did not write to the repo. Recommend-only; verify before acting.
+              RAG (when enabled) forces disclosures.json (tail-winsor + TD-9 sell hard-disable) + philosophy/09-point-in-time.
 
 ---
 

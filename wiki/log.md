@@ -12,6 +12,19 @@ Where `<action>` ∈ `{ingest, query, lint, recommendation, halt, universe, raw_
 
 ---
 
+## [2026-06-13 20:30 TW] research | SpaceX (SPCX) market-impact deep dive — capital siphon, Musk proxy split, valuation/bubble test case (researcher extension)
+
+- **Scope**: Web + X-sourced deep dive on *how* the 2026-06-12 SPCX listing transmitted into the broader stock market (beyond the initial day-1 snapshot). Focused on observable channels: liquidity absorption, sector proxy rotation ("siphon effect"), Musk ecosystem bifurcation (TSLA vs. new high-beta vehicle), valuation regime stress test (extreme P/S on losses), and forward mechanical flows (gamma from June 16 options, eventual QQQ inclusion).
+- **Sources (all graded & time-stamped)**: 
+  - Primary reporting (Yahoo Finance, Business Insider, Forbes Jun-4/12-13 coverage, Reuters snippets) for price action ($135 price → $150 open → $160.95 close +19.22%, intraday high ~$176.5, $75B raise, ~$1.77T→$2.1T+ mkt cap).
+  - Aswath Damodaran Substack (2026-06-13) — intrinsic equity value ~$1.25–1.3T anchor vs. market pricing.
+  - SpotGamma (May 2026) — options launch June 16 and expected gamma amplification on low-float mega-cap.
+  - X semantic results (2026-06-12/13 posts by verified/analyst accounts): contemporaneous documentation of proxy reversals (RKLB −10–17%, ASTS −10–14%, SPCE −24–37% etc.) and "siphon / sell-the-news" framing.
+- **Added to wiki**: Extended `[[inbox/2026-06-13-spacex-ipo-market-impact]]` with new "Deep Dive" section (capital rotation data + falsifiable hooks tied to existing triggers). Light update to `[[../../philosophy/entities/spacex]]` (new "Observed post-debut dynamics" subsection + cross-link to the extended synthesis). No changes to blackout, tier, or any recommendation-bearing files.
+- **Reconciliation with prior**: Fully consistent with initial compiler synthesis (index moves, TSLA halo, RKLB/SPCE displacement, P/S ~95× bubble flag, 90-day blackout, Y2-midterm IPO-trap timing). The siphon provides *live confirmation* of the exact falsifiable test already written in [[../wiki/07_sector_handoff]] §3 and the "AI IPO reception" case in [[../wiki/07_ai_bubble_audit]]. Strengthens liquidity-fishbowl and late-cycle IPO supply observations in [[../docs/ipo_wave_dotcom_analog]] without introducing lookahead or new position implications.
+- **Point-in-time**: All new claims anchored to 2026-06-12/13 source visibility windows. as_of_timestamp discipline observed. Grade D (social/KOL) informs monitoring only — never standalone for any future signal.
+- **No output impact**: Zero effect on picks, no raw/ touches, no philosophy/ principle changes. Pure researcher synthesis + entity extension.
+
 ## [2026-06-13 11:00 TW] ingest | Grok agent-integration conversation → cross-tool orchestration page (grade D, reconciled)
 
 - **Source**: a single Grok conversation dump (`wiki/grok.md`, scratch paste, 1835 lines with literally duplicated blocks) in which Grok self-describes how to be wired as a headless cross-reviewer/Risk Officer under Claude — grok agent stdio/ACP, custom MCP server, Claude subagents, Zellij/tmux layouts, multi-agent orchestration patterns. **Grade D** (LLM self-description / opinion; per [[../CLAUDE]] §5 informs research only, never opens a position — N/A here, it's ops tooling).
