@@ -95,3 +95,25 @@ data/akashic/*
 
 # Derived OCR working copies of broker screenshots (originals kept as provenance)
 raw/portfolio/_resized/
+
+# ── Personal / confidential ─────────────────────────────────────────────────
+# The main repo is PUBLIC (for external framework review). These hold portfolio,
+# personal-finance, and proprietary KOL-tracking data and must NEVER be published.
+# (Already-public files are untracked via `git rm --cached`; history still needs a
+#  separate filter-repo scrub — see wiki/log.md.)
+portfolio/
+wiki/personal/
+wiki/positions.md
+raw/principal/
+raw/macro/principal-*.md
+raw/kol_signals/
+!raw/kol_signals/.gitkeep
+outputs/daily-brief-*
+.grok/
+raw/portfolio/
+!raw/portfolio/.gitkeep
+outputs/*.bak
+outputs/daily_push_*
+wiki/05_recommendations/2026-05-30-portfolio-audit-and-employee-plan.md
+wiki/05_recommendations/2026-05-30-PRE-MARKET-OPEN-CHEATSHEET.md
+src/sharks/decision/personal_finance_guardrail.py

@@ -26,10 +26,11 @@ Phase 1 only ships the scaffold. All data clients return `NotImplementedError`. 
 
 ## What's in this directory
 
-### Constitution and rules (start here)
+### Operating rules (start here)
 
-- **[sharks.md](sharks.md)** — the constitution. 6 trading principles + 4 bottoming-pattern recognitions. Read first, every session.
-- **[CLAUDE.md](CLAUDE.md)** — agent operational rules (Compiler / Researcher / Risk Officer roles, SAFETY boundaries).
+- **[CLAUDE.md](CLAUDE.md)** — the operating rulebook (roles, SAFETY boundaries, source grading, the 10-signal contract). Read first, every session.
+- **[skills/project-program-skill-target/](skills/project-program-skill-target/SKILL.md)** — the PPST engineering contract for multi-agent calls + structured artifacts.
+- **[_legacy/philosophy/](_legacy/philosophy/)** — archived strategy/philosophy reference (history only; not active governance).
 
 ### Philosophy layer (static knowledge base)
 
@@ -67,7 +68,7 @@ Phase 1 only ships the scaffold. All data clients return `NotImplementedError`. 
 
 - **gemini.md** — Gemini-side design discussion and v1-plan critique (4 critical points)
 - **codex.md** — AI-Codex-side v1-plan critique (10 trading-logic vulnerabilities)
-- **sharks.md** — your hand-written constitution (preserved verbatim)
+- the original hand-written trading philosophy (`sharks.md`) is archived under `_legacy/` + git history
 
 ## Operating modes
 
@@ -96,7 +97,7 @@ These never cross:
 - **Never executes trades.** This system emits recommendations; humans execute.
 - **Never holds private keys / wallet secrets.**
 - **Never connects to brokerage / exchange APIs for order placement.**
-- **Never modifies the constitution (`sharks.md`).**
+- **Never modifies the operating rulebook (`CLAUDE.md`) without a human-applied diff.**
 - **Never references future data in a backtest (`as_of_timestamp` discipline).**
 - **Never pads the daily 10-signal output with low-confidence picks.**
 
@@ -104,9 +105,9 @@ Full list in [CLAUDE.md Section 2](CLAUDE.md).
 
 ## Why this design
 
-Three reviewers (Gemini, AI-Codex, and the user's own philosophy in `sharks.md`) shaped this:
+Three reviewers (Gemini, AI-Codex, and the user's own trading philosophy, now archived in `_legacy/`) shaped this:
 
-- The **constitution** (`sharks.md`) supplies the trading philosophy — 6 principles + 4 pattern recognitions.
+- The original trading-philosophy layer (`sharks.md` + `philosophy/`) is archived under `_legacy/` — history / reference only, not active governance.
 - **Gemini's review** identified 4 architectural gaps in v1 (Long-only blind spot, daily-10 vs. 1-12m horizon contradiction, free-API high-freq misalignment, TD-9 trend-continuation override). All addressed in Phase 1.
 - **Codex's review** identified 10 trading-logic vulnerabilities (2 Critical: point-in-time + risk/position; 4 High: sentiment rigidity, conflict resolution, data-snooping, time leakage; 4 Medium). All addressed in Phase 1; enforcement code lands Phase 2+.
 

@@ -111,8 +111,10 @@ class TestDriftVsPhilosophy:
 
     def setup_method(self):
         self.cfg = load_risk_config()
-        self.ex = (REPO_ROOT / "philosophy" / "06-exclusions.md").read_text(encoding="utf-8")
-        self.rp = (REPO_ROOT / "philosophy" / "08-risk-and-position.md").read_text(encoding="utf-8")
+        # philosophy/ was archived to _legacy/ (2026-06-13 re-orientation); these pages
+        # remain the canonical risk-number source the config must not drift from.
+        self.ex = (REPO_ROOT / "_legacy" / "philosophy" / "06-exclusions.md").read_text(encoding="utf-8")
+        self.rp = (REPO_ROOT / "_legacy" / "philosophy" / "08-risk-and-position.md").read_text(encoding="utf-8")
 
     def test_price_floor(self):
         assert "$5" in self.ex

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CALL SKILL Protocol",
+  "description": "Standardized message format for agent-to-agent skill invocation in the PPST harness. Open, extensible, engineering-focused.",
+  "type": "object",
+  "required": ["type", "layers", "target"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "CALL_SKILL",
+      "description": "Message type identifier."
+    },
+    "layers": {
+      "type": "object",
+      "description": "The four PPST layers. Must be fully specified.",
+      "required": ["PROJECT", "PROGRAM", "SKILL", "TARGET"],
+      "properties": {
+        "PROJECT": { "type": "string", "minLength": 1 },
+        "PROGRAM": { "type": "string", "minLength": 1 },
+        "SKILL": { "type": "string", "minLength": 1 },
+        "TARGET": { "type": "string", "minLength": 1 }
+      }
+    },
+    "context": {
+      "type": "string",
+      "description": "Minimal context from previous step (e.g., prior output, constraints). Keep small."
+    },
+    "caller": {
+      "type": "string",
+      "description": "Optional: identity of calling agent (e.g., 'orchestrator', 'claude', 'grok')."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp for auditability."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Open extension point for project-specific metadata (e.g., priority, timeout)."
+    }
+  },
+  "additionalProperties": false
+}

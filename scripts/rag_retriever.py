@@ -30,7 +30,7 @@ INDEX_DIR = ROOT / ".rag-index"
 RAG_DATA_DIR = ROOT / "rag-data"
 KEY_DIRS = [
     "wiki",
-    "philosophy",
+    "_legacy/philosophy",
     "docs",
     "outputs/cross-review",
     "rag-data",
@@ -40,10 +40,9 @@ KEY_DIRS = [
 # Core files we always want to force-include for guardrails
 ALWAYS_INCLUDE = [
     "rag-data/contracts/disclosures.json",
-    "philosophy/09-point-in-time.md",
+    "_legacy/philosophy/09-point-in-time.md",
     "CLAUDE.md",
     "AGENTS.md",
-    "sharks.md",
     "docs/finviz_screening_recipe.md",
 ]
 

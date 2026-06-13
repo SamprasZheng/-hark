@@ -55,6 +55,8 @@
   .\scripts\cross-review.ps1 -UseRag -Task "檢查 fom.py 的 tail winsorization 與 TD-9 sell 硬禁"
   .\scripts\cross-review.ps1 src\sharks\scoring\fom.py -Reviewer local -UseRag
   .\scripts\cross-review.ps1 -Target "main..HEAD" -Reviewer grok -Effort high
+  # When Writer is in isolated worktree, pass it so RAG sees latest changes:
+  .\scripts\cross-review.ps1 -UseRag -Worktree "..\hark-write-20260613" -Task "review new conflict_resolver.py against disclosures"
 #>
 [CmdletBinding()]
 param(
@@ -62,6 +64,7 @@ param(
     [ValidateSet("grok", "local", "codex")][string]$Reviewer = "grok",
     [switch]$UseRag,
     [string]$Task = "",
+    [string]$Worktree = "",   # NEW: path to active git worktree (e.g. ../hark-write-xxx). RAG will scan from there to avoid stale main-repo context.
     [switch]$Json,
     [string]$Model = "",
     [string]$Effort = "",
@@ -107,7 +110,19 @@ $ollamaBin = (wsl -e bash -lc "command -v ollama 2>/dev/null" | Out-String).Trim
 $ContextBlock = ""
 if ($UseRag) {
     Write-Host "🔍 [RAG] 正在調用 Chroma + LlamaIndex 檢索合規上下文 (disclosures.json + PIT + 契約)..." -ForegroundColor Cyan
-    $ragCmd = "cd '$repoWsl' && python3 scripts/rag_retriever.py --query `"$Task`" --k 6"
+    $scanRoot = $repoWsl
+    if ($Worktree) {
+        # Convert Windows worktree path to WSL if needed
+        if ($Worktree -match '^([A-Za-z]):\\(.*)$') {
+            $wtDrive = $matches[1].ToLower()
+            $wtRest = $matches[2] -replace '\\', '/'
+            $scanRoot = "/mnt/$wtDrive/$wtRest"
+        } else {
+            $scanRoot = $Worktree
+        }
+        Write-Host "[RAG] Using active worktree root for scan: $scanRoot (avoids stale main-repo context)" -ForegroundColor Yellow
+    }
+    $ragCmd = "cd '$scanRoot' && python3 scripts/rag_retriever.py --query `"$Task`" --k 6"
     if ($Model) { $ragCmd += " --model `"$Model`"" }
     $ragRaw = (wsl -e bash -lc $ragCmd 2>&1 | Out-String).Trim()
     if ($ragRaw) {
@@ -301,6 +316,7 @@ $report = @"
 - target    : $($tb.kind)
 - repo      : $repoRoot @ $gitBranch ($gitHead)
 - reviewer  : $reviewerLabel ($grokBin), mode=$fmt, max-turns=$MaxTurns$ragNote
+- worktree  : $(if ($Worktree) { $Worktree } else { "main repo" })
 - note      : READ-ONLY -- reviewer did not write to the repo. Recommend-only; verify before acting.
               RAG (when enabled) forces disclosures.json (tail-winsor + TD-9 sell hard-disable) + philosophy/09-point-in-time.
 

@@ -508,6 +508,67 @@ class SharksBot(discord.Client):
                 return
             await interaction.followup.send(embeds=council_to_embeds(result))
 
+        @tree.command(name="grok_review", description="觸發 Grok 作為 Risk Officer 做交叉審查 (cross-review.ps1 + RAG 護欄)")
+        @app_commands.describe(target="審查目標 (working / staged / 檔名 / commit / main..HEAD)", task="額外任務焦點 (會自動帶 disclosures.json 等契約)")
+        async def grok_review_cmd(interaction: discord.Interaction, target: str = "working", task: str = "對照 rag-data/contracts/disclosures.json 與 point-in-time 做完整 Risk Officer 審查"):
+            await interaction.response.defer(thinking=True)
+            try:
+                # Run from project root, use the verified PS1 bridge (Claude side can also run this)
+                cmd = [
+                    "powershell", "-ExecutionPolicy", "Bypass", "-File",
+                    "scripts\\cross-review.ps1", target,
+                    "-UseRag", "-Task", task
+                ]
+                # If Worktree needed, user can pass via task or we can extend
+                proc = subprocess.run(
+                    cmd,
+                    capture_output=True, text=True, cwd=str(Path("D:/DOT/$hark")),
+                    timeout=180, encoding="utf-8", errors="replace"
+                )
+                output = (proc.stdout or "") + "\n" + (proc.stderr or "")
+                if not output.strip():
+                    output = "(no output — check if PS1 ran successfully or Grok CLI available in the env)"
+                # Post in chunks, prefer as code block for readability
+                header = f"🛡️ **Grok Risk Officer Review** (target: {target})\nTask: {task}\n"
+                await interaction.followup.send(header)
+                for chunk in _chunks(output, 1800):
+                    await interaction.followup.send(f"```\n{chunk}\n```")
+            except Exception as e:
+                await interaction.followup.send(f"Grok review 觸發失敗: {e}\n提示: 也可以手動在 Windows 跑 .\\scripts\\cross-review.ps1 {target} -UseRag -Task \"{task}\" 然後貼結果到這裡繼續辯論。")
+
+        # ── New Agent Hooks for spec expansion (supply chain, KOL, macro) ─────────────────
+        @tree.command(name="supply_chain_hunter", description="供應鏈獵人: 七大龍催化後找二級低基期補漲 (SupplyChain_Hunter_Agent)")
+        @app_commands.describe(dragon="核心龍頭如 NVDA", capex_up="CAPEX上修幅度 (e.g. 0.2)")
+        async def supply_chain_cmd(interaction: discord.Interaction, dragon: str = "NVDA", capex_up: float = 0.2):
+            await interaction.response.defer(thinking=True)
+            try:
+                from sharks.decision.supply_chain_hunter_agent import run_supply_chain_hunter
+                rec = run_supply_chain_hunter(dragon, capex_up)
+                await interaction.followup.send(f"🚀 **SupplyChain_Hunter** for {dragon}:\n```json\n{rec.model_dump_json(indent=2)}\n```")
+            except Exception as e:
+                await interaction.followup.send(f"Error: {e}")
+
+        @tree.command(name="kol_validate", description="KOL邏輯驗證: 籌碼+TD-9+排除 清淤 (Social_KOL_Validator_Agent)")
+        @app_commands.describe(kol_stock="KOL推薦股票如 SYNA")
+        async def kol_validate_cmd(interaction: discord.Interaction, kol_stock: str = "SYNA"):
+            await interaction.response.defer(thinking=True)
+            try:
+                from sharks.decision.social_kol_validator_agent import run_social_kol_validator
+                val = run_social_kol_validator(kol_stock)
+                await interaction.followup.send(f"🔍 **KOL_Validator** for {kol_stock}:\n```json\n{val.model_dump_json(indent=2)}\n```")
+            except Exception as e:
+                await interaction.followup.send(f"Error: {e}")
+
+        @tree.command(name="macro_shield", description="宏觀盾牌: Fed/地緣 動態 regime 切換 (Macro_Regime_Shield_Agent)")
+        async def macro_shield_cmd(interaction: discord.Interaction):
+            await interaction.response.defer(thinking=True)
+            try:
+                from sharks.decision.macro_regime_shield_agent import run_macro_regime_shield
+                regime = run_macro_regime_shield()
+                await interaction.followup.send(f"🌍 **Macro_Regime_Shield**:\n```json\n{regime.model_dump_json(indent=2)}\n```")
+            except Exception as e:
+                await interaction.followup.send(f"Error: {e}")
+
         @tree.command(name="content",
                       description="生成自媒體草稿(x/blog/youtube)→ 只產草稿,不自動發佈")
         @app_commands.describe(kind="x / blog / youtube / all", topic="主題(可省略,預設用今日結論)")
