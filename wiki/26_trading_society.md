@@ -228,6 +228,27 @@ Caveat unchanged: returns are **relative rankings, not realistic P&L** (no costs
 slippage / sizing). Recommend-only; the canonical 10-signal pipeline + Risk-Officer
 gate remain the authority.
 
+## Phase 1 specialists — 14-trader roster (grok2.md)
+
+The two highest-value Phase-1 traders from the grok2.md roster are live
+(`simulation/specialist_traders.py`; full roster + weight architecture in
+`programs/trading_society/TRADER_ROSTER.md`). Deterministic 0-100 scorecards;
+recommend-only; picks join the society vote (base weight × regime tilt) under the
+regime guardrail + concentration caps + Risk-Officer gate.
+
+- **Small Cap Catalyst Hunter** — gate: real Finviz market cap < $12B; scores
+  market-cap / low-base / breakout / catalyst-acceleration. **Fills the "not only
+  large caps" gap** — surfaces names the large-cap momentum traders never would.
+  Live: **RDW 90.7** (Redwire, space, $3.6B), **AI (C3.ai) 86.4**, SEDG 80.3, SG,
+  MOV. Sizing 5/3/2% by score band.
+- **Power & AI Infrastructure Trader** — gate: AI power/grid/cooling/advanced-
+  packaging sleeve; scores 3m trend / relative strength / persistence. Live:
+  **KLAC 88.3, UCTT 85.6 (+98% 3m)**, NVMI, ICHR, ONTO, CRDO. Sizing 6/4/2.5%.
+
+Regime tilt for specialists: HARD_DEFENSE → SmallCap ×0.2 (right-to-zero), AI-Infra
+×0.5; PARADIGM_BREAKTHROUGH → ×1.6 / ×1.7. Phase 2 (Value & Quality Compounders,
+Pelosi Tracker) and Phase 3 (remaining 8) are documented but not built.
+
 ## Stage 2 — forward portfolio (society weighted vote + dynamic hedge)
 
 `simulation/portfolio_generator.py` builds a **next-month** and **next-quarter**

@@ -111,6 +111,17 @@ def _finviz_industry_map(tickers: List[str]) -> Dict[str, str]:
         return {}
 
 
+def _finviz_market_caps(tickers: List[str]) -> Dict[str, float]:
+    """Real Finviz market caps ($bn) for the small-cap specialist; {} on failure."""
+    if not tickers:
+        return {}
+    try:
+        from simulation.finviz_data import get_market_caps
+        return get_market_caps(tickers)
+    except Exception:
+        return {}
+
+
 # ---------------------------------------------------------------------------
 # Matrix helper
 # ---------------------------------------------------------------------------
@@ -239,15 +250,17 @@ def _core_growth_leg(longs: Dict[str, List[str]], weights: Dict[str, float],
     sector_fn(ticker)->label defaults to the hardcoded map; pass a real Finviz
     industry map for a finer, data-driven sector cap."""
     sec = sector_fn or sector_of
+    # Iterate every voting trader in `weights` (base 7 + any specialists), skipping
+    # the defensive trader (its weight feeds the defensive leg, not growth).
+    defensive_ids = {t["id"] for t in TRADERS if t["type"] == "defensive"}
     score: Dict[str, float] = {}
     backers: Dict[str, List[str]] = {}
-    for tr in TRADERS:
-        if tr["type"] == "defensive":
+    for tid, w in weights.items():
+        if tid in defensive_ids:
             continue
-        w = weights.get(tr["id"], 0.0)
-        for tk in longs.get(tr["id"], []):
+        for tk in longs.get(tid, []):
             score[tk] = score.get(tk, 0.0) + w
-            backers.setdefault(tk, []).append(tr["id"])
+            backers.setdefault(tk, []).append(tid)
     if not score:
         return [], 0.0, {}
     top = sorted(score, key=score.get, reverse=True)[:max_names]
@@ -327,10 +340,39 @@ def generate_portfolio(horizon: str, lookback_days: int,
     except Exception:
         regime = None
 
-    # Real Finviz industry map for the candidate names -> finer concentration cap;
-    # fall back to the hardcoded sector map where Finviz has no label.
-    candidate_names = sorted({t for tr in TRADERS if tr["type"] != "defensive"
-                              for t in longs.get(tr["id"], [])})
+    # Phase-1 specialists (grok2.md roster): Small Cap Catalyst Hunter +
+    # Power & AI Infrastructure Trader join the vote with base weight x regime
+    # tilt; everything renormalizes. Their picks come from the full series.
+    specialist_info = None
+    try:
+        from simulation.specialist_traders import SPECIALISTS, specialist_picks
+        from simulation.regime_filter import trader_tilt as _stilt
+        spec_mcaps = _finviz_market_caps(tickers)
+        spicks = specialist_picks(series, spec_mcaps)
+        rtilt = _stilt(regime["regime"]) if regime else {}
+        spec_w: Dict[str, float] = {}
+        chosen: Dict[str, Any] = {}
+        for s in SPECIALISTS:
+            names = [p["ticker"] for p in spicks.get(s.trader_id, [])]
+            if names:
+                longs[s.trader_id] = names
+                spec_w[s.trader_id] = round(s.base_weight * rtilt.get(s.trader_id, 1.0), 4)
+                chosen[s.trader_id] = [{"ticker": p["ticker"], "score": p["score"],
+                                        "suggested_size": p["suggested_size"]}
+                                       for p in spicks[s.trader_id][:6]]
+        if spec_w:
+            combined = {**wb["weights"], **spec_w}
+            tot = sum(combined.values()) or 1.0
+            wb = {"weights": {k: round(v / tot, 4) for k, v in combined.items()},
+                  "champions": wb["champions"]}
+            specialist_info = {"weights": spec_w, "top_picks": chosen}
+    except Exception:
+        specialist_info = None
+
+    # Real Finviz industry map for every voting trader's names -> finer
+    # concentration cap; fall back to the hardcoded sector map where Finviz has none.
+    voting_ids = [k for k in wb["weights"] if k != "RISK_OFFICER"]
+    candidate_names = sorted({t for tid in voting_ids for t in longs.get(tid, [])})
     finviz_map = _finviz_industry_map(candidate_names)
     sector_source = "finviz_industry" if finviz_map else "hardcoded"
 
@@ -360,6 +402,7 @@ def generate_portfolio(horizon: str, lookback_days: int,
         "trader_weights": wb["weights"],
         "recent_champions_boosted": wb["champions"],
         "regime_trader_tilt_applied": regime_tilt_applied,
+        "specialists": specialist_info,
         "transaction_cost_bps": TRANSACTION_COST_BPS,
         "macro_risk_environment": macro,
         "capex_momentum": capex,
@@ -450,6 +493,11 @@ def _print_summary(r: Dict[str, Any]) -> None:
               f"sectors={cc['sector_mix']})")
         champs = p["recent_champions_boosted"]
         print(f"  Champion-boosted traders: {champs}")
+        sp = p.get("specialists")
+        if sp:
+            for tid, picks in sp["top_picks"].items():
+                names = ", ".join(f"{q['ticker']}({q['score']})" for q in picks[:4])
+                print(f"  {tid} (w={sp['weights'].get(tid)}): {names}")
         print(f"  Core growth leg (top names):")
         for c in p["core_growth_leg"][:8]:
             tag = " [SpaceX]" if c["ticker"] in ("DXYZ", "RKLB", "ASTS", "PL", "LUNR",

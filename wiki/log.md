@@ -752,3 +752,10 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - 255 退出排查:純 shell pipe artifact(`Select-Object -First` 提前關閉管線 → python broken-pipe → 255),非程式 bug;隔離測試 + no-pipe full run(exit 0)確認:regime line=MEAN_REVERSION、BI 218.5、5 live FRED、Finviz 真實產業(Semiconductor Equipment 鎖 35%)全綠。
 - **② regime→trader weight tilt**(`regime_filter.REGIME_TRADER_TILT` + portfolio 套用):依 live regime 重塑全社會投票權重 — **HARD_DEFENSE**:RISK_OFFICER ×2.5(隔離測試:flat 權重下 RISK_OFFICER 升至 **0.41 居首**),momentum/breakout 砍至 0.3-0.4;**PARADIGM_BREAKTHROUGH**:trend/momentum/breakout ×1.3-1.6、MEAN_REVERSION/REVERSION 砍 0.5、RISK_OFFICER 0.6;**MEAN_REVERSION**:faders ×1.3-1.4。**直接解決前述「RISK_OFFICER 從不奪冠」**——危機 regime 下它拿到投票主導權。輸出加 `regime_trader_tilt_applied`。
 - 仍 recommend-only、never-raise(regime 失敗則不 tilt)。**③ 14-trader roster(結構性擴編)留待主理人點頭**。
+
+## 2026-06-13(j)— feat | Phase 1 specialist traders:Small Cap Catalyst Hunter + Power & AI Infra(grok2.md 14-trader ③)
+- cross-review 核准分批擴編 14-trader roster,Phase 1 = 補兩大缺口(小盤 + AI 電力基建)。建 `simulation/specialist_traders.py`(確定性 0-100 評分卡 + position sizing + 當下選股),`programs/trading_society/TRADER_ROSTER.md`(完整 14-trader 藍圖 + 分批順序 + 多層權重架構)。
+- **Small Cap Catalyst Hunter**(gate:真實 Finviz 市值 < $12B;市值/低基期/突破/催化加速 四維):live 選股 **RDW 90.7**(Redwire 太空 $3.6B)、**AI(C3.ai)86.4**、SEDG 80.3、SG、MOV — **補足「不只抓大型股」**,撈出大型動能交易員永遠看不到的真小盤。sizing 5/3/2%。
+- **Power & AI Infrastructure Trader**(gate:AI 電力/電網/散熱/先進封裝 sleeve;3m 趨勢/相對強度/持續性):live **KLAC 88.3、UCTT 85.6(+98% 3m)**、NVMI、ICHR、ONTO、CRDO。sizing 6/4/2.5%。
+- **整合**:portfolio 把兩 specialist 以 base_weight × regime_tilt 併入全社會投票後重正規化;`_core_growth_leg` 改 iterate weights keys(不再寫死 7 trader);regime_filter 加 specialist tilt(HARD_DEFENSE:SmallCap ×0.2 right-to-zero、AI-Infra ×0.5;PARADIGM_BREAKTHROUGH:×1.6/×1.7)。candidate_names 擴及 specialist 選股(吃真實 Finviz 產業);輸出加 `specialists`。
+- recommend-only、never-raise(specialist 失敗不影響主流程)。import-smoke 全綠;specialist self-test live 全綠(159/160 市值解析)。**Phase 2(Value & Quality Compounders、Pelosi Tracker)+ Phase 3(其餘 8)已文件化未建**。**待辦**:cross-style fitness 公平比較、真實 capex(需 key)。

@@ -97,6 +97,20 @@ def get_sector_map(tickers: List[str], use_industry: bool = True
     return out
 
 
+def get_market_caps(tickers: List[str]) -> Dict[str, float]:
+    """{ticker: market_cap_in_billions} from real Finviz data. {} on failure.
+    (Finviz 'Market Cap' export is already in $millions for most views.)"""
+    rows = fetch_rows(tickers=tickers)
+    out: Dict[str, float] = {}
+    for r in rows:
+        tk = (r.get("Ticker") or "").strip()
+        mc = _num(r.get("Market Cap"))
+        if tk and mc:
+            # Finviz export Market Cap is in $millions -> convert to billions.
+            out[tk] = round(mc / 1000.0, 3)
+    return out
+
+
 def get_valuation_snapshot(filters: str = "cap_largeover") -> Dict[str, Any]:
     """Real valuation context from a large-cap screen: median P/E, aggregate
     market cap of the screen, count. Not a true Buffett Indicator (would need the
