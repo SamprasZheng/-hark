@@ -759,3 +759,10 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **Power & AI Infrastructure Trader**(gate:AI 電力/電網/散熱/先進封裝 sleeve;3m 趨勢/相對強度/持續性):live **KLAC 88.3、UCTT 85.6(+98% 3m)**、NVMI、ICHR、ONTO、CRDO。sizing 6/4/2.5%。
 - **整合**:portfolio 把兩 specialist 以 base_weight × regime_tilt 併入全社會投票後重正規化;`_core_growth_leg` 改 iterate weights keys(不再寫死 7 trader);regime_filter 加 specialist tilt(HARD_DEFENSE:SmallCap ×0.2 right-to-zero、AI-Infra ×0.5;PARADIGM_BREAKTHROUGH:×1.6/×1.7)。candidate_names 擴及 specialist 選股(吃真實 Finviz 產業);輸出加 `specialists`。
 - recommend-only、never-raise(specialist 失敗不影響主流程)。import-smoke 全綠;specialist self-test live 全綠(159/160 市值解析)。**Phase 2(Value & Quality Compounders、Pelosi Tracker)+ Phase 3(其餘 8)已文件化未建**。**待辦**:cross-style fitness 公平比較、真實 capex(需 key)。
+
+## 2026-06-13(k)— feat | 2018-2026 演化比賽(長線/低頻 ≤3 trades/週)+ 2026 H2 預測選股
+- 主理人指令:「2018-2026 回測比賽、交易員每季演化、一週交易 ≤3 次(更長線)、比績效、給 2026 H2 預測選股」。建 `simulation/competition_2018_2026.py`(月線 2018-2026,582 名,7 長線交易員 monthly rebalance、持 ≤3 檔=遠低於 3 trades/週;10bps 成本;每季最弱 2 名演化 genome)。
+- **方法論 bug 抓修(誠實)**:首跑出現 **-1.000 / -5.869 破表**——空頭部位可虧 >100% → 權益轉負 → 複利變垃圾(-587% 無意義)。修:(a) `backtest_trader` 加 `long_only`(權益恆 ≥0);(b) 演化 lookback 下限 2(不准退化成高頻 lb1,守長線);(c) 淘汰改看**近 4 季 trailing**(非單季噪音)。
+- **修正後累積排行 2018-2026**(相對排名,**非真實 P&L**):LT_BREAKOUT +121×(冠軍,mom lb3)、LT_MOMENTUM +75×、LT_BALANCED +62×、LT_TREND +53×(**奪 9 季最多**)、LT_REVERSION +14×、RISK_OFFICER +0.47×(奪 5 季=2018Q4/2020Q1/2022 跌季,牛市整體墊底)、LT_DEEPVALUE -0.04×(深值逆勢此era 最差)。**動能完勝(前四全動能);防禦的價值在跌季存活非奪冠**。
+- **2026 H2 預測**(冠軍 LT_BREAKOUT mom/lb3 套最新月 bar,recommend-only):**KLAC / MXL / ALAB / VSH / VPG / MU / MRVL / CRDO**(半導體/設備/被動元件突破清單)。**live regime=MEAN_REVERSION、高估值 → 35% 防禦 floor 仍綁**(CLAUDE §10)。社會內部張力續存:動能冠軍喊「買半導體」,避險層喊「這些是擁擠 AI 名單、攜 35% 防禦」——human + Risk Officer 裁決,非下單。
+- 誠實 flag:報酬量級非可實現 P&L(top-3 集中、無真實 sizing);月線粒度(日線僅到 2021);動能優勢屬 2018-26 AI 牛市 regime-specific。artifact `outputs/trading-society-2018-2026-2026-06-13.json`。

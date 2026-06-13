@@ -105,10 +105,13 @@ def _lookback_return(closes: np.ndarray, t: int, L: int) -> np.ndarray:
 
 
 def backtest_trader(closes: np.ndarray, trader: Dict[str, Any],
-                    defensive_mask: np.ndarray, cost_bps: float = 0.0) -> np.ndarray:
+                    defensive_mask: np.ndarray, cost_bps: float = 0.0,
+                    long_only: bool = False) -> np.ndarray:
     """cost_bps: round-trip transaction cost in basis points charged each active
     period (full-turnover assumption). 0 = frictionless (default, keeps the
-    historical self-tests stable); the portfolio generator passes a real cost."""
+    historical self-tests stable); the portfolio generator passes a real cost.
+    long_only: drop short signals (a long-horizon book keeps equity >= -100%/name,
+    so cumulative compounding stays well-defined -- shorts can lose >100%)."""
     T, N = closes.shape
     L = int(trader["lookback"])
     thr = float(trader["threshold"])
@@ -140,6 +143,8 @@ def backtest_trader(closes: np.ndarray, trader: Dict[str, Any],
         else:  # reversion
             long_sig = valid & (lb < -thr)
             short_sig = valid & (lb > thr)
+        if long_only:
+            short_sig = np.zeros(N, dtype=bool)
         # rank by signal magnitude, keep top-k across long+short
         strength = np.where(long_sig | short_sig, np.abs(lb), -np.inf)
         if not np.any(np.isfinite(strength) & (strength > -np.inf)):

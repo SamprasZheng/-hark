@@ -228,6 +228,47 @@ Caveat unchanged: returns are **relative rankings, not realistic P&L** (no costs
 slippage / sizing). Recommend-only; the canonical 10-signal pipeline + Risk-Officer
 gate remain the authority.
 
+## 2018–2026 evolving competition + 2026 H2 forecast
+
+`simulation/competition_2018_2026.py` runs a **long-horizon, low-frequency** roster
+(monthly rebalance, ≤3 names held → well under 3 trades/week) over real monthly lake
+prices 2018-2026 (34 quarters, 582 names, 10bps cost, **long-only**). Each quarter the
+**two persistently weakest** traders (worst trailing-4Q) **evolve** (genome
+lookback/threshold mutation, kept long-horizon: lookback ≥ 2 months). Artifact:
+`outputs/trading-society-2018-2026-*.json`.
+
+**Cumulative leaderboard 2018-2026** (relative ranking, NOT real P&L):
+
+| # | trader | cum (×) | qtrs won | final genome |
+|---|---|---|---|---|
+| 1 | LT_BREAKOUT | +121.4 | 5 | momentum lb3 th0.08 |
+| 2 | LT_MOMENTUM | +74.8 | 5 | momentum lb2 th0.16 |
+| 3 | LT_BALANCED | +61.9 | 4 | momentum lb4 th0.12 |
+| 4 | LT_TREND | +53.4 | **9** | momentum lb10 th0.13 |
+| 5 | LT_REVERSION | +14.1 | 6 | reversion lb5 th0.10 |
+| 6 | RISK_OFFICER | +0.47 | 5 | defensive |
+| 7 | LT_DEEPVALUE | −0.04 | 0 | reversion lb2 th0.36 |
+
+**Findings:** momentum dominates the 2018-2026 (AI-bull) era — top 4 are all
+momentum. LT_TREND won the most quarters (9, the steady winner) but compounds 4th;
+LT_BREAKOUT compounds highest. **RISK_OFFICER won 5 quarters** (the down quarters:
+2018Q4 / 2020Q1 / 2022) but lags cumulatively in a bull regime — defense's value is
+crash-quarter survival, not the trophy. Deep-value reversion was worst (era-specific).
+
+**Methodology honesty:** the first run had broken cumulative math (short positions can
+lose >100% → negative equity → −587% garbage). Fixed to **long-only** (equity stays
+≥0) + long-horizon evolution bounds. Magnitudes are still **relative rankings**, not
+achievable P&L (top-3 concentrated, no realistic sizing).
+
+### 2026 H2 forecast (recommend-only)
+
+The evolutionary champion **LT_BREAKOUT** (momentum, lb3) applied to the latest bar →
+**KLAC, MXL, ALAB, VSH, VPG, MU, MRVL, CRDO** — a coherent semiconductor/semicap
+breakout list. **Live regime = MEAN_REVERSION, high-valuation → the 35% defensive
+floor still binds** (CLAUDE §10). The society's internal tension persists: the
+momentum champion says "buy the semis," the hedge layer says "these are the crowded
+AI names — carry 35% defense." Human + Risk-Officer adjudicate; not a capital order.
+
 ## Phase 1 specialists — 14-trader roster (grok2.md)
 
 The two highest-value Phase-1 traders from the grok2.md roster are live
