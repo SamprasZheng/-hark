@@ -53,23 +53,37 @@ REGIME_TRADER_TILT: Dict[str, Dict[str, float]] = {
     HARD_DEFENSE: {"RISK_OFFICER": 2.5, "MEAN_REVERSION": 1.1, "REVERSION_FAST": 1.0,
                    "MOMENTUM_SWING": 0.4, "MOMENTUM_FAST": 0.3, "TREND_RIDER": 0.4,
                    "BREAKOUT_HUNTER": 0.3, "SMALL_CAP_CATALYST_HUNTER": 0.2,
-                   "POWER_AI_INFRA_TRADER": 0.5},
+                   "POWER_AI_INFRA_TRADER": 0.5, "VALUE_QUALITY_COMPOUNDER": 1.5,
+                   "DEFENSE_GEO_ANALYST": 1.3, "BIOTECH_HEALTH_SPECIALIST": 1.1,
+                   "PELOSI_TRACKER": 0.5, "MUSK_ECOSYSTEM": 0.3},
     # Paradigm breakthrough: ride leaders + AI infra + small-cap catalysts.
     PARADIGM_BREAKTHROUGH: {"TREND_RIDER": 1.6, "MOMENTUM_SWING": 1.5,
                             "BREAKOUT_HUNTER": 1.5, "MOMENTUM_FAST": 1.3,
                             "MEAN_REVERSION": 0.5, "REVERSION_FAST": 0.5,
                             "RISK_OFFICER": 0.6, "SMALL_CAP_CATALYST_HUNTER": 1.6,
-                            "POWER_AI_INFRA_TRADER": 1.7},
+                            "POWER_AI_INFRA_TRADER": 1.7, "VALUE_QUALITY_COMPOUNDER": 0.7,
+                            "DEFENSE_GEO_ANALYST": 0.9, "BIOTECH_HEALTH_SPECIALIST": 1.0,
+                            "PELOSI_TRACKER": 1.3, "MUSK_ECOSYSTEM": 1.5},
     # Mean reversion: favor the faders; specialists neutral-ish.
     MEAN_REVERSION: {"MEAN_REVERSION": 1.4, "REVERSION_FAST": 1.3,
                      "MOMENTUM_SWING": 1.0, "MOMENTUM_FAST": 1.0, "TREND_RIDER": 0.9,
                      "BREAKOUT_HUNTER": 0.9, "RISK_OFFICER": 1.0,
-                     "SMALL_CAP_CATALYST_HUNTER": 0.8, "POWER_AI_INFRA_TRADER": 1.0},
+                     "SMALL_CAP_CATALYST_HUNTER": 0.8, "POWER_AI_INFRA_TRADER": 1.0,
+                     "VALUE_QUALITY_COMPOUNDER": 1.1, "DEFENSE_GEO_ANALYST": 1.0,
+                     "BIOTECH_HEALTH_SPECIALIST": 1.0, "PELOSI_TRACKER": 1.0,
+                     "MUSK_ECOSYSTEM": 0.9},
 }
 
 
 def trader_tilt(regime: str) -> Dict[str, float]:
     return dict(REGIME_TRADER_TILT.get(regime, {}))
+
+
+def shorts_allowed(regime: str) -> bool:
+    """Principal's rule: short positions are permitted ONLY in a confirmed bear
+    regime (HARD_DEFENSE -- the 2022 / COVID liquidity-shock analog). The society
+    is LONG-BIASED in PARADIGM_BREAKTHROUGH and MEAN_REVERSION."""
+    return regime == HARD_DEFENSE
 
 
 @dataclass

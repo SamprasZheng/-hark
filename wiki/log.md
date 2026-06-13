@@ -766,3 +766,10 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **修正後累積排行 2018-2026**(相對排名,**非真實 P&L**):LT_BREAKOUT +121×(冠軍,mom lb3)、LT_MOMENTUM +75×、LT_BALANCED +62×、LT_TREND +53×(**奪 9 季最多**)、LT_REVERSION +14×、RISK_OFFICER +0.47×(奪 5 季=2018Q4/2020Q1/2022 跌季,牛市整體墊底)、LT_DEEPVALUE -0.04×(深值逆勢此era 最差)。**動能完勝(前四全動能);防禦的價值在跌季存活非奪冠**。
 - **2026 H2 預測**(冠軍 LT_BREAKOUT mom/lb3 套最新月 bar,recommend-only):**KLAC / MXL / ALAB / VSH / VPG / MU / MRVL / CRDO**(半導體/設備/被動元件突破清單)。**live regime=MEAN_REVERSION、高估值 → 35% 防禦 floor 仍綁**(CLAUDE §10)。社會內部張力續存:動能冠軍喊「買半導體」,避險層喊「這些是擁擠 AI 名單、攜 35% 防禦」——human + Risk Officer 裁決,非下單。
 - 誠實 flag:報酬量級非可實現 P&L(top-3 集中、無真實 sizing);月線粒度(日線僅到 2021);動能優勢屬 2018-26 AI 牛市 regime-specific。artifact `outputs/trading-society-2018-2026-2026-06-13.json`。
+
+## 2026-06-13(l)— feat | 多空規則(只在確定轉熊放空)+ 擴編 5 交易員(grok2.md roster → 14 voting)
+- 主理人指令:「除非大環境真像 2022 或疫情確定轉熊才放空 + 參考 grok2.md 引入更多交易員」。
+- **多空規則(溶入憲法 §10)**:**預設 long-biased**;放空**只在確定轉熊 regime**(HARD_DEFENSE = 近 6 月市場中位報酬 < -8%,PIT;2022/COVID analog)。`backtest_trader` 加 `allow_short_mask`(逐月 bear 才准空)+ 空頭單筆虧損封頂 -100%(停損,權益恆定);`regime_filter.shorts_allowed()`(僅 HARD_DEFENSE)。**比賽實證:2018-2026 僅 8 個 bear 月亮燈 = 2018-12、2020-03(COVID)、2022-04→07** —— 正是主理人點名的 2018Q4/疫情/2022。開放 bear 放空後冠軍 LT_BREAKOUT +231×(無早先破表)。
+- **擴編 5 交易員**(grok2.md roster;`specialist_traders.py` 重構為統一 scorer(ticker,pts,ctx)):**Value & Quality Compounders**(便宜大型股 P/E + 低回撤;live FDX/TRGP)、**Defense & Geopolitical**(國防/太空 sleeve;IRDM/GSAT)、**Biotech & Healthcare**(LLY/HUM 96/GH)、**Nancy Pelosi Tracker**(Grade-D 公開申報持股 + 動能;PANW/CRWD)、**Elon Musk Ecosystem**(Grade-D;TSLA+SpaceX proxy,今日無票=不硬湊)。各有評分卡 + regime tilt;**全 long-only**。`finviz_data.get_fundamentals`(市值+P/E)餵 ctx。
+- **整合**:portfolio 7 specialist + 7 core = **14 voting traders**;portfolio 套真實 Finviz fundamentals;regime tilt 補 5 新(HARD_DEFENSE:Value ×1.5/Defense ×1.3/Biotech ×1.1、Pelosi/Musk 砍;PARADIGM:Musk ×1.5/Pelosi ×1.3)。`TRADER_ROSTER.md` 狀態更新(14 voting;剩 Energy/Consumer/Event-Driven 低優先 TODO)。
+- recommend-only、never-raise;specialist self-test live 全綠(170/170 fundamentals);import-smoke 綠。Pelosi/Musk 為 Grade-D curated 參考、非單獨觸發。

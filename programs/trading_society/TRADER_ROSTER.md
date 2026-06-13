@@ -23,23 +23,27 @@ picks pass the regime guardrail + concentration caps + Risk-Officer gate.
 
 **Layer 1 — sector specialists (6)**
 1. Semiconductor & AI Chain Analyst — *covered by the momentum/breakout core*
-2. **Power & AI Infrastructure Trader** — **Phase 1 ✅** (`specialist_traders.py`)
-3. Biotech & Healthcare Specialist — TODO
+2. **Power & AI Infrastructure Trader** — **built ✅** (`specialist_traders.py`)
+3. **Biotech & Healthcare Specialist** — **built ✅**
 4. Energy & Commodity Trader — TODO
-5. Defense & Geopolitical Analyst — TODO
+5. **Defense & Geopolitical Analyst** — **built ✅**
 6. Consumer & Internet Analyst — TODO
 
 **Layer 2 — style specialists (5)**
-7. **Small Cap Catalyst Hunter** — **Phase 1 ✅** (`specialist_traders.py`)
+7. **Small Cap Catalyst Hunter** — **built ✅** (`specialist_traders.py`)
 8. Momentum & Breakout Trader — *covered (MOMENTUM_*/BREAKOUT_HUNTER)*
-9. Value & Quality Compounders — Phase 2
+9. **Value & Quality Compounders** — **built ✅**
 10. Mean Reversion Trader — *covered (MEAN_REVERSION/REVERSION_FAST)*
 11. Event-Driven / Meme Trader — TODO
 
 **Layer 3 — 13F-imitation (3)**
-12. Nancy Pelosi Tracker — Phase 2
-13. Elon Musk Ecosystem — Phase 3
-14. Berkshire-style Value — Phase 3
+12. **Nancy Pelosi Tracker** — **built ✅** (Grade-D curated holdings + momentum)
+13. **Elon Musk Ecosystem** — **built ✅** (Grade-D curated)
+14. Berkshire-style Value — *largely covered by Value & Quality Compounders*
+
+**Status: 7 specialists built + 7 core = 14 voting traders.** Remaining TODO
+(Energy & Commodity, Consumer & Internet, Event-Driven/Meme) are lower priority.
+All specialists are **long-only**; shorting is regime-gated (HARD_DEFENSE only).
 
 ## Phased rollout
 

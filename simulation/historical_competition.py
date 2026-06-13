@@ -106,12 +106,15 @@ def _lookback_return(closes: np.ndarray, t: int, L: int) -> np.ndarray:
 
 def backtest_trader(closes: np.ndarray, trader: Dict[str, Any],
                     defensive_mask: np.ndarray, cost_bps: float = 0.0,
-                    long_only: bool = False) -> np.ndarray:
+                    long_only: bool = False,
+                    allow_short_mask: Optional[np.ndarray] = None) -> np.ndarray:
     """cost_bps: round-trip transaction cost in basis points charged each active
     period (full-turnover assumption). 0 = frictionless (default, keeps the
     historical self-tests stable); the portfolio generator passes a real cost.
-    long_only: drop short signals (a long-horizon book keeps equity >= -100%/name,
-    so cumulative compounding stays well-defined -- shorts can lose >100%)."""
+    long_only: never short. allow_short_mask: per-period bool; shorts are allowed
+    ONLY where True (e.g. confirmed-bear months) -- the principal's "only short in
+    a 2022/COVID-style confirmed bear" rule. Short losses are capped at -100% per
+    name (a stop), so equity stays well-defined."""
     T, N = closes.shape
     L = int(trader["lookback"])
     thr = float(trader["threshold"])
@@ -143,7 +146,11 @@ def backtest_trader(closes: np.ndarray, trader: Dict[str, Any],
         else:  # reversion
             long_sig = valid & (lb < -thr)
             short_sig = valid & (lb > thr)
-        if long_only:
+        # Shorts allowed only when not long_only AND (no mask OR this is a
+        # confirmed-bear period). Default: long-biased.
+        shorts_ok = (not long_only) and (
+            allow_short_mask is None or bool(allow_short_mask[t]))
+        if not shorts_ok:
             short_sig = np.zeros(N, dtype=bool)
         # rank by signal magnitude, keep top-k across long+short
         strength = np.where(long_sig | short_sig, np.abs(lb), -np.inf)
@@ -158,7 +165,8 @@ def backtest_trader(closes: np.ndarray, trader: Dict[str, Any],
         scores = []
         for i in picks:
             r = ret_next[i]
-            scores.append(r if long_sig[i] else -r)
+            # short loss capped at -100% per name (stop) so equity stays defined
+            scores.append(r if long_sig[i] else max(-1.0, -r))
         port[t] = float(np.mean(scores)) - cost  # charge round-trip turnover cost
     return port
 

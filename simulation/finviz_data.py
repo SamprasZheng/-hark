@@ -111,6 +111,24 @@ def get_market_caps(tickers: List[str]) -> Dict[str, float]:
     return out
 
 
+def get_fundamentals(tickers: List[str]) -> Dict[str, Dict[str, Any]]:
+    """{ticker: {mcap_bn, pe, sector, industry}} from real Finviz data; {} on
+    failure. One fetch serves the small-cap gate, the value/quality P/E, and the
+    industry concentration cap."""
+    rows = fetch_rows(tickers=tickers)
+    out: Dict[str, Dict[str, Any]] = {}
+    for r in rows:
+        tk = (r.get("Ticker") or "").strip()
+        if not tk:
+            continue
+        mc = _num(r.get("Market Cap"))
+        out[tk] = {"mcap_bn": round(mc / 1000.0, 3) if mc else None,
+                   "pe": _num(r.get("P/E")),
+                   "sector": (r.get("Sector") or "").strip(),
+                   "industry": (r.get("Industry") or "").strip()}
+    return out
+
+
 def get_valuation_snapshot(filters: str = "cap_largeover") -> Dict[str, Any]:
     """Real valuation context from a large-cap screen: median P/E, aggregate
     market cap of the screen, count. Not a true Buffett Indicator (would need the

@@ -88,6 +88,23 @@ def _mutate(trader: Dict[str, Any], rng: random.Random) -> Tuple[Dict[str, Any],
     return t, f"{lever} {old}->{new}"
 
 
+def _bear_mask(closes: np.ndarray, lookback: int = 6, threshold: float = -0.08
+               ) -> np.ndarray:
+    """Per-month confirmed-bear flag (PIT): trailing `lookback`-month MEDIAN market
+    return < threshold. Implements the principal's rule -- shorts only when the
+    tape has truly turned bear like 2022 / COVID, using only data up to month t."""
+    T, N = closes.shape
+    mask = np.zeros(T, dtype=bool)
+    for t in range(lookback, T):
+        prev, cur = closes[t - lookback], closes[t]
+        with np.errstate(invalid="ignore", divide="ignore"):
+            rets = np.where(prev > 0, cur / prev - 1.0, np.nan)
+        if np.any(~np.isnan(rets)):
+            m = float(np.nanmedian(rets))
+            mask[t] = m < threshold
+    return mask
+
+
 def _quarter_groups(dates: List[str]) -> List[Tuple[str, List[int]]]:
     groups: Dict[str, List[int]] = {}
     for i, d in enumerate(dates):
@@ -100,6 +117,10 @@ def run(seed: int = 11) -> Dict[str, Any]:
     dates, tickers, closes = load_close_matrix("1mo", "2018-01-01")
     defmask = np.array([t in set(DEFENSIVE_BASKET) for t in tickers])
     quarters = _quarter_groups(dates)
+    # Shorts allowed ONLY in confirmed-bear months (principal's rule); long-biased
+    # otherwise. ~2022 / 2020-COVID / 2018Q4 should light up.
+    bear_mask = _bear_mask(closes)
+    bear_months = [dates[i] for i in range(len(dates)) if bear_mask[i]]
 
     population = _roster()
     cumulative: Dict[str, float] = {t["id"]: 1.0 for t in population}
@@ -115,7 +136,7 @@ def run(seed: int = 11) -> Dict[str, Any]:
         q_returns: Dict[str, float] = {}
         for tr in population:
             port = backtest_trader(closes, tr, defmask, cost_bps=COST_BPS,
-                                   long_only=True)
+                                   long_only=False, allow_short_mask=bear_mask)
             seg = [port[i] for i in idxs if not np.isnan(port[i])]
             qret = float(np.prod([1 + x for x in seg]) - 1) if seg else 0.0
             q_returns[tr["id"]] = qret
@@ -162,7 +183,11 @@ def run(seed: int = 11) -> Dict[str, Any]:
         "rules": {"frequency": "monthly rebalance, <=3 names held (long-horizon, "
                                 "well under 3 trades/week)",
                   "cost_bps": COST_BPS, "evolution": "bottom-2 traders mutate each "
-                  "quarter (genome lookback/threshold)"},
+                  "quarter (genome lookback/threshold)",
+                  "shorting": "LONG-BIASED by default; shorts allowed ONLY in "
+                  "confirmed-bear months (trailing-6m median market return < -8%, "
+                  "PIT), short loss capped at -100%/name",
+                  "bear_months": bear_months},
         "window": {"start": dates[0], "end": dates[-1], "n_quarters": len(quarters),
                    "n_names": len(tickers)},
         "leaderboard_cumulative_2018_2026": leaderboard,
@@ -248,6 +273,9 @@ def _print(r: Dict[str, Any]) -> None:
     w = r["window"]
     print(f"Window: {w['start']}..{w['end']} ({w['n_quarters']} quarters, "
           f"{w['n_names']} names) | {r['rules']['frequency']}")
+    bm = r["rules"].get("bear_months", [])
+    print(f"Shorting: LONG-BIASED; shorts only in {len(bm)} confirmed-bear months"
+          + (f" (e.g. {', '.join(bm[:6])}...)" if bm else ""))
     print("\nCUMULATIVE LEADERBOARD 2018-2026 (relative ranking, not real P&L):")
     print(f"  {'#':<2} {'trader':<16} {'cum_return':>11} {'qtrs_won':>9} {'final_genome'}")
     for i, row in enumerate(r["leaderboard_cumulative_2018_2026"], 1):

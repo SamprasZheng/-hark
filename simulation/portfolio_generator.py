@@ -111,13 +111,14 @@ def _finviz_industry_map(tickers: List[str]) -> Dict[str, str]:
         return {}
 
 
-def _finviz_market_caps(tickers: List[str]) -> Dict[str, float]:
-    """Real Finviz market caps ($bn) for the small-cap specialist; {} on failure."""
+def _finviz_fundamentals(tickers: List[str]) -> Dict[str, Dict[str, Any]]:
+    """Real Finviz fundamentals {ticker: {mcap_bn, pe, sector, industry}} for the
+    specialists (small-cap gate, value/quality P/E); {} on failure."""
     if not tickers:
         return {}
     try:
-        from simulation.finviz_data import get_market_caps
-        return get_market_caps(tickers)
+        from simulation.finviz_data import get_fundamentals
+        return get_fundamentals(tickers)
     except Exception:
         return {}
 
@@ -347,8 +348,8 @@ def generate_portfolio(horizon: str, lookback_days: int,
     try:
         from simulation.specialist_traders import SPECIALISTS, specialist_picks
         from simulation.regime_filter import trader_tilt as _stilt
-        spec_mcaps = _finviz_market_caps(tickers)
-        spicks = specialist_picks(series, spec_mcaps)
+        spec_ctx = _finviz_fundamentals(tickers)
+        spicks = specialist_picks(series, spec_ctx)
         rtilt = _stilt(regime["regime"]) if regime else {}
         spec_w: Dict[str, float] = {}
         chosen: Dict[str, Any] = {}

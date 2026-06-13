@@ -287,8 +287,23 @@ regime guardrail + concentration caps + Risk-Officer gate.
   **KLAC 88.3, UCTT 85.6 (+98% 3m)**, NVMI, ICHR, ONTO, CRDO. Sizing 6/4/2.5%.
 
 Regime tilt for specialists: HARD_DEFENSE → SmallCap ×0.2 (right-to-zero), AI-Infra
-×0.5; PARADIGM_BREAKTHROUGH → ×1.6 / ×1.7. Phase 2 (Value & Quality Compounders,
-Pelosi Tracker) and Phase 3 (remaining 8) are documented but not built.
+×0.5; PARADIGM_BREAKTHROUGH → ×1.6 / ×1.7.
+
+**Roster expansion (now 7 specialists + 7 core = 14 voting traders):** added
+**Value & Quality Compounders** (cheap large-cap P/E + low drawdown; live FDX/TRGP),
+**Defense & Geopolitical** (defense/space sleeve; IRDM/GSAT), **Biotech & Healthcare**
+(LLY/HUM 96/GH), **Nancy Pelosi Tracker** (Grade-D curated public-disclosure
+holdings + momentum; PANW/CRWD), **Elon Musk Ecosystem** (Grade-D; TSLA + SpaceX
+proxies — no picks today, no forcing). Each has a scorecard + regime tilt; all are
+**long-only**.
+
+**Long-bias / shorting rule (principal directive, CLAUDE §10).** The society is
+long-biased by default; **shorts are permitted only in a confirmed bear regime**
+(HARD_DEFENSE — trailing-6m median market return < −8%, PIT; the 2022/COVID analog).
+In the 2018-2026 sim, exactly **8 bear months** lit up (2018-12, 2020-03,
+2022-04→07) — precisely the 2018Q4 / COVID / 2022 bears. Per-name short loss capped
+at −100% (stop). Enabling bear-shorts lifted the momentum champions
+(LT_BREAKOUT +231×) without the earlier negative-equity blowups.
 
 ## Stage 2 — forward portfolio (society weighted vote + dynamic hedge)
 
