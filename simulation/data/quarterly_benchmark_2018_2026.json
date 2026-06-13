@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "title": "Quarterly leaders/laggards answer key 2018Q1-2026Q2 (large + small cap)",
+    "source": "grok.md (principal-provided 'standard answer' matrix, lines ~7679-8067)",
+    "ingested_by": "Trading Society / historical_competition",
+    "as_of_timestamp": "2026-06-13",
+    "grade": "D",
+    "caveats": [
+      "Grade-D historical synthesis (LLM-generated), designated by the principal as the answer key.",
+      "Used ONLY for post-hoc grading of trader accuracy -- never fed to traders as a decision input (no lookahead into the strategies).",
+      "Generic groups ('many small-cap biotech', utilities) and private names (WeWork) are omitted; only concrete tickers kept.",
+      "Some 2018-2020 names are delisted / absent from the lake; the engine flags coverage."
+    ],
+    "schema": "quarter -> {large_lead, large_lag, small_lead, small_lag, regime} (lists of tickers)"
+  },
+  "quarters": {
+    "2018Q1": {"large_lead": ["AMZN"], "large_lag": ["XOM"], "small_lead": ["CMG"], "small_lag": [], "regime": "volmageddon_xiv_blowup"},
+    "2018Q2": {"large_lead": ["AAPL"], "large_lag": ["META"], "small_lead": ["NFLX"], "small_lag": [], "regime": "trade_war_megacap_flight"},
+    "2018Q3": {"large_lead": ["MSFT"], "large_lag": ["INTC"], "small_lead": ["AMD"], "small_lag": [], "regime": "breadth_narrowing_aapl_1T"},
+    "2018Q4": {"large_lead": ["PG"], "large_lag": ["NVDA"], "small_lead": ["TLT"], "small_lag": ["HMNY"], "regime": "qt_liquidity_shock_deleverage"},
+    "2019Q1": {"large_lead": ["NVDA"], "large_lag": ["BA"], "small_lead": ["ROKU"], "small_lag": [], "regime": "fed_pivot_short_squeeze"},
+    "2019Q2": {"large_lead": ["MSFT"], "large_lag": ["TSLA"], "small_lead": ["BYND"], "small_lag": [], "regime": "low_vol_beta_hunt"},
+    "2019Q3": {"large_lead": ["AAPL"], "large_lag": ["NFLX"], "small_lead": ["SHOP"], "small_lag": [], "regime": "repo_spike_non_qe"},
+    "2019Q4": {"large_lead": ["TSLA"], "large_lag": ["CVX"], "small_lead": ["ENPH"], "small_lag": [], "regime": "risk_on_melt_up"},
+    "2020Q1": {"large_lead": ["ZM"], "large_lag": ["DAL", "XOM"], "small_lead": ["APT"], "small_lag": ["HTZ"], "regime": "covid_crash_4_circuit_breakers"},
+    "2020Q2": {"large_lead": ["AMZN"], "large_lag": [], "small_lead": ["PTON"], "small_lag": [], "regime": "infinite_qe_gamma_squeeze"},
+    "2020Q3": {"large_lead": ["TSLA"], "large_lag": ["INTC"], "small_lead": ["NIO"], "small_lag": [], "regime": "trend_following_peak_sharpe"},
+    "2020Q4": {"large_lead": ["DIS"], "large_lag": [], "small_lead": [], "small_lag": [], "regime": "vaccine_value_rotation_spac"},
+    "2021Q1": {"large_lead": ["GOOGL"], "large_lag": [], "small_lead": ["GME", "AMC"], "small_lag": [], "regime": "meme_squeeze_archegos"},
+    "2021Q2": {"large_lead": ["NVDA"], "large_lag": [], "small_lead": ["MSTR"], "small_lag": ["CLOV"], "regime": "cpi_rising_arklike_top"},
+    "2021Q3": {"large_lead": ["MSFT"], "large_lag": ["BABA"], "small_lead": ["CAR"], "small_lag": [], "regime": "hidden_bear_breadth_collapse"},
+    "2021Q4": {"large_lead": ["TSLA"], "large_lag": ["META"], "small_lead": ["LCID"], "small_lag": ["PTON", "ZM"], "regime": "momentum_growth_reversal"},
+    "2022Q1": {"large_lead": ["CVX", "XOM"], "large_lag": ["META"], "small_lead": ["BTU"], "small_lag": ["RIVN"], "regime": "hike_cycle_start_war_oil"},
+    "2022Q2": {"large_lead": ["LLY"], "large_lag": ["NFLX"], "small_lead": [], "small_lag": ["UPST"], "regime": "stock_bond_double_kill_cash_king"},
+    "2022Q3": {"large_lead": ["AAPL"], "large_lag": ["NVDA"], "small_lead": ["PBF"], "small_lag": [], "regime": "75bps_hikes_liquidity_dry"},
+    "2022Q4": {"large_lead": ["XOM"], "large_lag": ["TSLA"], "small_lead": [], "small_lag": ["CVNA"], "regime": "chatgpt_launch_quiet_bottom"},
+    "2023Q1": {"large_lead": ["NVDA"], "large_lag": ["PFE"], "small_lead": ["AI"], "small_lag": ["SIVB"], "regime": "regional_bank_crisis_btfp"},
+    "2023Q2": {"large_lead": ["NVDA"], "large_lag": [], "small_lead": ["SMCI"], "small_lag": [], "regime": "mag7_concentration_record"},
+    "2023Q3": {"large_lead": ["GOOGL"], "large_lag": ["AAPL"], "small_lead": [], "small_lag": [], "regime": "10y_near_5pct_correction"},
+    "2023Q4": {"large_lead": ["MSFT"], "large_lag": ["XOM"], "small_lead": ["COIN"], "small_lag": [], "regime": "dovish_pivot_everything_rally"},
+    "2024Q1": {"large_lead": ["NVDA"], "large_lag": ["TSLA"], "small_lead": ["SMCI"], "small_lag": ["FSR"], "regime": "blackwell_supercycle"},
+    "2024Q2": {"large_lead": ["AAPL"], "large_lag": ["INTC"], "small_lead": ["VST", "CEG"], "small_lag": [], "regime": "ai_power_infra_broadening"},
+    "2024Q3": {"large_lead": ["META"], "large_lag": ["INTC"], "small_lead": ["LSCC"], "small_lag": ["SMCI"], "regime": "rotation_day_quant_crowding"},
+    "2024Q4": {"large_lead": ["TSLA"], "large_lag": [], "small_lead": ["MSTR"], "small_lag": [], "regime": "trump_trade_crypto_smallcap"},
+    "2025Q1": {"large_lead": ["ORCL"], "large_lag": ["INTC"], "small_lead": ["CAMT", "NVMI"], "small_lag": [], "regime": "cashflow_geopolitical_immunity"},
+    "2025Q2": {"large_lead": ["NVDA"], "large_lag": [], "small_lead": [], "small_lag": [], "regime": "institutional_concentration"},
+    "2025Q3": {"large_lead": ["AMZN"], "large_lag": [], "small_lead": [], "small_lag": [], "regime": "tariff_supply_chain_resort"},
+    "2025Q4": {"large_lead": ["AVGO"], "large_lag": [], "small_lead": [], "small_lag": [], "regime": "asic_digital_hardassets"},
+    "2026Q1": {"large_lead": ["NVDA"], "large_lag": ["INTC"], "small_lead": [], "small_lag": [], "regime": "ai_profit_only_smallcap_washout"},
+    "2026Q2": {"large_lead": ["NVDA", "ORCL"], "large_lag": [], "small_lead": [], "small_lag": [], "regime": "ai2_agent_native_profit"}
+  }
+}

@@ -144,6 +144,59 @@ public proxies in the lake: **DXYZ** (Destiny Tech100 NAV proxy, fetched
 2026-06-13), **RKLB** (purest launch comparable), ASTS / PL / LUNR / STRL / IRDM /
 GSAT, and LMT / NOC / BA. No SpaceX price is ever fabricated.
 
+## Stage 1 — historical competition: Risk Officer as a trader (2018–2026)
+
+`simulation/historical_competition.py` runs 7 traders — including a **RISK_OFFICER
+that competes as an equal** (holds cash when breadth is negative, else a defensive
+basket; no veto powers here) — over real lake prices. Weekly/monthly champions use
+daily data (2021-06→2026-06); quarterly leaders/laggards + accuracy use monthly
+data (2018→2026). Answer key = your grok.md quarterly matrix
+(`simulation/data/quarterly_benchmark_2018_2026.json`, Grade-D, **post-hoc grading
+only — never a trader input**). Artifact: `outputs/trading-society-history-*.json`.
+
+**Champion wins (who won the most periods):**
+
+| trader | weekly (~260) | monthly (~60) | quarterly (34) |
+|---|---|---|---|
+| MEAN_REVERSION | 56 | **15** | 3 |
+| REVERSION_FAST | **58** | 8 | 5 |
+| MOMENTUM_FAST | 45 | 13 | 5 |
+| MOMENTUM_SWING | 41 | 9 | **9** |
+| TREND_RIDER | 32 | 7 | 6 |
+| BREAKOUT_HUNTER | 28 | 9 | 6 |
+| RISK_OFFICER | 1 | 0 | 0 |
+
+**Accuracy (caught quarter leaders / avoided laggards / hit your answer-key leader):**
+
+| trader | catch | avoid | answer-key | 
+|---|---|---|---|
+| MOMENTUM_FAST | 0.235 | 0.871 | **0.235** |
+| BREAKOUT_HUNTER | 0.235 | 0.871 | **0.235** |
+| TREND_RIDER | 0.228 | 0.879 | 0.118 |
+| MOMENTUM_SWING | **0.246** | 0.868 | 0.088 |
+| MEAN_REVERSION | 0.162 | 0.846 | 0.059 |
+| REVERSION_FAST | 0.169 | 0.860 | 0.000 |
+| RISK_OFFICER | 0.007 | **0.989** | 0.029 |
+
+**Findings (all honest, all from real prices):**
+1. **Horizon split:** reversion wins the most *weeks* (short-horizon edge);
+   momentum wins the most *quarters* (long-horizon edge). Different traders own
+   different time frames — exactly the niche design.
+2. **Momentum catches the legends:** MOMENTUM_FAST / BREAKOUT_HUNTER hit your
+   answer-key leader (NVDA/MSFT/AAPL/TSLA...) 23.5% of quarters — best at
+   "catching" the big names; reversion barely does.
+3. **The Risk Officer did NOT win** (1 week, 0 months, 0 quarters) — because the
+   other traders can *short* and profit in downturns, so pure cash/defense rarely
+   tops them. But it has by far the **highest laggard-avoidance (0.989)** — it
+   almost never holds the losers. So defense's value here is **risk reduction, not
+   leaderboard wins** — and now we can *see* that instead of assuming it.
+4. **Evolution adjustment (human-gated):** the engine reflects on the weakest
+   trader (REVERSION_FAST, weak answer-key hit) and proposes a regime filter.
+
+Caveat unchanged: returns are **relative rankings, not realistic P&L** (no costs /
+slippage / sizing). Recommend-only; the canonical 10-signal pipeline + Risk-Officer
+gate remain the authority.
+
 ## Evolution + competition (演化 + 競賽)
 
 - `simulation/strategy_agent.py` — parameterized genome (lookback, entry_threshold,

@@ -710,3 +710,15 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **誠實警示(重要)**:報酬量級(+1.02 等)**非真實 P&L**(無手續費/滑價/部位 sizing、267 筆、next-bar naive 計分)——只作 trader **相對排名**,不承諾報酬。且冠軍=逢低承接,其 SpaceX 選股(DXYZ/ASTS/RKLB 皆深跌)正是 persona 避險層警告的「高估值接刀」——**社會內部張力本身就是價值**,由 human + Risk Officer 裁決。recommend-only,不取代 canonical 10-signal 與 Risk Officer 閘。
 - **SpaceX 處理**:私有公司=monitor-only(不捏造 ticker/價,honors `watchlist/spacex_ipo_2026_event.md`);今日拉入 DXYZ(556)/IRDM(1256)/GSAT(1256)入湖(湖 gitignored);可交易 proxy = DXYZ/RKLB/ASTS/PL/LUNR/STRL/IRDM/GSAT/LMT/NOC/BA。
 - 12 模組 self-test 全綠;wiki/26 增「Live result + 演化/競賽 + SpaceX」段;EVOLUTION_PROGRAM status 更新。
+
+## 2026-06-13(e)— feat | Stage 1 歷史競賽:Risk Officer 變交易員 + 週/月/季冠軍 + 2018-2026 領漲領跌正確率
+- 主理人指令:「Risk Officer 也變成一個交易員(不是最大的;若持現金/買防禦循環股贏了也能脫穎而出)→ 給我週冠軍月冠軍;用 2018-now 每季領漲領跌(grok.md 標準答案)回測演化調整,看誰正確率高/誰能抓到/誰績效好。這是第一階段。下一階段:預測下一季/下月 portfolio。」
+- **答案鍵 ingest**:`simulation/data/quarterly_benchmark_2018_2026.json` — grok.md「2018-2026 逐季領漲領跌矩陣」(34 季、大/小資本多空)結構化落盤;標 **Grade-D**、provenance、**僅 post-hoc 評分用、絕不餵給交易員(無 lookahead)**。私有/泛指名(WeWork/「大量生技」)略去,只留具體 ticker。
+- **引擎**:`simulation/historical_competition.py`(numpy 向量化)— 7 交易員含 **RISK_OFFICER(平等競爭:breadth<0 持現金、否則防禦籃 KO/PG/JNJ/LMT/GLD...;無否決特權)**。日線(2021-06→2026-06,587 檔)算週/月冠軍;月線(2018→2026,582 檔)算季冠軍 + 季領漲領跌(湖內實際 top/bottom decile)+ 對答案鍵正確率。`llm=none` KPI-eligible。
+- **結果**(`outputs/trading-society-history-2026-06-13.json`):
+  - **週冠軍 tally**:REVERSION_FAST 58 / MEAN_REVERSION 56 領先(逢低承接=短週期王);**月冠軍**:MEAN_REVERSION 15;**季冠軍**:MOMENTUM_SWING 9 / TREND_RIDER 6(動能=長週期王)。→ **結構發現:reversion 贏週、momentum 贏季,時間框各有其主。**
+  - **正確率(抓到季領漲/避開季領跌/命中答案鍵)**:MOMENTUM_FAST & BREAKOUT_HUNTER catch 0.235 / **answer-key 0.235**(最會抓 NVDA/MSFT/AAPL/TSLA 等傳奇);reversion 幾乎抓不到。
+  - **RISK_OFFICER 誠實結論**:週/月/季冠軍 = 1/0/0 **幾乎沒贏**(因其他交易員能放空、在跌勢照樣獲利,純現金/防禦難勝);但 **laggard 迴避 0.989 全場最高**——它幾乎不抱輸家。**防禦的價值在降風險、不在搶冠軍**——現在「看得到」而非假設。
+- **演化調整(human-gated)**:引擎對最弱交易員(REVERSION_FAST,答案鍵命中 0)經 `reflection_engine`(高估值 regime → dot-com 壓測模板)診斷 regime_stability 弱 → 提 regime_filter +0.25(PROPOSAL,須多 regime 重測 + human gate)。
+- **誠實警示**:報酬量級非真實 P&L(無成本/滑價/sizing);答案鍵 Grade-D 僅評分用;recommend-only,不取代 canonical pipeline。**下一階段(待辦)**:用此排名/正確率預測「下一季/下個月 portfolio」(forward,須嚴格 walk-forward + Risk Officer 閘 + human 選優)。
+- wiki/26 增 Stage-1 段;`historical_competition` self-test 綠。
