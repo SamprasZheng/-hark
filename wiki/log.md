@@ -773,3 +773,10 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **擴編 5 交易員**(grok2.md roster;`specialist_traders.py` 重構為統一 scorer(ticker,pts,ctx)):**Value & Quality Compounders**(便宜大型股 P/E + 低回撤;live FDX/TRGP)、**Defense & Geopolitical**(國防/太空 sleeve;IRDM/GSAT)、**Biotech & Healthcare**(LLY/HUM 96/GH)、**Nancy Pelosi Tracker**(Grade-D 公開申報持股 + 動能;PANW/CRWD)、**Elon Musk Ecosystem**(Grade-D;TSLA+SpaceX proxy,今日無票=不硬湊)。各有評分卡 + regime tilt;**全 long-only**。`finviz_data.get_fundamentals`(市值+P/E)餵 ctx。
 - **整合**:portfolio 7 specialist + 7 core = **14 voting traders**;portfolio 套真實 Finviz fundamentals;regime tilt 補 5 新(HARD_DEFENSE:Value ×1.5/Defense ×1.3/Biotech ×1.1、Pelosi/Musk 砍;PARADIGM:Musk ×1.5/Pelosi ×1.3)。`TRADER_ROSTER.md` 狀態更新(14 voting;剩 Energy/Consumer/Event-Driven 低優先 TODO)。
 - recommend-only、never-raise;specialist self-test live 全綠(170/170 fundamentals);import-smoke 綠。Pelosi/Musk 為 Grade-D curated 參考、非單獨觸發。
+
+## 2026-06-13(m)— feat | 3 層比賽框架:Layer 1 短期配置 + Layer 3 十年潛力評分(主理人框架)
+- 主理人提供 3 層框架(L1 短期可執行配置 ★★★★★、L2 中期演化比賽、L3 十年潛力);建議先做 L1。自動執行 **L1 + L3**(L2 即既有 2018-2026 比賽),文件化 `programs/trading_society/COMPETITION_FRAMEWORK.md`。
+- **Layer 1**(`simulation/layer1_allocation.py`):把 14-trader 投票轉成「下季配置建議」—— **核心(大型股 80%)+ 衛星(小盤高 Beta 20%,Small Cap Hunter)+ 動態防禦腿**;**新增/繼續持有/減持**(對比上次 artifact diff,首跑=baseline 全新增);上限 核心 ≤12%、衛星 ≤6%、產業 ≤35%、§10 高估值 floor。**首跑 2026 Q3**(MEAN_REVERSION、BI 218.5%、防禦 35%):核心 ROKU/AMKR/ARM/FORM + semicap(52%)、衛星 RDW/AI/SEDG/SG(13%)、防禦 現金 19.5% + KO/PG/JNJ/LMT/NOC/RTX。中文 readout 寫 UTF-8 `.md`(cp950 console 不亂碼)。
+- **Layer 3**(`simulation/layer3_potential.py`):0-100 七維潛力評分(產業趨勢 25% · **護城河 20% 真實=`fom.IP_DEFENSIBILITY`** · 資本配置 15% proxy · FCF 15% proxy · **估值 10% 真實 Finviz P/E** · 經營層 10% proxy · 地緣 5% curated)→ Top 30。**今日 Top 10:MSFT 71.8、NOC、NVDA、TSM、ASML、LMT、QCOM、GOOGL、RTX、CRM**(大型科技 + 國防 + 半導體);分 `core_long_term` / `high_growth_high_risk` 兩桶。**誠實:7 維中 3 維(資本配置/FCF/經營)為中性 proxy,待真實財報接線**。
+- **編碼修正**:cp950 box 上 print 中文會亂碼 → L1 中文 readout 改寫 UTF-8 `.md`、console 只印 ASCII 摘要;L3 console driver/risk 改 ASCII(中文框架在 chat 呈現)。
+- recommend-only、never-raise;import-smoke 綠。**L2 優化待辦**:每季 reset、風險調整 fitness、cross-style 公平比較。

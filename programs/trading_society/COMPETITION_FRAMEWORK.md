@@ -1,0 +1,77 @@
+---
+type: research
+title: Trading Society — 3-layer competition framework (short-term + 10-year)
+as_of_timestamp: 2026-06-14T00:00:00+08:00
+author_role: writer
+status: draft
+tags: [trading-society, framework, allocation, competition, potential, layers]
+related:
+  - simulation/layer1_allocation.py
+  - simulation/competition_2018_2026.py
+  - simulation/layer3_potential.py
+  - simulation/portfolio_generator.py
+---
+
+# Trading Society — 3-layer competition framework
+
+A layered framework that serves both **short-term executable recommendations** and
+**long-term potential prediction**. Recommend-only throughout; promotion to capital
+use requires human + Risk-Officer gate (CLAUDE.md §10).
+
+| Layer | Goal | Horizon | Output | Status |
+|---|---|---|---|---|
+| **1** | short-term decision support | 1–3 months | next-quarter allocation (new/hold/trim) | **built** (`layer1_allocation.py`) |
+| **2** | mid-term strategy validation | 1–4 quarters | evolving competition leaderboard | **built** (`competition_2018_2026.py`) |
+| **3** | long-term potential | 5–10 years | Top-30 potential scorecard | **built** (`layer3_potential.py`) |
+
+## Layer 1 — short-term allocation (top priority)
+
+`layer1_allocation.py` turns the 14-trader vote into a readable next-quarter
+allocation:
+- **Core growth (large-cap, 80% of growth leg):** new / hold / trim lists (diffed
+  vs the prior Layer-1 run). Single-name cap ≤ 12%.
+- **Satellite (small-cap high-beta, 20%):** Small Cap Catalyst Hunter picks. Cap ≤ 6%.
+- **Defensive leg:** dynamic ratio + the §10 high-valuation floor (≥ 35%), cash +
+  defensive basket.
+- **Caps:** single-sector ≤ 35% (real Finviz industries). Regime guardrail applied.
+
+## Layer 2 — mid-term evolving competition
+
+`competition_2018_2026.py` — long-horizon (monthly rebalance, ≤3 names),
+quarter-by-quarter evolution, long-biased (shorts only in confirmed-bear months).
+**Optimization TODO** (principal): per-quarter reset + rebalance, risk-adjusted
+fitness (Sharpe + MDD + recovery), cross-style fairness (compare each style within
+its best regime), per-quarter performance report.
+
+## Layer 3 — 10-year potential scorecard
+
+`layer3_potential.py` — a transparent 0-100 scorecard over 7 dimensions:
+
+| Dimension | Weight | Data source |
+|---|---|---|
+| Industry trend (10-yr structural growth) | 25% | curated by Finviz industry |
+| Moat / competitive advantage | 20% | **real** (`fom.IP_DEFENSIBILITY`) |
+| Capital allocation (ROIC, M&A record) | 15% | **proxy (neutral) — TODO real** |
+| FCF quality & growth | 15% | **proxy (neutral) — TODO real** |
+| Valuation vs growth | 10% | **real** (Finviz P/E) |
+| Management & governance | 10% | **proxy (neutral) — TODO** |
+| Geopolitical / sovereign immunity | 5% | curated |
+
+Output: Top-30 ranking, each name tagged `core_long_term` vs `high_growth_high_risk`,
+with its main driver + risk flag. Honest: 3 of 7 dimensions are neutral proxies until
+real financials (polygon FCF/ROIC) + governance data are wired.
+
+## Quarterly run sequence
+
+```
+each quarter start:
+  Layer 1 -> next-quarter allocation (new/hold/trim) + regime floor
+  Layer 2 -> run the evolving competition; update leaderboard + genomes
+  Layer 3 -> (yearly) refresh the 10-year potential Top-30; cross-check vs Layer 1
+```
+
+## Governance
+
+Recommend-only. Layers never write `outputs/picks-*` / `wiki/05_recommendations/*`.
+Real data: FRED macro + real Buffett Indicator, Finviz industries + valuation.
+Long-biased; shorts only in HARD_DEFENSE (CLAUDE.md §10).

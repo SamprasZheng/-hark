@@ -228,6 +228,31 @@ Caveat unchanged: returns are **relative rankings, not realistic P&L** (no costs
 slippage / sizing). Recommend-only; the canonical 10-signal pipeline + Risk-Officer
 gate remain the authority.
 
+## 3-layer competition framework (short-term + 10-year)
+
+Full design: `programs/trading_society/COMPETITION_FRAMEWORK.md`. Three layers, all
+recommend-only:
+
+- **Layer 1 — short-term allocation** (`simulation/layer1_allocation.py`): turns the
+  14-trader vote into a next-quarter allocation with **NEW / HOLD / TRIM** lists
+  (diffed vs the prior run), **core (large-cap, 80%) + satellite (small-cap, 20%)**
+  split, position caps (core ≤12%, satellite ≤6%, sector ≤35%), and the §10 hedge
+  floor. First run (2026 Q3, MEAN_REVERSION, BI 218.5%, 35% defensive): core ≈
+  ROKU/AMKR/ARM/FORM + semicap; satellite = RDW/AI/SEDG/SG (Small Cap Hunter);
+  defensive = 19.5% cash + KO/PG/JNJ/LMT/NOC/RTX. Chinese readout →
+  `outputs/layer1-allocation-*.md` (UTF-8).
+- **Layer 2 — mid-term evolving competition** (`competition_2018_2026.py`): the
+  2018-2026 long-horizon competition (above). Optimization TODO: per-quarter reset,
+  risk-adjusted fitness, cross-style fairness.
+- **Layer 3 — 10-year potential** (`simulation/layer3_potential.py`): a 0-100,
+  7-dimension scorecard (industry trend 25% · **moat 20% real via
+  `fom.IP_DEFENSIBILITY`** · capital-allocation 15% *proxy* · FCF 15% *proxy* ·
+  **valuation 10% real Finviz P/E** · management 10% *proxy* · geopolitical 5%
+  curated). Top-30 today: **MSFT 71.8, NOC, NVDA, TSM, ASML, LMT, QCOM, GOOGL,
+  RTX, CRM...** (mega-cap tech + defense + semis), each tagged `core_long_term`
+  vs `high_growth_high_risk`. Honest: 3 of 7 dimensions are neutral proxies pending
+  real financials.
+
 ## 2018–2026 evolving competition + 2026 H2 forecast
 
 `simulation/competition_2018_2026.py` runs a **long-horizon, low-frequency** roster
