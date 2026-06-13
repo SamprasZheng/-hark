@@ -53,6 +53,14 @@ if ($isWeekly -and ((Get-Date).Day -le 7)) {
 Log "RF/PM/analog rush-order cycle (variable #15, two-door: leading vs handset)..."
 python -m sharks.cli rf-cycle --as-of $today 2>&1 | Tee-Object -FilePath $log -Append
 
+# ── DAILY: Finviz Elite 全宇宙拉取 → PIT 原始存檔 + rally 連續起漲 ─────────────
+# 趁 Elite 訂閱在線,每天捕捉新鮮 point-in-time 原始資料(raw/market_data/),供日後
+# 離線回測 — 兌現主理人 2026-06-10 指令。token/訂閱失效時 CLI 自動 fallback 讀最近存檔。
+# PYTHONUTF8 避免 Finviz CLI 印 ✅/中文 在 cp950 console 崩潰。recommend-only,永不下單。
+$env:PYTHONUTF8 = "1"
+Log "Finviz Elite universe pull (PIT capture + rally streak)..."
+python -m sharks.data.finviz_elite rally universe 2>&1 | Tee-Object -FilePath $log -Append
+
 # ── WEEKLY: 選股建議 + FOM recalibration heartbeat ───────────────────────────
 if ($isWeekly) {
     Log "WEEKLY: FOM universe scan (選股建議)..."
@@ -88,6 +96,7 @@ $digest = Join-Path $projectRoot "outputs\routine_digest_$today.md"
 - posture / recommendations: outputs/daily-health-check-$today.json
 - portfolio audit: outputs/portfolio-audit-$today.json
 - RF/PM cycle (變數#15, leading vs handset door): outputs/rfpm-cycle-$today.json
+- Finviz rally scan (PIT capture): outputs/finviz-scan-$today.json → raw/market_data/finviz-export-universe-$today.csv
 $(if ($isWeekly) { "- FOM scan: outputs/fom-monthly-*.json`n- IC re-check: outputs/fom-validation-2016-to-2026.json (verdict + best horizon)" })
 
 ## Discipline reminder
