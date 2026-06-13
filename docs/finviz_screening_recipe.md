@@ -87,9 +87,9 @@ Beta·Short Float·Volatility、Analyst Recom、Insider/Inst Transactions、Rel/
 1. Finviz → Screener → 切到 **Custom** 表格視圖(URL 帶 `v=152`)。
 2. 點欄位齒輪,勾選上表 5 欄(名稱以你帳號顯示為準;`HEADER_ALIASES` 會吸收措辭差異)。
 3. 存檔。之後 `python -m sharks.data.finviz_elite rally universe`(或每日排程)即自動帶到。
-4. 驗證:跑完看 stderr 的「維度覆蓋」與 `outputs/finviz-scan-<date>.json` 的 `flags` —
-   `forward_pe`/`atr`/`inst_own`/`insider_own` 不再是 `null`、`earnings_blackout`/`squeeze_watch`
-   開始有名單,即代表 5 欄已生效。
+4. 驗證(自動自報):跑完 stderr 會印「**閘門欄位覆蓋**」行 + `outputs/finviz-scan-<date>.json`
+   會帶 `gate_coverage` 區塊。5 欄到位 → 印 **✅ 三閘可運作**、`gate_coverage.dark==[]`;
+   仍缺 → 印 `⚠️ 缺欄(對應閘暗):…`。無需人工比對 `null`。
 
 ### 注意
 - 排程每日跑,但 finviz pull 有 **Tue–Sat TPE 閘**(`scripts/daily_routine.ps1`):TPE 週日/週一

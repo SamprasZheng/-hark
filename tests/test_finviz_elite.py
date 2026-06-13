@@ -261,3 +261,26 @@ def test_field_resolves_aliases_and_is_case_insensitive():
     assert FE._field({"sales growth past 5 years": "30%"}, "sales_growth") == 30.0  # case
     assert FE._field({"52-Week High": "-12%"}, "dist_52w_high") == -12.0            # wording
     assert FE._field({"X": "1"}, "no_such_field") is None                           # unknown
+
+
+def test_flags_coverage_reports_dark_gated_columns():
+    full = {"AAA": {"forward_pe": 18.0, "earnings_date": "Jun 12/a", "atr": 5.0,
+                    "inst_own": 80.0, "insider_own": 12.0}}
+    c = FE.flags_coverage(full)
+    assert c["n"] == 1 and c["dark"] == [] and c["fields"]["atr"] == 1
+    # the current Custom view (no ownership / ATR / earnings / fwd PE) → all 5 dark
+    bare = {"AAA": {"forward_pe": None, "earnings_date": None, "atr": None,
+                    "inst_own": None, "insider_own": None, "overshoot_200d": True}}
+    assert set(FE.flags_coverage(bare)["dark"]) == set(FE.GATE_COVERAGE_FIELDS)
+    assert FE.flags_coverage(None)["n"] == 0          # tolerant of empty/None
+
+
+def test_scan_json_embeds_gate_coverage(tmp_path):
+    import json
+    from sharks.scoring import rally_signal as RS
+    sigs = [RS.assess("AAA", {"technical": 70}, prior_streak=0)]
+    flags = {"AAA": {"forward_pe": 18.0, "earnings_date": "Jun 12/a", "atr": 5.0,
+                     "inst_own": 80.0, "insider_own": 12.0}}
+    p = FE.write_scan_recommendation(tmp_path, sigs, source="universe", flags_by_ticker=flags)
+    rec = json.loads(p.read_text(encoding="utf-8"))
+    assert rec["gate_coverage"]["dark"] == [] and rec["gate_coverage"]["fields"]["atr"] == 1

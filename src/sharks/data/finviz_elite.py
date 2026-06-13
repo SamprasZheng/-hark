@@ -436,6 +436,24 @@ def atr_position_size(entry: float, atr: float, account_equity: float, *,
             "k": k, "risk_pct": risk_pct}
 
 
+# The 5 account-side Custom-view columns (finviz_schema.json TO_ADD). Each is None until
+# the operator ticks it in the Finviz UI; flags_coverage reports which are still dark.
+GATE_COVERAGE_FIELDS = ("forward_pe", "earnings_date", "atr", "inst_own", "insider_own")
+
+
+def flags_coverage(flags_by_ticker: Optional[dict]) -> dict:
+    """Per-field non-null count for the 5 account-side gated columns → which gates can
+    fire. 0 for a field ⇒ that column isn't in the Custom view yet (gate stays dark:
+    earnings_date→earnings_blackout, atr→ATR sizing, insider_own→squeeze_watch). Pure;
+    powers both the CLI self-report and the scan-JSON coverage block."""
+    fbt = flags_by_ticker or {}
+    n = len(fbt)
+    fields = {k: sum(1 for f in fbt.values() if f.get(k) is not None)
+              for k in GATE_COVERAGE_FIELDS}
+    return {"n": n, "fields": fields,
+            "dark": sorted(k for k, c in fields.items() if c == 0)}
+
+
 def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz",
                               flags_by_ticker: Optional[dict] = None):
     """Write the data-driven re-recommendation to outputs/finviz-scan-<date>.json
@@ -464,6 +482,9 @@ def write_scan_recommendation(outputs_dir, signals, *, source: str = "finviz",
                                    if f.get("squeeze_watch")),
            "overshoot_200d": sorted(t for t, f in flags_by_ticker.items()
                                     if f.get("overshoot_200d")),
+           # 5-column gate coverage (which account-side gates can fire) — see
+           # docs/finviz_screening_recipe.md; dark fields ⇒ tick them in the Custom view
+           "gate_coverage": flags_coverage(flags_by_ticker),
            "ranked": [row(s) for s in signals]}
     path = outputs_dir / f"finviz-scan-{date}.json"
     path.write_text(json.dumps(rec, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -745,6 +766,14 @@ def main(argv: Optional[list[str]] = None) -> int:
         if cov["technical"] == 0 and cov["fundamental"] == 0:
             print("⚠️ 技術/基本面欄位全空 → 此 view 沒帶到欄位;用 view=/cols= 從你的 "
                   "Finviz Custom URL 覆蓋(見 docs/finviz_screening_recipe.md)。")
+        # 5-column gate self-report (the account-side Custom-view columns)
+        gc = flags_coverage(flags)
+        print("閘門欄位覆蓋:", " ".join(f"{k}={gc['fields'][k]}/{n}" for k in GATE_COVERAGE_FIELDS))
+        if gc["dark"]:
+            print(f"⚠️ 缺欄(對應閘暗):{', '.join(gc['dark'])} — 到 Finviz Custom view 勾選"
+                  f"(docs/finviz_screening_recipe.md);earnings_date 暗=財報黑窗閘 bypass(風險)")
+        else:
+            print("✅ 5 帳號端欄全到位 → earnings_blackout / squeeze_watch / ATR sizing 三閘可運作")
         for s in sigs[:30]:
             d = s.dims
             f = flags.get(s.ticker, {})
