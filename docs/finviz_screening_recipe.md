@@ -58,3 +58,41 @@ Avg Vol>500K + Price>$2 + Current Ratio>1 + Gross Margin>20%。
 1. Finviz 是**找宇宙**,不是買訊;真正的進場由系統的金叉/連續起漲 + regime 健檢確認。
 2. **風險濾鏡優先於收益濾鏡**:寧可少幾檔,也不要撈到落刀。
 3. 小型股 regime-conditional:資金面翻 STRESS → 先砍,別逆勢接。
+
+---
+
+## Finviz Elite Custom View 設定檢查清單(export-API 路徑)
+
+> 自動化路徑用的是 Finviz Elite 的 `/export` API(`src/sharks/data/finviz_elite.py`,view=152
+> Custom)。欄名比對走集中式 `HEADER_ALIASES`(大小寫不敏感 + 多措辭別名),所以**任何
+> 帳號的欄名變體都對得上**——唯一需要你手動做的,是在 Custom view 把欄位**勾出來**。
+> 缺欄一律優雅降級為 `None`(不報錯、不下單),但對應的閘門會「暗」掉。
+
+### 目前已覆蓋(view=152 預設已帶)
+technical / capital / fundamental / valuation / growth / risk / analyst / **dist_ath_pct**
+(`52-Week High`、`50/200-Day SMA`、`EPS/Sales Growth`、ROE/毛利/淨利、P/E·P/S·PEG、
+Beta·Short Float·Volatility、Analyst Recom、Insider/Inst Transactions、Rel/Avg Volume、Price)。
+
+### 仍需手動勾選的 5 欄(勾完才會亮的閘門)
+
+| Finviz 欄位(Custom view 勾選名) | 點亮的閘門 / 用途 | 缺少時的行為(graceful) |
+|---|---|---|
+| **Forward P/E** | valuation 改用前瞻 PE(成長股 trailing 失真) | 退回 trailing `P/E` |
+| **Earnings** | `earnings_blackout`(財報 ≤3 日不開新倉 — **風險閘**) | gate 永遠 `False`(等於 bypass,**風險**) |
+| **ATR** | ATR 部位 sizing(stop = entry − k·ATR) | `atr/atr_pct=None`,無 ATR 停損;改用固定 risk% sizing |
+| **Inst Own** | 機構持股**水位**(IPO-drain 防禦傾斜) | `inst_own=None` |
+| **Insider Own** | `squeeze_watch`(Short Float≥10% ＋ 高內部人持股) | squeeze 預警永不觸發 |
+
+### 設定步驟(約 5 分鐘,一次性)
+1. Finviz → Screener → 切到 **Custom** 表格視圖(URL 帶 `v=152`)。
+2. 點欄位齒輪,勾選上表 5 欄(名稱以你帳號顯示為準;`HEADER_ALIASES` 會吸收措辭差異)。
+3. 存檔。之後 `python -m sharks.data.finviz_elite rally universe`(或每日排程)即自動帶到。
+4. 驗證:跑完看 stderr 的「維度覆蓋」與 `outputs/finviz-scan-<date>.json` 的 `flags` —
+   `forward_pe`/`atr`/`inst_own`/`insider_own` 不再是 `null`、`earnings_blackout`/`squeeze_watch`
+   開始有名單,即代表 5 欄已生效。
+
+### 注意
+- 排程每日跑,但 finviz pull 有 **Tue–Sat TPE 閘**(`scripts/daily_routine.ps1`):TPE 週日/週一
+  會重抓上週五收盤,故跳過,避免污染 `連續起漲` streak 與 `overshoot_200d`。
+- 趁訂閱在線,每跑一次就把原始 export 存進 `raw/market_data/finviz-export-*.csv`(point-in-time,
+  gitignored,本地保存)——訂閱失效後 CLI 自動 fallback 讀最近存檔做離線回測。

@@ -57,9 +57,16 @@ python -m sharks.cli rf-cycle --as-of $today 2>&1 | Tee-Object -FilePath $log -A
 # 趁 Elite 訂閱在線,每天捕捉新鮮 point-in-time 原始資料(raw/market_data/),供日後
 # 離線回測 — 兌現主理人 2026-06-10 指令。token/訂閱失效時 CLI 自動 fallback 讀最近存檔。
 # PYTHONUTF8 避免 Finviz CLI 印 ✅/中文 在 cp950 console 崩潰。recommend-only,永不下單。
-$env:PYTHONUTF8 = "1"
-Log "Finviz Elite universe pull (PIT capture + rally streak)..."
-python -m sharks.data.finviz_elite rally universe 2>&1 | Tee-Object -FilePath $log -Append
+# TUE–SAT TPE 閘:美股 16:00 ET 收盤 = TPE 隔日 04:00,故 Tue–Sat 09:30 各抓到 Mon–Fri
+# 一個美股 session 的 EOD;TPE 週日/週一會重抓上週五 stale data → 跳過(免污染 streak/
+# overshoot)。其餘 daily tasks 不受影響。(US 假日仍可能重抓前一交易日,屬殘留邊角。)
+if ($dow -eq 'Sunday' -or $dow -eq 'Monday') {
+    Log "Finviz PIT pull SKIPPED on TPE $dow — would re-capture last Friday's US close (stale for streak/overshoot). Other daily tasks continue."
+} else {
+    $env:PYTHONUTF8 = "1"
+    Log "Finviz Elite universe pull (PIT capture + rally streak; Tue-Sat TPE gate)..."
+    python -m sharks.data.finviz_elite rally universe 2>&1 | Tee-Object -FilePath $log -Append
+}
 
 # ── WEEKLY: 選股建議 + FOM recalibration heartbeat ───────────────────────────
 if ($isWeekly) {
