@@ -231,3 +231,33 @@ def test_write_scan_recommendation_embeds_flags(tmp_path):
     p2 = FE.write_scan_recommendation(tmp_path, sigs, source="universe")
     rec2 = json.loads(p2.read_text(encoding="utf-8"))
     assert rec2["earnings_blackout"] == [] and "flags" not in rec2["ranked"][0]
+
+
+# ── 2026-06-13 regression: Custom view (152) Title-Case headers silently zeroed dims ──
+
+def test_custom_view_title_case_headers_populate_dims():
+    # The bug: _num matched on exact, lower-ish strings ('52W High', 'SMA50', 'EPS growth
+    # next year'); the live Custom-view export uses different wording / casing, so
+    # dist_ath_pct / growth went 0/603 and SMA contributions were dropped (06-09→06-12).
+    row = {"Ticker": "OKTA", "Performance (Month)": "10.0%",
+           "50-Day Simple Moving Average": "6.0%", "200-Day Simple Moving Average": "18.0%",
+           "Relative Strength Index (14)": "60",
+           "EPS Growth Next Year": "35%", "Sales Growth Past 5 Years": "25%",
+           "52-Week High": "-28.0%"}
+    d = FE.finviz_row_to_dims(row)
+    assert d["dist_ath_pct"] == 28.0          # was None before the header fix
+    assert d["growth"] is not None and d["growth"] > 60
+    assert d["technical"] is not None         # SMA50/200 now contribute
+
+
+def test_custom_view_title_case_overshoot_flag():
+    from datetime import date
+    f = FE.finviz_row_to_flags({"Ticker": "Q", "200-Day Simple Moving Average": "45%",
+                                "Price": "100"}, asof=date(2026, 6, 10))
+    assert f["overshoot_200d"] is True        # SMA200 resolved via Title-Case header
+
+
+def test_field_resolves_aliases_and_is_case_insensitive():
+    assert FE._field({"sales growth past 5 years": "30%"}, "sales_growth") == 30.0  # case
+    assert FE._field({"52-Week High": "-12%"}, "dist_52w_high") == -12.0            # wording
+    assert FE._field({"X": "1"}, "no_such_field") is None                           # unknown

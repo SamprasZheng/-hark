@@ -140,17 +140,30 @@ def resolve_filters(filters_or_preset: str) -> str:
 # snapshot). Tolerant to which columns are present (matched by HEADER NAME).
 
 def _num(row: dict, *names: str) -> Optional[float]:
-    """First present column among ``names`` → float (strips %, commas, B/M/K)."""
+    """First present column among ``names`` → float (strips %, commas, B/M/K).
+
+    Header matching is case-INSENSITIVE: the Custom view (152) exports use Title Case
+    ('Sales Growth Past 5 Years', 'EPS Growth Next Year') while presets / the Overview
+    view use other casings, so an exact-string lookup silently misses real columns.
+    We try the literal key first, then fall back to a lowercased key map."""
+    lower_map = None
     for n in names:
-        if n in row and str(row[n]).strip() not in ("", "-", "—"):
-            s = str(row[n]).strip().replace("%", "").replace(",", "")
-            mult = {"B": 1e9, "M": 1e6, "K": 1e3}.get(s[-1:], 1)
-            if mult != 1:
-                s = s[:-1]
-            try:
-                return float(s) * mult
-            except ValueError:
-                continue
+        cell = row.get(n)
+        if cell is None:
+            if lower_map is None:
+                lower_map = {k.lower(): k for k in row}
+            real = lower_map.get(n.lower())
+            cell = row[real] if real is not None else None
+        if cell is None or str(cell).strip() in ("", "-", "—"):
+            continue
+        s = str(cell).strip().replace("%", "").replace(",", "")
+        mult = {"B": 1e9, "M": 1e6, "K": 1e3}.get(s[-1:], 1)
+        if mult != 1:
+            s = s[:-1]
+        try:
+            return float(s) * mult
+        except ValueError:
+            continue
     return None
 
 
@@ -158,14 +171,82 @@ def _clamp(x: float) -> float:
     return max(0.0, min(100.0, x))
 
 
+# ── Canonical field → the header names Finviz uses across views / accounts ──
+# ONE table to maintain when Finviz renames a column or you switch Custom views, so the
+# row→dims/flags mappers below never carry literal header strings. Matching is ALSO
+# case-insensitive (see _num/_text), so only DISTINCT WORDINGS need listing here:
+# 'Sales Growth Past 5 Years' vs 'sales growth past 5 years' collapse automatically, but
+# 'SMA50' vs '50-Day Simple Moving Average' (different words) must both appear.
+HEADER_ALIASES: dict[str, tuple[str, ...]] = {
+    # technical
+    "perf_month":    ("Perf Month", "Performance (Month)"),
+    "sma50":         ("SMA50", "SMA50 (Relative)", "50-Day Simple Moving Average"),
+    "sma200":        ("SMA200", "SMA200 (Relative)", "200-Day Simple Moving Average"),
+    "rsi":           ("RSI", "Relative Strength Index (14)"),
+    # capital (flow)
+    "rel_volume":    ("Rel Volume", "Relative Volume"),
+    "insider_trans": ("Insider Trans", "Insider Transactions"),
+    "inst_trans":    ("Inst Trans", "Institutional Transactions"),
+    # fundamental (quality)
+    "roe":           ("ROE", "Return on Equity"),
+    "gross_margin":  ("Gross Margin",),
+    "sales_growth":  ("Sales growth past 5 years", "Sales Growth Past 5 Years",
+                      "Sales past 5Y", "Sales Q/Q", "Sales growth quarter over quarter",
+                      "Sales Growth Quarter Over Quarter"),
+    "profit_margin": ("Profit Margin", "Net Profit Margin"),
+    # distance from 52-week high (Finviz reports a negative %)
+    "dist_52w_high": ("52W High", "52-Week High (Relative)", "52-Week High"),
+    # valuation / growth
+    "pe":            ("P/E", "PE"),
+    "forward_pe":    ("Forward P/E", "Fwd P/E", "Forward PE", "P/E Forward"),
+    "ps":            ("P/S", "PS"),
+    "peg":           ("PEG",),
+    "eps_next_y":    ("EPS growth next year", "EPS Growth Next Year", "EPS next Y", "EPS Q/Q"),
+    # risk
+    "beta":          ("Beta",),
+    "short_float":   ("Short Float", "Float Short"),
+    "volatility_w":  ("Volatility (Week)", "Volatility", "Volatility W"),
+    # analyst
+    "analyst_recom": ("Analyst Recom", "Recom"),
+    # ownership / sizing / earnings — the 5 TO_ADD Custom-view columns (finviz_schema.json)
+    "inst_own":      ("Inst Own", "Institutional Ownership"),
+    "insider_own":   ("Insider Own", "Insider Ownership"),
+    "atr":           ("ATR", "Average True Range", "ATR (14)"),
+    "price":         ("Price",),
+    "perf_week":     ("Perf Week", "Performance (Week)"),
+    "earnings":      ("Earnings", "Earnings Date"),
+}
+
+
+def _field(row: dict, canonical: str) -> Optional[float]:
+    """Numeric value for a canonical field, resolved via HEADER_ALIASES then (in _num)
+    case-insensitively. An unknown canonical is treated as a literal header name."""
+    return _num(row, *HEADER_ALIASES.get(canonical, (canonical,)))
+
+
+def _text(row: dict, canonical: str) -> Optional[str]:
+    """First non-blank string among a canonical field's aliases (case-insensitive)."""
+    lower_map = None
+    for n in HEADER_ALIASES.get(canonical, (canonical,)):
+        cell = row.get(n)
+        if cell is None:
+            if lower_map is None:
+                lower_map = {k.lower(): k for k in row}
+            real = lower_map.get(n.lower())
+            cell = row[real] if real is not None else None
+        if cell is not None and str(cell).strip() not in ("", "-", "—"):
+            return str(cell).strip()
+    return None
+
+
 def finviz_row_to_dims(row: dict) -> dict:
     """Map one Finviz export row → {capital, technical, fundamental, news, dist_ath_pct}
     (0..100 dims, None when the inputs are absent). Feeds rally_signal.assess."""
     # 技術:月/季動能 + 相對 50/200 日線 + RSI 健康區
-    perf_m = _num(row, "Perf Month", "Performance (Month)")
-    sma50 = _num(row, "SMA50", "SMA50 (Relative)")
-    sma200 = _num(row, "SMA200", "SMA200 (Relative)")
-    rsi = _num(row, "RSI", "Relative Strength Index (14)")
+    perf_m = _field(row, "perf_month")
+    sma50 = _field(row, "sma50")
+    sma200 = _field(row, "sma200")
+    rsi = _field(row, "rsi")
     tech = None
     if perf_m is not None or sma50 is not None:
         t = 50.0 + (perf_m or 0) * 1.2
@@ -178,9 +259,9 @@ def finviz_row_to_dims(row: dict) -> dict:
         tech = _clamp(t)
 
     # 資金:相對成交量 + 內部人/法人買盤
-    relvol = _num(row, "Rel Volume", "Relative Volume")
-    insider = _num(row, "Insider Trans", "Insider Transactions")
-    inst = _num(row, "Inst Trans", "Institutional Transactions")
+    relvol = _field(row, "rel_volume")
+    insider = _field(row, "insider_trans")
+    inst = _field(row, "inst_trans")
     capital = None
     if relvol is not None or insider is not None or inst is not None:
         c = 30.0 + ((relvol or 1) - 1) * 40
@@ -191,11 +272,10 @@ def finviz_row_to_dims(row: dict) -> dict:
         capital = _clamp(c)
 
     # 基本面:ROE / 毛利 / 營收成長 / 獲利率(quality 代理)
-    roe = _num(row, "ROE", "Return on Equity")
-    gm = _num(row, "Gross Margin")
-    sales = _num(row, "Sales growth past 5 years", "Sales past 5Y", "Sales Q/Q",
-                 "Sales growth quarter over quarter")
-    pm = _num(row, "Profit Margin", "Net Profit Margin")
+    roe = _field(row, "roe")
+    gm = _field(row, "gross_margin")
+    sales = _field(row, "sales_growth")
+    pm = _field(row, "profit_margin")
     fund = None
     if any(v is not None for v in (roe, gm, sales, pm)):
         f = 50.0
@@ -209,16 +289,16 @@ def finviz_row_to_dims(row: dict) -> dict:
             f += 6 if pm > 10 else (0 if pm > 0 else -8)
         fund = _clamp(f)
 
-    dist = _num(row, "52W High", "52-Week High (Relative)")   # Finviz: negative % from 52w high
+    dist = _field(row, "dist_52w_high")                # Finviz: negative % from 52w high
     dist_ath = abs(dist) if dist is not None else None
 
     # ── 更多維度(估值/成長/風險/分析師)——讓評估更立體 ──
-    pe = _num(row, "P/E", "PE")
-    fwd_pe = _num(row, "Forward P/E", "Fwd P/E", "Forward PE", "P/E Forward")
+    pe = _field(row, "pe")
+    fwd_pe = _field(row, "forward_pe")
     pe_eff = fwd_pe if fwd_pe is not None else pe      # prefer Forward P/E: growth names'
     #                                                    trailing PE looks stretched
-    ps = _num(row, "P/S", "PS")
-    peg = _num(row, "PEG")
+    ps = _field(row, "ps")
+    peg = _field(row, "peg")
     valuation = None                                   # 高分 = 便宜(有上檔空間)
     if any(v is not None for v in (pe_eff, ps, peg)):
         v = 50.0
@@ -230,16 +310,16 @@ def finviz_row_to_dims(row: dict) -> dict:
             v += 15 if peg < 1 else (-10 if peg > 3 else 0)
         valuation = _clamp(v)
 
-    eps_next = _num(row, "EPS growth next year", "EPS next Y", "EPS Q/Q")
-    sales_g = _num(row, "Sales growth past 5 years", "Sales past 5Y", "Sales Q/Q")
+    eps_next = _field(row, "eps_next_y")
+    sales_g = _field(row, "sales_growth")
     growth = None                                      # 高分 = 成長強
     if eps_next is not None or sales_g is not None:
         g = 50.0 + min(30, (eps_next or 0) * 0.4) + min(20, (sales_g or 0) * 0.4)
         growth = _clamp(g)
 
-    beta = _num(row, "Beta")
-    short_f = _num(row, "Short Float", "Float Short")
-    volat = _num(row, "Volatility (Week)", "Volatility", "Volatility W")
+    beta = _field(row, "beta")
+    short_f = _field(row, "short_float")
+    volat = _field(row, "volatility_w")
     risk = None                                        # 高分 = 風險高(波動/擁擠空單)
     if any(v is not None for v in (beta, short_f, volat)):
         r = 40.0
@@ -251,7 +331,7 @@ def finviz_row_to_dims(row: dict) -> dict:
             r += min(20, volat * 2)
         risk = _clamp(r)
 
-    recom = _num(row, "Analyst Recom", "Recom")        # 1 強力買進 .. 5 賣出
+    recom = _field(row, "analyst_recom")               # 1 強力買進 .. 5 賣出
     analyst = _clamp((5 - recom) / 4 * 100) if recom is not None else None
 
     return {"technical": tech, "capital": capital, "fundamental": fund,
@@ -304,15 +384,15 @@ def finviz_row_to_flags(row: dict, *, asof=None) -> dict:
     earnings blackout, ATR (stop sizing), Forward P/E, ownership levels, short-squeeze
     pre-alert, 200d overshoot. recommend-only — consumed by write_scan_recommendation
     and the weekly SOP (raw/metadata/finviz_schema.json gates), never an auto-trade."""
-    fwd_pe = _num(row, "Forward P/E", "Fwd P/E", "Forward PE", "P/E Forward")
-    inst_own = _num(row, "Inst Own", "Institutional Ownership")
-    insider_own = _num(row, "Insider Own", "Insider Ownership")
-    atr = _num(row, "ATR", "Average True Range", "ATR (14)")
-    price = _num(row, "Price")
-    sma200 = _num(row, "SMA200", "SMA200 (Relative)")
-    short_f = _num(row, "Short Float", "Float Short")
-    perf_w = _num(row, "Perf Week", "Performance (Week)")
-    earnings_raw = (row.get("Earnings") or row.get("Earnings Date") or "").strip() or None
+    fwd_pe = _field(row, "forward_pe")
+    inst_own = _field(row, "inst_own")
+    insider_own = _field(row, "insider_own")
+    atr = _field(row, "atr")
+    price = _field(row, "price")
+    sma200 = _field(row, "sma200")
+    short_f = _field(row, "short_float")
+    perf_w = _field(row, "perf_week")
+    earnings_raw = _text(row, "earnings")
     days_to = _days_to_earnings(earnings_raw, asof=asof)
     # gate.earnings_blackout: within the next N trading days → trim / avoid new entry.
     blackout = days_to is not None and 0 <= days_to <= EARNINGS_BLACKOUT_DAYS
