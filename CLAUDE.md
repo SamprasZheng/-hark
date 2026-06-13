@@ -98,3 +98,21 @@ See `AGENTS.md`: worktree isolation, **mandatory cross-review before merge**, an
 ## 9. Change control
 
 `CLAUDE.md`, `AGENTS.md`, and `RISK_OFFICER_SLA.md` are governance: changed only by a reviewed diff with human sign-off, logged in `wiki/log.md` — not by an unprompted agent ingest. The legacy strategy/philosophy layer is frozen in `_legacy/` (reference only).
+
+---
+
+## 10. Trading Society — silicon trading society (research layer)
+
+A multi-agent **research** layer (矽基交易社會): specialized AI traders/analysts with distinct strategies and time frequencies that improve via competition, multi-round debate, reflection, and **controlled, human-gated** evolution. It is a PROJECT under PPST (`programs/trading_society/PROJECT.md`), not a production signal source. The four user phases map to four PROGRAMs: Backtest/Simulation (Phase 0), Debate (Phase 1), Ranking+Reflection (Phase 2), Evolution (Phase 3).
+
+**It inherits every P0 boundary in §2 and adds these binding rules:**
+
+- **Research, never a shortcut to the §5 contract.** Society outputs are research artifacts. They never produce or bypass `outputs/picks-*.json` / `wiki/05_recommendations/*`. Promotion of any society output to a capital-facing signal requires **human winner-selection + Risk-Officer gate + cross-review** (§8, `AGENTS.md §3`).
+- **Human is the final selector.** Evolution is assistive. No mutated/evolved agent becomes "active" for capital-facing use without explicit human selection.
+- **LLM-backtest protocol is mandatory.** Any society backtest path obeys `docs/LLM-BACKTEST-PROTOCOL.md`: an `llm_involvement` marker on every output, no banned forecast-shaped keys (`probability/direction/verdict/target/forecast/signal/score`) on historical periods, walk-forward gating for LLM-involved runs, and RAG `before_as_of = as_of`. Only `none`/`narration_only` runs are KPI-eligible.
+- **~10 actions per simulated society-day** (mirrors the §5 10-signal spirit; prevents over-trading in sim). No padding — unfilled slots are `null`/`no_action`.
+- **Ecological niches protected.** Each core agent owns a distinct (frequency × edge) slot; the Ranking/Evolution layer protects empty niches and injects novelty to prevent winner-take-all (大者恆大).
+- **Grade D/E** (KOL/social/pure model opinion) informs watch buckets only — never opens or sizes a society position (§4).
+- **High-valuation forced-hedge rule.** In a high-valuation regime (Buffett Indicator > 200% **or** the Dalio bubble flag is set), the multi-round debate must force-include the **TailRisk_Hedger_Agent** plus at least one risk-off voice (Buffett/Burry/Dalio), and **any consensus must carry an explicit hedge / capital-preservation plan — otherwise the Risk Officer (debate Verifier seat) vetoes it.** The legendary-investor persona roster (`simulation/personas.py`, `skills/multi_round_debate/personas/`) is recommend-only: persona outputs enter the debate transcript and never emit a ticker order.
+
+**Canonical artifacts:** roles → `programs/trading_society/CORE_AGENT_ROLES.md`; orchestrator → `simulation/society_orchestrator.py`; backtest+fitness → `simulation/backtest_runner.py` + `simulation/performance_tracker.py`; debate → `programs/debate/DEBATE_PROGRAM.md` + `skills/multi_round_debate/SKILL.md` + `simulation/debate_engine.py`; investor personas → `simulation/personas.py` + `skills/multi_round_debate/personas/`; ranking/reflection/mutation → `simulation/ranking_system.py` + `simulation/reflection_engine.py` + `simulation/evolution/mutator.py` (+ `programs/evolution/EVOLUTION_PROGRAM.md`). Compiled overview: `wiki/26_trading_society.md`.

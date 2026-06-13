@@ -43,6 +43,7 @@ updated: 2026-06-12
 - [[23_world_model]] — **世界模型**:GSCPI/GPR 事件 → DNA 權重/分桶/sizing(2026-06-12 上線;§4a 歷史鏡頭)
 - [[24_exposure_validation]] — 曝險地圖網證覆核(台鏈/光通訊/中國營收,Round 1+2)
 - [[25_cross_tool_agent_orchestration]] — 跨工具 agent 編排:把 Grok 當 headless cross-reviewer(`--prompt-file` 已驗證;MCP/subagent/ACP 為待辦)
+- [[26_trading_society]] — **矽基交易社會**:7+1 專業 agent × 多輪辯論 × 排名/反省 × 人類把關演化(research 層;受 CLAUDE §10 治理,永不繞過 §5 10-signal)
 
 ## 其他
 
