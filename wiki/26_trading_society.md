@@ -218,11 +218,32 @@ concentrated in semi-cap equipment + ARM/ROKU (KLAC, ONTO, UCTT, ICHR, FORM,
 AMKR, backed by 3-4 traders each). Defensive leg: ~17.5% cash + KO/PG/JNJ/LMT/
 NOC/RTX. Walk-forward verification is a **periodic health check**, not every run.
 
-**Honest flags:** Capex score is a **proxy** (AI-capex sleeve 3m price momentum) —
-real 1st/2nd-derivative capex from financials is TODO (no fabrication). Macro is
-synthetic (not PIT — M2/BTC/Gold/CRB/credit-spread wires TODO). Weights from
-cost-free relative backtests. Recommend-only; promotion needs human + Risk-Officer
-gate + cross-review.
+### Stage 2 data-quality upgrade (review B/A/C)
+
+After a cross-review flagged the synthetic inputs, the three weakest links were
+wired to real data / real controls:
+
+- **B — real PIT Macro** (`simulation/macro_risk.py`): a transparent 0-100
+  composite of **live FRED** credit spread (HY OAS), yield curve, VIX, M2 growth,
+  net-liquidity, and valuation; per-series never-raise fallback; ALFRED
+  `vintage_date` for true PIT. **Finding:** real macro reads **~31/100 (risk_on)** —
+  credit spreads are *tight* (HY OAS 2.78%), M2 *expanding*, liquidity growing —
+  the opposite of the old synthetic 97.5. Only **valuation** is extreme, so the
+  §10 high-valuation floor (35%) is what forces the hedge, not the plumbing. A
+  clean demonstration that valuation discipline holds even in a calm-credit tape.
+- **A — real Capex 1st/2nd derivative** (`simulation/capex_provider.py`): capex
+  growth (YoY) + acceleration from **polygon cash-flow statements**, PIT via
+  `filing_date`, cached; falls back to a flagged price-momentum proxy only when no
+  cache / `POLYGON_API_KEY`. `--refresh` populates the real sleeve.
+- **C — concentration caps + costs** (`portfolio_generator.py`): single-name
+  **≤10%**, single-sector **≤35%** (ai_semis was ~50%, now capped at exactly 35%),
+  **10bps** round-trip cost charged in the fitness backtests, and cap-clipped
+  weight routed to cash (defensive cash 17.5% → ~26%).
+
+Remaining honest flags: valuation (Buffett Indicator) is still an override input
+(no clean free FRED source); real capex needs a polygon key (else proxy). Macro
+live-series count varies per run (FRED can time out → flagged fallback).
+Recommend-only; promotion needs human + Risk-Officer gate + cross-review.
 
 ## Evolution + competition (演化 + 競賽)
 

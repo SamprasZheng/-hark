@@ -50,8 +50,9 @@ try:
     from simulation.historical_competition import (
         TRADERS, DEFENSIVE_BASKET, backtest_trader, _lookback_return)
     from simulation.universe_competition import build_universe, SPACE_SLEEVE
-    from simulation.performance_tracker import sharpe as sharpe_of, bubble_risk_score
-    from simulation.macro_data_provider import get_market_context, synthetic_snapshot
+    from simulation.performance_tracker import sharpe as sharpe_of
+    from simulation.macro_risk import macro_risk_score as real_macro_risk
+    from simulation.capex_provider import get_capex_momentum as real_capex
 except Exception:  # pragma: no cover
     import sys
     sys.path.insert(0, str(REPO))
@@ -59,15 +60,44 @@ except Exception:  # pragma: no cover
     from simulation.historical_competition import (
         TRADERS, DEFENSIVE_BASKET, backtest_trader, _lookback_return)
     from simulation.universe_competition import build_universe, SPACE_SLEEVE
-    from simulation.performance_tracker import sharpe as sharpe_of, bubble_risk_score
-    from simulation.macro_data_provider import get_market_context, synthetic_snapshot
+    from simulation.performance_tracker import sharpe as sharpe_of
+    from simulation.macro_risk import macro_risk_score as real_macro_risk
+    from simulation.capex_provider import get_capex_momentum as real_capex
 
-# AI-capex sleeve used as the Capex-momentum PROXY (semis / AI infra).
-CAPEX_SLEEVE = ["NVDA", "AVGO", "AMD", "TSM", "ASML", "AMAT", "LRCX", "KLAC",
-                "MU", "MRVL", "VRT", "GEV", "ETN", "ANET", "CRWV", "ORCL"]
 CHAMPION_FRACTION = 0.30
 CHAMPION_BOOST = 1.40
 HIGH_VALUATION_DEFENSIVE_FLOOR = 0.35  # CLAUDE.md sec.10 hedge floor
+TRANSACTION_COST_BPS = 10.0            # round-trip, charged in fitness backtests
+MAX_NAME_WEIGHT = 0.10                 # concentration cap: single name (review item)
+MAX_SECTOR_WEIGHT = 0.35               # concentration cap: single sector
+
+# Sector map (review: industry-concentration cap). Default sector = "other".
+_SECTORS: Dict[str, List[str]] = {
+    "ai_semis": ["NVDA", "AMD", "AVGO", "MRVL", "ARM", "MU", "TSM", "ASML",
+                 "AMAT", "LRCX", "KLAC", "ONTO", "UCTT", "ICHR", "FORM", "NVMI",
+                 "CAMT", "ENTG", "COHU", "KLIC", "ACMR", "AEHR", "ALAB", "CRDO",
+                 "AXTI", "POET", "MPWR", "ON", "NVTS", "POWI", "WOLF", "AMKR",
+                 "TER", "GLW", "SIMO", "WDC", "STX", "AOSL", "ADI", "NXPI",
+                 "MCHP", "MXL", "DIOD", "SLAB", "LSCC", "SWKS", "QRVO", "INTC"],
+    "megacap_software": ["AAPL", "MSFT", "GOOGL", "META", "AMZN", "ORCL", "CRM",
+                         "NOW", "NFLX", "ADBE", "PANW", "CRWD", "FTNT", "DDOG",
+                         "NET", "SNOW", "PLTR", "APP", "OKTA"],
+    "optical_net": ["LITE", "COHR", "CIEN", "ANET", "AAOI", "FN"],
+    "dc_power": ["VRT", "ETN", "GEV", "PWR", "CEG", "VST", "NRG", "ASMI"],
+    "defense_space": ["LMT", "RTX", "NOC", "GD", "BA", "RKLB", "ASTS", "LUNR",
+                      "PL", "RDW", "IRDM", "GSAT", "STRL", "DXYZ"],
+    "defensive_staples": ["KO", "PG", "JNJ", "WMT", "PEP", "MCD", "COST", "CL",
+                          "MDT", "MMC", "VZ", "SO", "DUK", "NEE", "GLD", "NEM",
+                          "BRK-B"],
+    "speculative": ["MSTR", "COIN", "HOOD", "CVNA", "QBTS", "IONQ", "RGTI", "AI",
+                    "BBAI", "SOUN"],
+    "consumer_media": ["ROKU", "DIS", "ABNB", "CROX", "CAVA", "CMG"],
+}
+SECTOR_OF: Dict[str, str] = {t: s for s, names in _SECTORS.items() for t in names}
+
+
+def sector_of(ticker: str) -> str:
+    return SECTOR_OF.get(ticker, "other")
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +125,7 @@ def _trader_recent_fitness(mat: np.ndarray, defmask: np.ndarray
                            ) -> Dict[str, float]:
     out: Dict[str, float] = {}
     for tr in TRADERS:
-        port = backtest_trader(mat, tr, defmask)
+        port = backtest_trader(mat, tr, defmask, cost_bps=TRANSACTION_COST_BPS)
         rets = [x for x in port.tolist() if not math.isnan(x)]
         out[tr["id"]] = sharpe_of(rets) if len(rets) >= 5 else 0.0
     return out
@@ -142,37 +172,26 @@ def _weights_with_champion_boost(fitness: Dict[str, float]) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Steps 4-6: macro + capex -> defensive ratio
 # ---------------------------------------------------------------------------
-def macro_risk_score(stressed: bool = True) -> Dict[str, Any]:
-    snap = synthetic_snapshot("2026-06-14", stressed=stressed)
-    score = bubble_risk_score(buffett_indicator=snap.buffett_indicator,
-                              dalio_bubble_flag=snap.dalio_bubble_flag,
-                              vix=snap.extra.get("vix") if hasattr(snap, "extra") else None)
-    return {"score_0_100": round(score * 100, 1),
-            "buffett_indicator": snap.buffett_indicator,
-            "bubble_flag": snap.dalio_bubble_flag,
-            "regime": snap.regime_label, "source": snap.source,
-            "is_point_in_time": snap.is_point_in_time,
-            "note": "M2/BTC/Gold/CRB/credit-spread wires are TODO; current score "
-                    "from buffett-indicator + bubble flag (synthetic, not PIT)."}
+def macro_risk_score(as_of: Optional[str] = None,
+                     buffett_indicator: float = 225.0) -> Dict[str, Any]:
+    """Real FRED-based macro risk (review item B). Valuation (buffett_indicator)
+    is still an override input (no clean free FRED source) and is flagged."""
+    r = real_macro_risk(as_of=as_of, pit=bool(as_of), buffett_indicator=buffett_indicator)
+    bi = r["inputs"].get("buffett_indicator", buffett_indicator)
+    return {"score_0_100": r["score_0_100"], "posture": r["posture"],
+            "buffett_indicator": bi, "bubble_flag": bool(bi > 200),
+            "components": r["components"], "sources": r["sources"],
+            "n_live_series": r["n_live_series"],
+            "is_point_in_time": r["is_point_in_time"],
+            "note": "Real FRED composite (credit/curve/vix/M2/liquidity); "
+                    "valuation input is an override (flagged). Higher = risk-off."}
 
 
-def capex_momentum_score(series: Dict[str, List[PricePoint]]) -> Dict[str, Any]:
-    """PROXY: 3-month price momentum of the AI-capex sleeve, mapped to 0-100.
-    Flagged as a proxy until real 1st/2nd-derivative capex from financials is wired."""
-    present = [t for t in CAPEX_SLEEVE if t in series and len(series[t]) > 63]
-    moms = []
-    for t in present:
-        pts = series[t]
-        m = pts[-1].close / pts[-63].close - 1.0 if pts[-63].close > 0 else 0.0
-        moms.append(m)
-    avg = float(np.mean(moms)) if moms else 0.0
-    # map -20%..+30% momentum onto 0..100
-    score = max(0.0, min(100.0, (avg + 0.20) / 0.50 * 100))
-    return {"score_0_100": round(score, 1), "proxy_avg_3m_momentum": round(avg, 4),
-            "sleeve_priced": present,
-            "note": "PROXY = AI-capex sleeve 3m price momentum. Real capex 1st/2nd "
-                    "derivative from financials (polygon/finnhub) is TODO -- no "
-                    "fabrication of capex figures."}
+def capex_momentum_score(series: Dict[str, List[PricePoint]],
+                         as_of: Optional[str] = None) -> Dict[str, Any]:
+    """Real capex 1st/2nd derivative if a cache exists, else flagged price proxy
+    (review item A). See simulation/capex_provider.py."""
+    return real_capex(series=series, as_of=as_of)
 
 
 def defensive_leg_ratio(macro_0_100: float, capex_0_100: float,
@@ -200,7 +219,11 @@ def defensive_leg_ratio(macro_0_100: float, capex_0_100: float,
 # Steps 7-8: assemble portfolio
 # ---------------------------------------------------------------------------
 def _core_growth_leg(longs: Dict[str, List[str]], weights: Dict[str, float],
-                     growth_ratio: float, max_names: int = 12) -> List[Dict[str, Any]]:
+                     growth_ratio: float, max_names: int = 14
+                     ) -> Tuple[List[Dict[str, Any]], float, Dict[str, float]]:
+    """Society-weighted vote -> growth leg, with single-name and single-sector
+    concentration caps (review item). Returns (leg, realized_weight, sector_mix).
+    Weight clipped away by caps is reported so the caller routes it to cash."""
     score: Dict[str, float] = {}
     backers: Dict[str, List[str]] = {}
     for tr in TRADERS:
@@ -211,16 +234,32 @@ def _core_growth_leg(longs: Dict[str, List[str]], weights: Dict[str, float],
             score[tk] = score.get(tk, 0.0) + w
             backers.setdefault(tk, []).append(tr["id"])
     if not score:
-        return []
+        return [], 0.0, {}
     top = sorted(score, key=score.get, reverse=True)[:max_names]
     tot = sum(score[t] for t in top) or 1.0
+    # raw absolute weights summing to growth_ratio
+    wt = {t: growth_ratio * score[t] / tot for t in top}
+    # cap 1: single name
+    wt = {t: min(w, MAX_NAME_WEIGHT) for t, w in wt.items()}
+    # cap 2: single sector -- scale an over-weight sector's names down
+    sec_sum: Dict[str, float] = {}
+    for t, w in wt.items():
+        sec_sum[sector_of(t)] = sec_sum.get(sector_of(t), 0.0) + w
+    for sec, s in sec_sum.items():
+        if s > MAX_SECTOR_WEIGHT and s > 0:
+            scale = MAX_SECTOR_WEIGHT / s
+            for t in wt:
+                if sector_of(t) == sec:
+                    wt[t] *= scale
+    realized = sum(wt.values())
     leg = []
-    for t in top:
-        leg.append({"ticker": t,
-                    "weight": round(growth_ratio * score[t] / tot, 4),
-                    "n_backers": len(backers[t]),
-                    "backers": backers[t][:4]})
-    return leg
+    for t in sorted(wt, key=wt.get, reverse=True):
+        leg.append({"ticker": t, "weight": round(wt[t], 4), "sector": sector_of(t),
+                    "n_backers": len(backers[t]), "backers": backers[t][:4]})
+    sector_mix = {}
+    for c in leg:
+        sector_mix[c["sector"]] = round(sector_mix.get(c["sector"], 0.0) + c["weight"], 4)
+    return leg, round(realized, 4), sector_mix
 
 
 def _defensive_leg(tickers_present: List[str], defensive_ratio: float
@@ -239,34 +278,47 @@ def generate_portfolio(horizon: str, lookback_days: int,
     dates, tickers, mat = _matrix(series, lookback_days)
     defmask = np.array([t in set(DEFENSIVE_BASKET) for t in tickers])
 
+    as_of = dates[-1] if dates else None
     fitness = _trader_recent_fitness(mat, defmask)
     wb = _weights_with_champion_boost(fitness)
     longs = _trader_current_longs(mat, tickers)
 
-    macro = macro_risk_score(stressed=True)
-    capex = capex_momentum_score(series)
+    macro = macro_risk_score(as_of=None)  # live FRED (set as_of for ALFRED PIT)
+    capex = capex_momentum_score(series, as_of=as_of)
     high_val = bool(macro["bubble_flag"] or macro["buffett_indicator"] > 200)
     dleg = defensive_leg_ratio(macro["score_0_100"], capex["score_0_100"], high_val)
 
-    core = _core_growth_leg(longs, wb["weights"], dleg["core_growth_ratio"])
-    defensive = _defensive_leg(tickers, dleg["defensive_ratio"])
+    core, realized_growth, sector_mix = _core_growth_leg(
+        longs, wb["weights"], dleg["core_growth_ratio"])
+    # weight clipped by concentration caps is routed to cash (conservative)
+    cap_shortfall = round(max(0.0, dleg["core_growth_ratio"] - realized_growth), 4)
+    defensive = _defensive_leg(tickers, dleg["defensive_ratio"] + cap_shortfall)
 
     space_in_core = [c["ticker"] for c in core if c["ticker"] in SPACE_SLEEVE]
     ro_note = (
         f"High-valuation regime: defensive floor {HIGH_VALUATION_DEFENSIVE_FLOOR:.0%} "
-        f"enforced (CLAUDE sec.10). Final defensive leg {dleg['defensive_ratio']:.0%}."
+        f"enforced (CLAUDE sec.10). Macro plumbing posture={macro['posture']} "
+        f"(score {macro['score_0_100']}). Defensive leg {dleg['defensive_ratio']:.0%}"
+        + (f" + {cap_shortfall:.0%} cap-shortfall to cash" if cap_shortfall else "") + "."
         if high_val else
-        f"Normal regime: defensive leg {dleg['defensive_ratio']:.0%} (macro+capex driven).")
+        f"Macro posture={macro['posture']} (score {macro['score_0_100']}); "
+        f"defensive leg {dleg['defensive_ratio']:.0%} (macro+capex driven).")
 
     return {
         "horizon": horizon,
-        "as_of": dates[-1] if dates else None,
+        "as_of": as_of,
         "lookback_days": lookback_days,
         "trader_weights": wb["weights"],
         "recent_champions_boosted": wb["champions"],
+        "transaction_cost_bps": TRANSACTION_COST_BPS,
         "macro_risk_environment": macro,
         "capex_momentum": capex,
         "defensive_decision": dleg,
+        "concentration_caps": {"max_name": MAX_NAME_WEIGHT,
+                               "max_sector": MAX_SECTOR_WEIGHT,
+                               "realized_growth_weight": realized_growth,
+                               "cap_shortfall_to_cash": cap_shortfall,
+                               "sector_mix": sector_mix},
         "core_growth_leg": core,
         "defensive_leg": defensive,
         "spacex_exposure_in_core": space_in_core,
@@ -302,9 +354,11 @@ def main() -> int:
         "disclaimer": (
             "Stage 2 forward portfolio. Recommend-only RESEARCH. Not a capital order; "
             "does not replace the canonical 10-signal pipeline or the Risk-Officer "
-            "gate. Weights from relative (cost-free) backtests; Capex score is a "
-            "flagged proxy; macro is synthetic (not PIT). Promotion to capital use "
-            "requires human selection + Risk-Officer gate + cross-review."),
+            "gate. Macro = real FRED composite (valuation input still an override); "
+            "weights include a 10bps round-trip cost; single-name <=10% and single-"
+            "sector <=35% caps enforced. Capex is real (polygon) when a cache exists, "
+            "else a flagged price-momentum proxy. Promotion to capital use requires "
+            "human selection + Risk-Officer gate + cross-review."),
     }
 
     out = REPO / "outputs" / f"trading-society-portfolio-{result['as_of_timestamp'][:10]}.json"
@@ -324,13 +378,17 @@ def _print_summary(r: Dict[str, Any]) -> None:
     for hz in ("next_month", "next_quarter"):
         p = r["portfolios"][hz]
         print(f"\n----- {hz.upper()} (as_of {p['as_of']}, lookback {p['lookback_days']}d) -----")
-        print(f"  Macro risk score: {p['macro_risk_environment']['score_0_100']}/100 "
-              f"(BI {p['macro_risk_environment']['buffett_indicator']}, "
-              f"bubble={p['macro_risk_environment']['bubble_flag']})")
-        print(f"  Capex momentum (proxy): {p['capex_momentum']['score_0_100']}/100")
+        mr = p["macro_risk_environment"]
+        print(f"  Macro risk: {mr['score_0_100']}/100 ({mr['posture']}, "
+              f"{mr['n_live_series']} live FRED series; BI {mr['buffett_indicator']})")
+        cx = p["capex_momentum"]
+        print(f"  Capex momentum: {cx['score_0_100']}/100 (source={cx['source']})")
         dd = p["defensive_decision"]
+        cc = p["concentration_caps"]
         print(f"  Posture: {dd['posture']} -> defensive {dd['defensive_ratio']:.0%} / "
-              f"growth {dd['core_growth_ratio']:.0%}")
+              f"growth {dd['core_growth_ratio']:.0%} "
+              f"(caps: name<={cc['max_name']:.0%}, sector<={cc['max_sector']:.0%}; "
+              f"sectors={cc['sector_mix']})")
         champs = p["recent_champions_boosted"]
         print(f"  Champion-boosted traders: {champs}")
         print(f"  Core growth leg (top names):")

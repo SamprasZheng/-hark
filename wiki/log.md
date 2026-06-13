@@ -730,3 +730,11 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **誠實 flag**:**Capex score=proxy**(AI-capex sleeve 3m 價格動能;真實 capex 一二階導數需接 financials,TODO,不捏造);Macro=synthetic 非 PIT(M2/BTC/Gold/CRB/credit-spread 待接);權重來自無成本相對回測;recommend-only,promotion 須 human + Risk Officer 閘 + cross-review。
 - **內部一致性觀察**:Capex 動能 100(強)本應降防禦,但 Macro 97.5(極端)+ 高估值 floor 壓過 → 仍 35% 防禦;動態互動如設計。walk-forward 健檢=定期(跑 `historical_competition` 比對冠軍穩定度),非每次;自動排程化 TODO。
 - wiki/26 增 Stage-2 段;`portfolio_generator` self-test 綠。**待辦**:真實 capex 一二階(financials)、PIT macro(FRED ALFRED + M2/BTC/Gold/CRB)、walk-forward 自動健檢排程。
+
+## 2026-06-13(g)— feat | Stage 2 數據品質升級(cross-review B/A/C):真實 PIT Macro + 真實 Capex + 集中度上限/成本
+- cross-review 裁決 proxy 數據是最大風險,排序 B(真實 PIT Macro)> A(真實 Capex)> C(成本+集中度)。三項全做。
+- **B — 真實 PIT Macro**(`simulation/macro_risk.py`):透明 0-100 composite = **live FRED** HY OAS(信用利差)+ 殖利率曲線 + VIX + M2 成長 + 淨流動性 + 估值;逐 series never-raise fallback(標 source);ALFRED `vintage_date` 真 PIT;FRED 逾時降 max_retries=2/timeout=12 快速 fallback。**頭條發現:真實 macro ≈ 31/100(risk_ON)** — HY OAS **2.78%(極緊)**、M2 +4.72%(擴張)、淨流動性增 —— 與舊 synthetic 97.5 相反;**唯估值極端**,故高估值 floor(35%)才是強制避險來源而非 plumbing。證明估值紀律在信用平靜時仍守住。
+- **A — 真實 Capex 一二階**(`simulation/capex_provider.py`):polygon 現金流量表 capex → YoY 成長(一階)+ 加速度(二階),**PIT via filing_date**,落 cache;無 cache/POLYGON_API_KEY 時降級 flagged 價格動能 proxy;`--refresh` 拉真實 sleeve(限速 ~13s/檔)。本次無 polygon key → 用 proxy(已標 source=proxy_price_momentum,不偽裝)。
+- **C — 集中度上限 + 交易成本**(`portfolio_generator.py`):單一個股 **≤10%**、單一產業 **≤35%**(SECTOR_MAP;ai_semis 原 ~50% → 砍至剛好 35%)、fitness 回測收 **10bps** round-trip 成本(`backtest_trader` 加 cost_bps,預設 0 不動既有測試)、被上限裁掉的權重轉現金(防禦現金 17.5%→~26%)。
+- **升級後輸出**(`outputs/trading-society-portfolio-2026-06-13.json`):Macro 31.3(risk_on,2-4 live FRED)、估值 floor 仍 35% 防禦 + 16-17% cap-shortfall 轉現金;成長腿 ROKU 8.2%/ARM/ICHR/KLAC/UCTT/ONTO/AMKR/FORM(ai_semis 鎖 35%、consumer_media 11%);防禦腿 cash ~26% + KO/PG/JNJ/LMT/NOC/RTX。
+- **誠實 flag(殘留)**:估值(Buffett Indicator)仍 override 輸入(無乾淨免費 FRED 源);真實 capex 需 polygon key(否則 proxy);FRED live series 數每次浮動(逾時→flagged fallback)。17 模組 import-smoke 全綠。recommend-only。**待辦**:polygon key 後跑 capex --refresh;ALFRED vintage 歷史回放;walk-forward 自動排程。

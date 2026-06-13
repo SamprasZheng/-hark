@@ -105,13 +105,17 @@ def _lookback_return(closes: np.ndarray, t: int, L: int) -> np.ndarray:
 
 
 def backtest_trader(closes: np.ndarray, trader: Dict[str, Any],
-                    defensive_mask: np.ndarray) -> np.ndarray:
+                    defensive_mask: np.ndarray, cost_bps: float = 0.0) -> np.ndarray:
+    """cost_bps: round-trip transaction cost in basis points charged each active
+    period (full-turnover assumption). 0 = frictionless (default, keeps the
+    historical self-tests stable); the portfolio generator passes a real cost."""
     T, N = closes.shape
     L = int(trader["lookback"])
     thr = float(trader["threshold"])
     k = int(trader["max_actions"])
     ttype = trader["type"]
     port = np.full(T, np.nan)
+    cost = cost_bps / 1e4
 
     for t in range(L, T - 1):
         nxt = closes[t + 1]
@@ -122,10 +126,11 @@ def backtest_trader(closes: np.ndarray, trader: Dict[str, Any],
             lb = _lookback_return(closes, t, L)
             breadth = np.nanmedian(lb) if np.any(~np.isnan(lb)) else 0.0
             if breadth < 0:
-                port[t] = 0.0  # hold cash -> 0 beats a drawdown
+                port[t] = 0.0  # hold cash -> 0 beats a drawdown (and pays no cost)
             else:
                 mask = defensive_mask & ~np.isnan(ret_next)
-                port[t] = float(np.nanmean(ret_next[mask])) if np.any(mask) else 0.0
+                port[t] = (float(np.nanmean(ret_next[mask])) - cost
+                           if np.any(mask) else 0.0)
             continue
         lb = _lookback_return(closes, t, L)
         valid = ~np.isnan(lb) & ~np.isnan(ret_next)
@@ -149,7 +154,7 @@ def backtest_trader(closes: np.ndarray, trader: Dict[str, Any],
         for i in picks:
             r = ret_next[i]
             scores.append(r if long_sig[i] else -r)
-        port[t] = float(np.mean(scores))
+        port[t] = float(np.mean(scores)) - cost  # charge round-trip turnover cost
     return port
 
 
