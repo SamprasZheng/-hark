@@ -722,3 +722,11 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **演化調整(human-gated)**:引擎對最弱交易員(REVERSION_FAST,答案鍵命中 0)經 `reflection_engine`(高估值 regime → dot-com 壓測模板)診斷 regime_stability 弱 → 提 regime_filter +0.25(PROPOSAL,須多 regime 重測 + human gate)。
 - **誠實警示**:報酬量級非真實 P&L(無成本/滑價/sizing);答案鍵 Grade-D 僅評分用;recommend-only,不取代 canonical pipeline。**下一階段(待辦)**:用此排名/正確率預測「下一季/下個月 portfolio」(forward,須嚴格 walk-forward + Risk Officer 閘 + human 選優)。
 - wiki/26 增 Stage-1 段;`historical_competition` self-test 綠。
+
+## 2026-06-13(f)— feat | Stage 2 前瞻 portfolio 產生器:全社會加權 + 冠軍加成 + Macro/Capex 動態防禦腿
+- 主理人選定(經 AskUserQuestion):**引擎=全社會加權會議(選項2)**、walk-forward 當定期健檢非每次;**風險姿態=強制動態防禦腿**(Macro Risk Score + Capex 一二階 → 動態防禦比例 + Risk Officer 最終審 + 高估值 floor)。
+- **`simulation/portfolio_generator.py`**(8 步,principal 流程):(1) 各 trader 由湖內 PIT 價產當下多單 →(2) 近期風險調整 fitness 為基礎權重 →(3) **冠軍加成**(近期前 ~30% ×1.40)→(4) **Macro Risk Environment Score** 0-100(由 buffett_indicator+bubble flag;`bubble_risk_score`)→(5) **Capex Momentum Score** 0-100 →(6) Macro+Capex → **動態防禦腿比例** →(7) Risk Officer 審(高估值 floor ≥35%,CLAUDE §10)→(8) 核心成長腿 + 防禦腿。產 next_month(63d)+ next_quarter(126d)。
+- **首次輸出**(`outputs/trading-society-portfolio-2026-06-13.json`,as_of 2026-06-12):Macro risk **97.5/100**(BI 225/bubble)→ posture **risk_off**、防禦 **35%**(高估值 floor 強制)/ 成長 65%。冠軍加成=BREAKOUT_HUNTER+MOMENTUM_SWING/FAST。核心成長腿集中半導體設備+ARM/ROKU(KLAC/ONTO/UCTT/ICHR/FORM/AMKR,各 3-4 trader 背書);防禦腿 cash 17.5% + KO/PG/JNJ/LMT/NOC/RTX。
+- **誠實 flag**:**Capex score=proxy**(AI-capex sleeve 3m 價格動能;真實 capex 一二階導數需接 financials,TODO,不捏造);Macro=synthetic 非 PIT(M2/BTC/Gold/CRB/credit-spread 待接);權重來自無成本相對回測;recommend-only,promotion 須 human + Risk Officer 閘 + cross-review。
+- **內部一致性觀察**:Capex 動能 100(強)本應降防禦,但 Macro 97.5(極端)+ 高估值 floor 壓過 → 仍 35% 防禦;動態互動如設計。walk-forward 健檢=定期(跑 `historical_competition` 比對冠軍穩定度),非每次;自動排程化 TODO。
+- wiki/26 增 Stage-2 段;`portfolio_generator` self-test 綠。**待辦**:真實 capex 一二階(financials)、PIT macro(FRED ALFRED + M2/BTC/Gold/CRB)、walk-forward 自動健檢排程。

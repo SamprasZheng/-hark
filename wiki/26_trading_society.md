@@ -197,6 +197,33 @@ Caveat unchanged: returns are **relative rankings, not realistic P&L** (no costs
 slippage / sizing). Recommend-only; the canonical 10-signal pipeline + Risk-Officer
 gate remain the authority.
 
+## Stage 2 — forward portfolio (society weighted vote + dynamic hedge)
+
+`simulation/portfolio_generator.py` builds a **next-month** and **next-quarter**
+portfolio via the principal-chosen flow: whole-society weighted vote (champion-
+boosted) → Macro + Capex scores → dynamic defensive leg → Risk-Officer hedge
+floor. `llm_involvement=none`; recommend-only; artifact
+`outputs/trading-society-portfolio-*.json`.
+
+8-step method: (1) each trader's current longs from lake PIT prices → (2) recent
+risk-adjusted fitness → base weights → (3) champion boost (recent top ~30% ×1.40)
+→ (4) **Macro Risk Environment Score** (0-100) → (5) **Capex Momentum Score**
+(0-100) → (6) Macro+Capex → **dynamic defensive-leg ratio** → (7) Risk-Officer
+review (high-valuation floor ≥35%, CLAUDE §10) → (8) core growth leg + defensive leg.
+
+**First run (as_of 2026-06-12):** Macro risk **97.5/100** (BI 225, bubble on) →
+posture **risk_off**, defensive **35%** (high-valuation floor enforced) / growth
+**65%**. Champion-boosted: BREAKOUT_HUNTER + MOMENTUM_SWING/FAST. Core growth leg
+concentrated in semi-cap equipment + ARM/ROKU (KLAC, ONTO, UCTT, ICHR, FORM,
+AMKR, backed by 3-4 traders each). Defensive leg: ~17.5% cash + KO/PG/JNJ/LMT/
+NOC/RTX. Walk-forward verification is a **periodic health check**, not every run.
+
+**Honest flags:** Capex score is a **proxy** (AI-capex sleeve 3m price momentum) —
+real 1st/2nd-derivative capex from financials is TODO (no fabrication). Macro is
+synthetic (not PIT — M2/BTC/Gold/CRB/credit-spread wires TODO). Weights from
+cost-free relative backtests. Recommend-only; promotion needs human + Risk-Officer
+gate + cross-review.
+
 ## Evolution + competition (演化 + 競賽)
 
 - `simulation/strategy_agent.py` — parameterized genome (lookback, entry_threshold,
