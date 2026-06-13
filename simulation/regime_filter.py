@@ -45,6 +45,29 @@ MEAN_REVERSION = "MEAN_REVERSION"
 LEADER_SHORT_LOCK = ["NVDA", "SMCI", "AVGO", "ASML", "TSM", "ORCL", "MSFT", "META"]
 
 
+# grok2.md regime -> trader weight tilt: which traders to up/down-weight per regime.
+# Multipliers applied on top of fitness + champion-boost weights, then renormalized.
+REGIME_TRADER_TILT: Dict[str, Dict[str, float]] = {
+    # Liquidity shock: lean hard on the defensive trader; punish chasing.
+    HARD_DEFENSE: {"RISK_OFFICER": 2.5, "MEAN_REVERSION": 1.1, "REVERSION_FAST": 1.0,
+                   "MOMENTUM_SWING": 0.4, "MOMENTUM_FAST": 0.3, "TREND_RIDER": 0.4,
+                   "BREAKOUT_HUNTER": 0.3},
+    # Paradigm breakthrough: ride leaders; do NOT fade them (decoupling lock).
+    PARADIGM_BREAKTHROUGH: {"TREND_RIDER": 1.6, "MOMENTUM_SWING": 1.5,
+                            "BREAKOUT_HUNTER": 1.5, "MOMENTUM_FAST": 1.3,
+                            "MEAN_REVERSION": 0.5, "REVERSION_FAST": 0.5,
+                            "RISK_OFFICER": 0.6},
+    # Mean reversion: favor the faders.
+    MEAN_REVERSION: {"MEAN_REVERSION": 1.4, "REVERSION_FAST": 1.3,
+                     "MOMENTUM_SWING": 1.0, "MOMENTUM_FAST": 1.0, "TREND_RIDER": 0.9,
+                     "BREAKOUT_HUNTER": 0.9, "RISK_OFFICER": 1.0},
+}
+
+
+def trader_tilt(regime: str) -> Dict[str, float]:
+    return dict(REGIME_TRADER_TILT.get(regime, {}))
+
+
 @dataclass
 class RegimeVerdict:
     regime: str

@@ -306,14 +306,24 @@ def generate_portfolio(horizon: str, lookback_days: int,
     # grok2.md regime guardrail (veto-class). HARD_DEFENSE raises the defensive
     # floor; PARADIGM_BREAKTHROUGH locks reverse-shorts on AI leaders.
     regime = None
+    regime_tilt_applied = None
     try:
         from simulation.regime_filter import from_live as _regime_from_live
+        from simulation.regime_filter import trader_tilt as _trader_tilt
         regime = _regime_from_live(macro, capex).to_dict()
         floor = regime.get("defensive_floor", 0.0)
         if floor > dleg["defensive_ratio"]:
             dleg = {**dleg, "defensive_ratio": round(floor, 3),
                     "core_growth_ratio": round(1 - floor, 3),
                     "regime_floor_applied": regime["regime"]}
+        # grok2.md regime -> trader weight tilt: reshape the society vote by regime.
+        tilt = _trader_tilt(regime["regime"])
+        if tilt:
+            tw = {k: wb["weights"][k] * tilt.get(k, 1.0) for k in wb["weights"]}
+            tot = sum(tw.values()) or 1.0
+            wb = {"weights": {k: round(v / tot, 4) for k, v in tw.items()},
+                  "champions": wb["champions"]}
+            regime_tilt_applied = regime["regime"]
     except Exception:
         regime = None
 
@@ -349,6 +359,7 @@ def generate_portfolio(horizon: str, lookback_days: int,
         "lookback_days": lookback_days,
         "trader_weights": wb["weights"],
         "recent_champions_boosted": wb["champions"],
+        "regime_trader_tilt_applied": regime_tilt_applied,
         "transaction_cost_bps": TRANSACTION_COST_BPS,
         "macro_risk_environment": macro,
         "capex_momentum": capex,
