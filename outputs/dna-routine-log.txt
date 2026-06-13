@@ -21,3 +21,19 @@
 2026-06-12T14:13:12.338209+00:00 preopen: start
 2026-06-12T14:13:19.331288+00:00 preopen: wrote D:\DOT\$hark\outputs\position-brief-2026-06-12.md
 2026-06-12T14:13:19.336301+00:00 preopen: risk-queue +0
+2026-06-12T23:40:00.468957+00:00 morning: start
+2026-06-12T23:40:25.784301+00:00 morning: lake 584 refreshed (err 0); scan -> outputs\ma-scan-2026-06-12.json
+2026-06-12T23:40:36.315642+00:00 morning: reflexivity ok
+2026-06-12T23:40:42.834214+00:00 morning: world-monitor ok (events 3, live=True)
+2026-06-12T23:41:31.463212+00:00 morning: rally_dna ok (scores logged)
+2026-06-13T00:02:18.496117+00:00 morning: failed-analogs collected 0 (dir 0)
+2026-06-13T00:02:18.506575+00:00 morning: case-store sync FAILED
+Traceback (most recent call last):
+  File "D:\DOT\$hark\src\sharks\daily_dna_routine.py", line 94, in run_morning
+    res = case_store.sync_from_outputs()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'sharks.memory.case_store' has no attribute 'sync_from_outputs'
+
+2026-06-13T00:02:21.801322+00:00 morning: failed-analogs survival recompute ok
+2026-06-13T00:02:22.922666+00:00 morning: world-backfill + regime-transitions ok
+2026-06-13T00:02:22.922666+00:00 morning: done

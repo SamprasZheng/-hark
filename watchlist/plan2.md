@@ -2050,3 +2050,131 @@ def calculate_behavioral_deviation_score(events: dict, market_data: dict) -> flo
 需要我現在把以上三個函式**合併成一個完整的 `RegimePredictorEnhanced` 類別**，並包含與你現有 `world-monitor` 事件的完整整合嗎？
 
 還是你想先針對其中某一個部分再做更細部的調整？
+
+
+**✅ 收到：「自己 router 資料」**
+
+你想自己建一個**本地 Data Router**（智能資料路由層），來統管多來源金融數據（Polygon 免費層 + yfinance + 本地快取 + 未來付費層），這是非常正確且高價值的決定。
+
+特別是在你現在遇到以下痛點時：
+- Polygon 免費層只有 **5 calls/min + 2 年歷史**
+- 下市票（failed-analogs）歷史資料拿不到
+- 夜間大量 collect 太慢
+- 需要穩定、成本可控、自動 fallback 的資料層
+
+---
+
+### 推薦架構：Local Data Router
+
+我建議你建一個 **`DataRouter`** 類別，作為所有資料請求的**唯一入口**。
+
+**核心功能**：
+- 統一介面（`get_bars`, `get_fundamentals`, `get_pit_data` 等）
+- 智能路由決策（根據需求選擇最佳來源）
+- 多層快取（記憶體 + 本地 Parquet）
+- 各來源獨立速率限制管理
+- 自動 fallback + 記錄來源
+- 完整日誌（方便監控與除錯）
+
+### 1. DataRouter 核心程式碼骨架
+
+```python
+# data/router.py
+from typing import Optional, Literal
+import pandas as pd
+from datetime import datetime, timedelta
+import time
+from functools import lru_cache
+
+class DataRouter:
+    def __init__(self):
+        self.sources = {
+            "polygon": PolygonClient(),      # 你的 Polygon 客戶端
+            "yfinance": YFinanceClient(),    # yfinance 客戶端
+            "local": LocalParquetStore(),    # 本地 Parquet 快取
+        }
+        self.rate_limiters = {
+            "polygon": RateLimiter(max_calls=5, period=60),  # 免費層
+            "yfinance": RateLimiter(max_calls=2000, period=3600),  # 較寬鬆
+        }
+        self.cache = {}  # 可改成 Redis
+
+    def get_bars(
+        self,
+        ticker: str,
+        start: str,
+        end: str,
+        interval: str = "1d",
+        source_preference: Optional[list] = None
+    ) -> pd.DataFrame:
+        """
+        智能取得 K 線
+        """
+        if source_preference is None:
+            source_preference = self._decide_sources(ticker, start, end)
+
+        for source_name in source_preference:
+            if not self.rate_limiters[source_name].can_call():
+                continue
+
+            try:
+                df = self.sources[source_name].get_bars(ticker, start, end, interval)
+                if not df.empty:
+                    self._save_to_cache(ticker, start, end, df, source_name)
+                    return df
+            except Exception as e:
+                print(f"[Router] {source_name} failed for {ticker}: {e}")
+                continue
+
+        raise ValueError(f"無法取得 {ticker} 的資料")
+
+    def _decide_sources(self, ticker: str, start: str, end: str) -> list:
+        """智能路由決策"""
+        days_needed = (datetime.fromisoformat(end) - datetime.fromisoformat(start)).days
+
+        if days_needed <= 730:           # 2 年內 → 優先 Polygon（快 + 品質好）
+            return ["local", "polygon", "yfinance"]
+        else:                            # 超過 2 年或下市票 → 優先 yfinance + local
+            return ["local", "yfinance", "polygon"]
+
+    def _save_to_cache(self, ticker, start, end, df, source):
+        # 寫入本地 Parquet + 更新 manifest
+        pass
+```
+
+### 2. 路由策略建議（針對你專案）
+
+| 需求類型               | 優先來源順序                  | 理由 |
+|------------------------|-------------------------------|------|
+| 每日 lake 刷新         | local → polygon              | 快 + 免費 |
+| rally_dna / 近期數據   | polygon（免費層）            | 品質較穩定 |
+| failed-analogs（深歷史） | yfinance → local             | 突破 2 年限制 |
+| PIT 序列回補           | polygon（付費後）或 yfinance | 需要 filing_date 對齊 |
+| 大量夜間 collect       | local cache 優先 + yfinance  | 避開 Polygon 速率限制 |
+
+### 3. 立即可以做的三件事（建議優先順序）
+
+1. **先把現有 collect 批次包一層 Router**（最快見效）
+   - 把你現在直接呼叫 Polygon 的地方，改成 `router.get_bars(...)`
+   - 自動使用 local cache + fallback
+
+2. **建立簡單的本地 Parquet 快取層**
+   - 所有拿過的資料都落地到 `data/lake/{ticker}/{interval}/`
+   - 加上 manifest 記錄來源與時間
+
+3. **Rate Limiter + 日誌**
+   - 每個來源獨立計數
+   - 每次請求都記錄 `source_used` 和 `latency`
+
+---
+
+**需要我現在立刻產出以下任一項嗎？**
+
+- **完整 `DataRouter` 類別 + RateLimiter 實作**（可直接 plug-in）
+- **與你現有 `collect` 批次整合的修改範例**
+- **本地 Parquet 快取 + manifest 設計**
+- **把 Router 接進夜班自主循環的計劃**
+
+告訴我你想先做哪一塊，我馬上給完整可執行程式碼。
+
+這樣一來，你的夜班就能更聰明、更穩定地跑資料，而不用一直撞 Polygon 免費層的牆。

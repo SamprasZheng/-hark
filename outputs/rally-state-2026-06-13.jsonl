@@ -1,0 +1,603 @@
+{"ticker": "OKTA", "streak": 3, "composite": 63.7, "is_rallying": true, "buy_consider": true, "conviction": "🟢 連續起漲 3 期 · 可考慮買入(分批/小倉)", "date": "2026-06-13"}
+{"ticker": "ROKU", "streak": 1, "composite": 89.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "FDS", "streak": 1, "composite": 81.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ONTO", "streak": 2, "composite": 81.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ARM", "streak": 2, "composite": 80.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "BIRK", "streak": 2, "composite": 79.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MRVL", "streak": 2, "composite": 77.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "RL", "streak": 2, "composite": 76.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MOV", "streak": 2, "composite": 75.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "VFC", "streak": 2, "composite": 74.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CR", "streak": 2, "composite": 74.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ALAB", "streak": 2, "composite": 73.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DXCM", "streak": 2, "composite": 72.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ACMR", "streak": 2, "composite": 72.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ASML", "streak": 2, "composite": 72.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "FRSH", "streak": 2, "composite": 71.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "RDW", "streak": 3, "composite": 71.7, "is_rallying": true, "buy_consider": false, "conviction": "🚫 純炒作·無實證(墓園型)", "date": "2026-06-13"}
+{"ticker": "GLBE", "streak": 2, "composite": 71.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ANF", "streak": 2, "composite": 70.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "SPG", "streak": 1, "composite": 70.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CRDO", "streak": 2, "composite": 69.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "KIM", "streak": 1, "composite": 69.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "AMKR", "streak": 2, "composite": 69.5, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "AMAT", "streak": 2, "composite": 69.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "KTB", "streak": 2, "composite": 69.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "SG", "streak": 2, "composite": 69.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "INCY", "streak": 1, "composite": 68.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "NVMI", "streak": 1, "composite": 68.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CPRI", "streak": 2, "composite": 68.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "WSM", "streak": 2, "composite": 68.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "AEO", "streak": 2, "composite": 68.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ANET", "streak": 2, "composite": 68.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "PD", "streak": 2, "composite": 68.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "PANW", "streak": 2, "composite": 68.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "URI", "streak": 2, "composite": 67.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CAVA", "streak": 2, "composite": 67.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "QLYS", "streak": 2, "composite": 67.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "UMC", "streak": 2, "composite": 67.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "IRDM", "streak": 2, "composite": 67.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "VPG", "streak": 2, "composite": 67.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "PCTY", "streak": 1, "composite": 67.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "KLAC", "streak": 2, "composite": 67.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DDOG", "streak": 1, "composite": 66.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "LRCX", "streak": 2, "composite": 66.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "IFF", "streak": 1, "composite": 66.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "VSH", "streak": 2, "composite": 66.5, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "RMBS", "streak": 2, "composite": 66.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ESTC", "streak": 2, "composite": 66.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "UAA", "streak": 2, "composite": 66.4, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "DOV", "streak": 1, "composite": 66.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ENPH", "streak": 2, "composite": 66.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "LC", "streak": 1, "composite": 66.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "FUN", "streak": 1, "composite": 66.0, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "IBM", "streak": 2, "composite": 65.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "PSA", "streak": 2, "composite": 65.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "SFIX", "streak": 2, "composite": 65.5, "is_rallying": true, "buy_consider": false, "conviction": "🚫 純炒作·無實證(墓園型)", "date": "2026-06-13"}
+{"ticker": "FTNT", "streak": 2, "composite": 65.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MU", "streak": 2, "composite": 65.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "PPG", "streak": 2, "composite": 64.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "VIRT", "streak": 1, "composite": 64.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TSM", "streak": 2, "composite": 64.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "YETI", "streak": 2, "composite": 64.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "WING", "streak": 2, "composite": 64.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TROW", "streak": 1, "composite": 64.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DECK", "streak": 1, "composite": 64.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DT", "streak": 2, "composite": 64.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TRGP", "streak": 1, "composite": 64.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TGT", "streak": 2, "composite": 63.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CSX", "streak": 1, "composite": 63.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CAMT", "streak": 2, "composite": 63.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "HOOD", "streak": 2, "composite": 63.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "VSAT", "streak": 2, "composite": 63.5, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "GH", "streak": 2, "composite": 63.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CDNS", "streak": 1, "composite": 63.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ASTS", "streak": 3, "composite": 63.1, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 3 期", "date": "2026-06-13"}
+{"ticker": "NBIX", "streak": 1, "composite": 63.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "JNJ", "streak": 1, "composite": 62.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ADBE", "streak": 0, "composite": 62.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NWL", "streak": 1, "composite": 62.5, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "ADSK", "streak": 0, "composite": 62.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "KLIC", "streak": 1, "composite": 62.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "RH", "streak": 2, "composite": 62.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ROST", "streak": 1, "composite": 62.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "SO", "streak": 1, "composite": 62.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DOCN", "streak": 1, "composite": 62.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "KVUE", "streak": 1, "composite": 62.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "BURL", "streak": 1, "composite": 62.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CSCO", "streak": 1, "composite": 62.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ONON", "streak": 1, "composite": 61.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "LIN", "streak": 1, "composite": 61.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "URBN", "streak": 1, "composite": 61.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "PG", "streak": 1, "composite": 61.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "EW", "streak": 1, "composite": 61.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CLX", "streak": 2, "composite": 61.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "HUM", "streak": 1, "composite": 61.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "RKLB", "streak": 0, "composite": 61.6, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "JBHT", "streak": 1, "composite": 61.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "FRT", "streak": 1, "composite": 61.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "STLD", "streak": 2, "composite": 61.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "EVR", "streak": 1, "composite": 61.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "WDAY", "streak": 1, "composite": 61.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TJX", "streak": 1, "composite": 61.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "FSLR", "streak": 1, "composite": 61.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "AI", "streak": 2, "composite": 61.2, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "TRV", "streak": 1, "composite": 61.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CHRW", "streak": 1, "composite": 61.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "AEIS", "streak": 1, "composite": 61.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "RIVN", "streak": 1, "composite": 61.0, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "VICI", "streak": 1, "composite": 60.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "AMD", "streak": 2, "composite": 60.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "PLD", "streak": 1, "composite": 60.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "SHLS", "streak": 1, "composite": 60.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TER", "streak": 1, "composite": 60.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "HPE", "streak": 2, "composite": 60.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ASAN", "streak": 2, "composite": 60.5, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "OLLI", "streak": 0, "composite": 60.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "LLY", "streak": 1, "composite": 60.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "FDX", "streak": 1, "composite": 60.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CHH", "streak": 1, "composite": 60.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MTSI", "streak": 1, "composite": 60.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "POWI", "streak": 2, "composite": 60.2, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "MRK", "streak": 1, "composite": 60.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "JEF", "streak": 1, "composite": 60.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CLSK", "streak": 2, "composite": 59.9, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "ODFL", "streak": 2, "composite": 59.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "GS", "streak": 1, "composite": 59.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ALLY", "streak": 1, "composite": 59.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "UNP", "streak": 1, "composite": 59.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ALL", "streak": 1, "composite": 59.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "WST", "streak": 1, "composite": 59.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TDOC", "streak": 1, "composite": 59.5, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "GIII", "streak": 1, "composite": 59.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CCI", "streak": 1, "composite": 59.4, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "MEDP", "streak": 1, "composite": 59.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "AMGN", "streak": 1, "composite": 59.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "FND", "streak": 1, "composite": 59.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TBCH", "streak": 2, "composite": 59.2, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 2 期", "date": "2026-06-13"}
+{"ticker": "MNDY", "streak": 1, "composite": 59.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "BGC", "streak": 1, "composite": 59.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "POWL", "streak": 1, "composite": 59.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ROK", "streak": 1, "composite": 59.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CL", "streak": 1, "composite": 59.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "AMT", "streak": 1, "composite": 59.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TPR", "streak": 1, "composite": 58.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "IONQ", "streak": 1, "composite": 58.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "NUE", "streak": 1, "composite": 58.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ETSY", "streak": 1, "composite": 58.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "J", "streak": 1, "composite": 58.7, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "UCTT", "streak": 1, "composite": 58.7, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "TTD", "streak": 0, "composite": 58.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NXPI", "streak": 1, "composite": 58.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "UDR", "streak": 1, "composite": 58.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "STZ", "streak": 1, "composite": 58.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "EQR", "streak": 1, "composite": 58.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "BAC", "streak": 1, "composite": 58.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "UNH", "streak": 1, "composite": 58.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MDLZ", "streak": 1, "composite": 58.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ELS", "streak": 1, "composite": 58.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MMM", "streak": 1, "composite": 58.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TXN", "streak": 1, "composite": 58.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "AXON", "streak": 1, "composite": 58.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "OKE", "streak": 1, "composite": 57.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "KMB", "streak": 1, "composite": 57.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "EAT", "streak": 1, "composite": 57.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CI", "streak": 1, "composite": 57.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MS", "streak": 1, "composite": 57.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "IBKR", "streak": 1, "composite": 57.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "RPM", "streak": 1, "composite": 57.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "STX", "streak": 2, "composite": 57.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "COHU", "streak": 1, "composite": 57.5, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "WDC", "streak": 2, "composite": 57.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "SIMO", "streak": 1, "composite": 57.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CB", "streak": 1, "composite": 57.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "UPS", "streak": 1, "composite": 57.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "SNOW", "streak": 1, "composite": 57.1, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "D", "streak": 1, "composite": 57.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "SWKS", "streak": 1, "composite": 57.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CART", "streak": 1, "composite": 56.9, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "LAZ", "streak": 0, "composite": 56.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BMRN", "streak": 1, "composite": 56.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DOC", "streak": 1, "composite": 56.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "TENB", "streak": 1, "composite": 56.8, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "JPM", "streak": 1, "composite": 56.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "LEVI", "streak": 1, "composite": 56.7, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "INVH", "streak": 1, "composite": 56.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "APPN", "streak": 2, "composite": 56.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "HPQ", "streak": 1, "composite": 56.6, "is_rallying": true, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪 第 1 期", "date": "2026-06-13"}
+{"ticker": "RJF", "streak": 1, "composite": 56.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "O", "streak": 1, "composite": 56.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "HLT", "streak": 1, "composite": 56.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MAA", "streak": 1, "composite": 56.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DIOD", "streak": 1, "composite": 56.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "NOW", "streak": 2, "composite": 56.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "MSCI", "streak": 1, "composite": 56.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "C", "streak": 1, "composite": 56.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DG", "streak": 1, "composite": 55.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "COLM", "streak": 1, "composite": 55.8, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "RSG", "streak": 1, "composite": 55.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "VZ", "streak": 1, "composite": 55.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "BBY", "streak": 2, "composite": 55.6, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "PATH", "streak": 0, "composite": 55.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "APO", "streak": 1, "composite": 55.5, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "ECL", "streak": 1, "composite": 55.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "EXC", "streak": 1, "composite": 55.4, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "REG", "streak": 1, "composite": 55.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "LSCC", "streak": 1, "composite": 55.3, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "IRM", "streak": 1, "composite": 55.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "DLTR", "streak": 2, "composite": 55.2, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 2 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "HST", "streak": 1, "composite": 55.1, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "HD", "streak": 1, "composite": 55.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "GE", "streak": 1, "composite": 55.0, "is_rallying": true, "buy_consider": false, "conviction": "🟡 起漲中 第 1 期(觀察,未達連續門檻)", "date": "2026-06-13"}
+{"ticker": "CNC", "streak": 0, "composite": 54.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "CAT", "streak": 0, "composite": 54.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "WRBY", "streak": 0, "composite": 54.7, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BXP", "streak": 0, "composite": 54.7, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "RVTY", "streak": 0, "composite": 54.7, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "BX", "streak": 0, "composite": 54.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "KO", "streak": 0, "composite": 54.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "CIFR", "streak": 0, "composite": 54.6, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "BOOT", "streak": 0, "composite": 54.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "FAST", "streak": 0, "composite": 54.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ALGM", "streak": 0, "composite": 54.5, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "MPWR", "streak": 0, "composite": 54.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "STRL", "streak": 0, "composite": 54.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "QRVO", "streak": 0, "composite": 54.4, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "GTLB", "streak": 0, "composite": 54.4, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "ABBV", "streak": 0, "composite": 54.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "RTX", "streak": 0, "composite": 54.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "FIX", "streak": 0, "composite": 54.2, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "COHR", "streak": 0, "composite": 54.2, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NKE", "streak": 0, "composite": 54.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "EXR", "streak": 0, "composite": 54.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "DRI", "streak": 0, "composite": 54.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SAIA", "streak": 0, "composite": 54.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AES", "streak": 0, "composite": 54.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "CAL", "streak": 0, "composite": 54.0, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "WULF", "streak": 0, "composite": 54.0, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "PFE", "streak": 0, "composite": 53.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "APTV", "streak": 0, "composite": 53.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "ICHR", "streak": 0, "composite": 53.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "W", "streak": 0, "composite": 53.7, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "ELF", "streak": 0, "composite": 53.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "CROX", "streak": 0, "composite": 53.6, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "VRTX", "streak": 0, "composite": 53.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "QCOM", "streak": 0, "composite": 53.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "PGR", "streak": 0, "composite": 53.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NTRA", "streak": 0, "composite": 53.5, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "CRWD", "streak": 0, "composite": 53.5, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "BUD", "streak": 0, "composite": 53.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "EA", "streak": 0, "composite": 53.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "RDDT", "streak": 0, "composite": 53.2, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "INTC", "streak": 0, "composite": 53.2, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "WM", "streak": 0, "composite": 53.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "XEL", "streak": 0, "composite": 53.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BG", "streak": 0, "composite": 53.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BLMN", "streak": 0, "composite": 53.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "SLB", "streak": 0, "composite": 53.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "DELL", "streak": 0, "composite": 53.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "HALO", "streak": 0, "composite": 53.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ABT", "streak": 0, "composite": 53.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "DKS", "streak": 0, "composite": 53.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SMTC", "streak": 0, "composite": 53.0, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "FCX", "streak": 0, "composite": 52.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AVB", "streak": 0, "composite": 52.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AVTR", "streak": 0, "composite": 52.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "CHD", "streak": 0, "composite": 52.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AEP", "streak": 0, "composite": 52.7, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "CVS", "streak": 0, "composite": 52.7, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "EMR", "streak": 0, "composite": 52.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AFRM", "streak": 0, "composite": 52.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "TWLO", "streak": 0, "composite": 52.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "WWD", "streak": 0, "composite": 52.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "MET", "streak": 0, "composite": 52.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SCHW", "streak": 0, "composite": 52.2, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "APP", "streak": 0, "composite": 52.2, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "WELL", "streak": 0, "composite": 52.2, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "GWW", "streak": 0, "composite": 52.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "PSX", "streak": 0, "composite": 52.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SPOT", "streak": 0, "composite": 52.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "GIS", "streak": 0, "composite": 51.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ED", "streak": 0, "composite": 51.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ARES", "streak": 0, "composite": 51.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "EIX", "streak": 0, "composite": 51.7, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "MPC", "streak": 0, "composite": 51.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "MAS", "streak": 0, "composite": 51.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SPIR", "streak": 0, "composite": 51.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SHW", "streak": 0, "composite": 51.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "WEC", "streak": 0, "composite": 51.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "CPT", "streak": 0, "composite": 51.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ENTG", "streak": 0, "composite": 51.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ELV", "streak": 0, "composite": 51.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "GPC", "streak": 0, "composite": 51.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "VLO", "streak": 0, "composite": 51.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "EXPD", "streak": 0, "composite": 51.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "CPNG", "streak": 0, "composite": 51.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "ADI", "streak": 0, "composite": 50.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "PCAR", "streak": 0, "composite": 50.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "HUT", "streak": 0, "composite": 50.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "NSC", "streak": 0, "composite": 50.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "F", "streak": 0, "composite": 50.6, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "GD", "streak": 0, "composite": 50.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "FORM", "streak": 0, "composite": 50.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AXP", "streak": 0, "composite": 50.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SYF", "streak": 0, "composite": 50.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BWA", "streak": 0, "composite": 50.0, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "MDB", "streak": 0, "composite": 50.0, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "NVO", "streak": 0, "composite": 49.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "HWM", "streak": 0, "composite": 49.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "DE", "streak": 0, "composite": 49.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "DVN", "streak": 0, "composite": 49.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SMCI", "streak": 0, "composite": 49.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "RPD", "streak": 0, "composite": 49.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BLDR", "streak": 0, "composite": 49.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "OXY", "streak": 0, "composite": 49.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AYI", "streak": 0, "composite": 49.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NET", "streak": 0, "composite": 49.5, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "ALNY", "streak": 0, "composite": 49.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AAPL", "streak": 0, "composite": 49.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "WH", "streak": 0, "composite": 49.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "OWL", "streak": 0, "composite": 49.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "DEO", "streak": 0, "composite": 49.2, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "LYV", "streak": 0, "composite": 49.2, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "AEHR", "streak": 0, "composite": 49.2, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "AOS", "streak": 0, "composite": 49.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "RVLV", "streak": 0, "composite": 49.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BE", "streak": 0, "composite": 49.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "MO", "streak": 0, "composite": 49.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "RIOT", "streak": 0, "composite": 49.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "MARA", "streak": 0, "composite": 49.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "PLAY", "streak": 0, "composite": 49.0, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "NXT", "streak": 0, "composite": 48.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SBUX", "streak": 0, "composite": 48.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "H", "streak": 0, "composite": 48.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "SYK", "streak": 0, "composite": 48.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "V", "streak": 0, "composite": 48.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BBWI", "streak": 0, "composite": 48.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NVCR", "streak": 0, "composite": 48.4, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "NVTS", "streak": 0, "composite": 48.4, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "XYZ", "streak": 0, "composite": 48.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "GM", "streak": 0, "composite": 48.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "PM", "streak": 0, "composite": 48.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "LMT", "streak": 0, "composite": 48.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "MRNA", "streak": 0, "composite": 48.0, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "APA", "streak": 0, "composite": 47.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NDAQ", "streak": 0, "composite": 47.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "MCD", "streak": 0, "composite": 47.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NVT", "streak": 0, "composite": 47.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ARWR", "streak": 0, "composite": 47.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "DUK", "streak": 0, "composite": 47.7, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "GVA", "streak": 0, "composite": 47.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "WFC", "streak": 0, "composite": 47.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SYNA", "streak": 0, "composite": 47.5, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "FTV", "streak": 0, "composite": 47.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ALLE", "streak": 0, "composite": 47.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "FIGS", "streak": 0, "composite": 47.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ON", "streak": 0, "composite": 47.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "RGTI", "streak": 0, "composite": 47.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "SJM", "streak": 0, "composite": 47.0, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "VMC", "streak": 0, "composite": 46.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "PCG", "streak": 0, "composite": 46.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "COP", "streak": 0, "composite": 46.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "PEG", "streak": 0, "composite": 46.7, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "TSEM", "streak": 0, "composite": 46.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "CRM", "streak": 0, "composite": 46.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "CRUS", "streak": 0, "composite": 46.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ZBH", "streak": 0, "composite": 46.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "EBAY", "streak": 0, "composite": 46.4, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ETN", "streak": 0, "composite": 46.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "DPZ", "streak": 0, "composite": 46.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BIIB", "streak": 0, "composite": 46.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "EL", "streak": 0, "composite": 46.3, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "EOG", "streak": 0, "composite": 46.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "MCHP", "streak": 0, "composite": 46.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "DOCU", "streak": 0, "composite": 46.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "BRK-B", "streak": 0, "composite": 46.0, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "AME", "streak": 0, "composite": 45.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "WCN", "streak": 0, "composite": 45.9, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "ARE", "streak": 0, "composite": 45.9, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "MDT", "streak": 0, "composite": 45.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "EQIX", "streak": 0, "composite": 45.8, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NTLA", "streak": 0, "composite": 45.8, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "TEAM", "streak": 0, "composite": 45.8, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "HON", "streak": 0, "composite": 45.6, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "SOFI", "streak": 0, "composite": 45.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "XOM", "streak": 0, "composite": 45.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "PWR", "streak": 0, "composite": 45.5, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "NEE", "streak": 0, "composite": 45.3, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "DBX", "streak": 0, "composite": 45.2, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "YUM", "streak": 0, "composite": 45.1, "is_rallying": false, "buy_consider": false, "conviction": "🔵 蓄勢(尚未起漲)", "date": "2026-06-13"}
+{"ticker": "RARE", "streak": 0, "composite": 45.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "SEDG", "streak": 0, "composite": 45.1, "is_rallying": false, "buy_consider": false, "conviction": "🪨 缺燃料·反彈非大浪", "date": "2026-06-13"}
+{"ticker": "SPGI", "streak": 0, "composite": 44.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TMUS", "streak": 0, "composite": 44.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "HUBS", "streak": 0, "composite": 44.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CTVA", "streak": 0, "composite": 44.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CMG", "streak": 0, "composite": 44.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "JACK", "streak": 0, "composite": 44.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AOSL", "streak": 0, "composite": 44.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GPN", "streak": 0, "composite": 44.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BMY", "streak": 0, "composite": 44.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PEN", "streak": 0, "composite": 44.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "COST", "streak": 0, "composite": 44.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CMI", "streak": 0, "composite": 44.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PH", "streak": 0, "composite": 44.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PAYC", "streak": 0, "composite": 44.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PJT", "streak": 0, "composite": 44.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "FOUR", "streak": 0, "composite": 44.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PODD", "streak": 0, "composite": 43.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AVGO", "streak": 0, "composite": 43.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CWEN", "streak": 0, "composite": 43.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SDGR", "streak": 0, "composite": 43.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "POET", "streak": 0, "composite": 43.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GAP", "streak": 0, "composite": 43.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BOX", "streak": 0, "composite": 43.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TNDM", "streak": 0, "composite": 43.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SRE", "streak": 0, "composite": 43.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SHOP", "streak": 0, "composite": 43.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CVX", "streak": 0, "composite": 43.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AMZN", "streak": 0, "composite": 43.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "NOC", "streak": 0, "composite": 43.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DLR", "streak": 0, "composite": 43.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "HIMS", "streak": 0, "composite": 43.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "KMI", "streak": 0, "composite": 43.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "OXM", "streak": 0, "composite": 43.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PVH", "streak": 0, "composite": 42.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LITE", "streak": 0, "composite": 42.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CAG", "streak": 0, "composite": 42.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ABNB", "streak": 0, "composite": 42.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SLAB", "streak": 0, "composite": 42.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "NFLX", "streak": 0, "composite": 42.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "FANG", "streak": 0, "composite": 42.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PINS", "streak": 0, "composite": 42.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TXRH", "streak": 0, "composite": 42.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MA", "streak": 0, "composite": 41.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PEP", "streak": 0, "composite": 41.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "IR", "streak": 0, "composite": 41.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "WBD", "streak": 0, "composite": 41.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MKTX", "streak": 0, "composite": 41.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GLW", "streak": 0, "composite": 41.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "QBTS", "streak": 0, "composite": 41.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CMCSA", "streak": 0, "composite": 41.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GMED", "streak": 0, "composite": 41.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BLDP", "streak": 0, "composite": 41.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "VAL", "streak": 0, "composite": 41.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "STE", "streak": 0, "composite": 41.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CRWV", "streak": 0, "composite": 41.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LNG", "streak": 0, "composite": 41.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "WMB", "streak": 0, "composite": 41.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GEV", "streak": 0, "composite": 40.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SBAC", "streak": 0, "composite": 40.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MELI", "streak": 0, "composite": 40.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TLN", "streak": 0, "composite": 40.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ALB", "streak": 0, "composite": 40.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DD", "streak": 0, "composite": 40.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ORLY", "streak": 0, "composite": 40.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ORCL", "streak": 0, "composite": 40.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BLD", "streak": 0, "composite": 40.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MOS", "streak": 0, "composite": 40.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "RUN", "streak": 0, "composite": 40.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "U", "streak": 0, "composite": 40.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SITM", "streak": 0, "composite": 40.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "KHC", "streak": 0, "composite": 40.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GOOG", "streak": 0, "composite": 40.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PLNT", "streak": 0, "composite": 40.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "INDI", "streak": 0, "composite": 40.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "FN", "streak": 0, "composite": 39.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AR", "streak": 0, "composite": 39.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BA", "streak": 0, "composite": 39.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TMO", "streak": 0, "composite": 39.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GSAT", "streak": 0, "composite": 39.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GOOGL", "streak": 0, "composite": 39.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "T", "streak": 0, "composite": 39.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TAP", "streak": 0, "composite": 39.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DHR", "streak": 0, "composite": 39.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "VRT", "streak": 0, "composite": 39.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "COTY", "streak": 0, "composite": 39.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ES", "streak": 0, "composite": 39.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ROL", "streak": 0, "composite": 38.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "HUBB", "streak": 0, "composite": 38.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AAOI", "streak": 0, "composite": 38.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MSFT", "streak": 0, "composite": 38.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "VIPS", "streak": 0, "composite": 38.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ITW", "streak": 0, "composite": 38.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BKNG", "streak": 0, "composite": 38.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TW", "streak": 0, "composite": 38.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CEG", "streak": 0, "composite": 38.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TOST", "streak": 0, "composite": 38.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "NVDA", "streak": 0, "composite": 38.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "APD", "streak": 0, "composite": 38.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TSLA", "streak": 0, "composite": 38.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DIS", "streak": 0, "composite": 38.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "NU", "streak": 0, "composite": 37.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PL", "streak": 0, "composite": 37.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "KKR", "streak": 0, "composite": 37.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "RBLX", "streak": 0, "composite": 37.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "EXPE", "streak": 0, "composite": 37.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MLM", "streak": 0, "composite": 37.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "NRG", "streak": 0, "composite": 37.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MXL", "streak": 0, "composite": 37.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PLTR", "streak": 0, "composite": 37.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "UBER", "streak": 0, "composite": 37.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LULU", "streak": 0, "composite": 36.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "VST", "streak": 0, "composite": 36.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LUNR", "streak": 0, "composite": 36.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "FIVE", "streak": 0, "composite": 36.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "REAL", "streak": 0, "composite": 36.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "RMD", "streak": 0, "composite": 36.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CHWY", "streak": 0, "composite": 36.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BEAM", "streak": 0, "composite": 36.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BRZE", "streak": 0, "composite": 36.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CF", "streak": 0, "composite": 36.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SE", "streak": 0, "composite": 35.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ISRG", "streak": 0, "composite": 35.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CSL", "streak": 0, "composite": 35.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BWXT", "streak": 0, "composite": 35.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DASH", "streak": 0, "composite": 35.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CME", "streak": 0, "composite": 35.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "INSM", "streak": 0, "composite": 35.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BKSY", "streak": 0, "composite": 35.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "RXRX", "streak": 0, "composite": 35.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DOW", "streak": 0, "composite": 35.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DOCS", "streak": 0, "composite": 34.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MCO", "streak": 0, "composite": 34.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AXTI", "streak": 0, "composite": 34.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SHAK", "streak": 0, "composite": 34.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "WMT", "streak": 0, "composite": 34.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ACM", "streak": 0, "composite": 34.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CHGG", "streak": 0, "composite": 34.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "META", "streak": 0, "composite": 34.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "COF", "streak": 0, "composite": 33.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "RKT", "streak": 0, "composite": 33.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MCK", "streak": 0, "composite": 33.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "IONS", "streak": 0, "composite": 33.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "NVAX", "streak": 0, "composite": 33.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GILD", "streak": 0, "composite": 33.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "XYL", "streak": 0, "composite": 32.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "HAL", "streak": 0, "composite": 32.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ULTA", "streak": 0, "composite": 32.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AESI", "streak": 0, "composite": 32.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PYPL", "streak": 0, "composite": 31.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CRNX", "streak": 0, "composite": 31.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CIEN", "streak": 0, "composite": 31.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BDX", "streak": 0, "composite": 31.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BNTX", "streak": 0, "composite": 31.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CVNA", "streak": 0, "composite": 31.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BSX", "streak": 0, "composite": 31.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "NEM", "streak": 0, "composite": 31.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LOW", "streak": 0, "composite": 31.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "INTU", "streak": 0, "composite": 30.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "EQT", "streak": 0, "composite": 30.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ICE", "streak": 0, "composite": 30.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LYB", "streak": 0, "composite": 30.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BLK", "streak": 0, "composite": 30.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "KR", "streak": 0, "composite": 30.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BJ", "streak": 0, "composite": 30.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AIG", "streak": 0, "composite": 29.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LHX", "streak": 0, "composite": 29.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PI", "streak": 0, "composite": 29.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "HSY", "streak": 0, "composite": 29.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "REGN", "streak": 0, "composite": 28.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MBLY", "streak": 0, "composite": 28.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "FUTU", "streak": 0, "composite": 28.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CCJ", "streak": 0, "composite": 28.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "WEN", "streak": 0, "composite": 27.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "HSAI", "streak": 0, "composite": 27.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "PDD", "streak": 0, "composite": 27.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SNPS", "streak": 0, "composite": 27.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "UWMC", "streak": 0, "composite": 27.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AZO", "streak": 0, "composite": 27.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CRSP", "streak": 0, "composite": 26.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BILL", "streak": 0, "composite": 26.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "UEC", "streak": 0, "composite": 26.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "WOLF", "streak": 0, "composite": 26.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "JMIA", "streak": 0, "composite": 25.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ZS", "streak": 0, "composite": 25.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SRPT", "streak": 0, "composite": 25.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "RENT", "streak": 0, "composite": 24.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ARRY", "streak": 0, "composite": 24.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "VKTX", "streak": 0, "composite": 24.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TTWO", "streak": 0, "composite": 24.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "COIN", "streak": 0, "composite": 23.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LPL", "streak": 0, "composite": 23.6, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SNAP", "streak": 0, "composite": 23.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "JD", "streak": 0, "composite": 22.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "LCID", "streak": 0, "composite": 22.7, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "S", "streak": 0, "composite": 22.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "STEP", "streak": 0, "composite": 22.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "OKLO", "streak": 0, "composite": 21.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "JOBY", "streak": 0, "composite": 21.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "GLD", "streak": 0, "composite": 21.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DNA", "streak": 0, "composite": 20.9, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "TIGR", "streak": 0, "composite": 20.8, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BABA", "streak": 0, "composite": 20.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SMR", "streak": 0, "composite": 20.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "DNN", "streak": 0, "composite": 20.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "SOUN", "streak": 0, "composite": 20.0, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "AMBA", "streak": 0, "composite": 19.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "UUUU", "streak": 0, "composite": 19.1, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "MSTR", "streak": 0, "composite": 18.5, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "CRCL", "streak": 0, "composite": 18.4, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "BBAI", "streak": 0, "composite": 18.2, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "IBIT", "streak": 0, "composite": 14.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}
+{"ticker": "ACHR", "streak": 0, "composite": 11.3, "is_rallying": false, "buy_consider": false, "conviction": "⚪ 觀察(訊號不足)", "date": "2026-06-13"}

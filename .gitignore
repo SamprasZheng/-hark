@@ -49,6 +49,9 @@ outputs/*.json
 outputs/*.csv
 !outputs/.gitkeep
 
+# Cross-review reports (scripts/cross-review.ps1) — ephemeral QC artifacts, regenerated each run.
+outputs/cross-review/
+
 # Crypto tracker daily snapshots — immutable raw, regenerated each run (like outputs/).
 # watchlist.yaml, watchlist_history/, and analysis/*.md stay tracked (point-in-time integrity).
 crypto/data/*.json

@@ -14,22 +14,26 @@ schema_version: 1
 
 For each month: known major catalysts + the FOM-flagged watchlist tickers most likely to react.
 
-## June 2026 — SpaceX IPO Roadshow + Q2 Earnings Run-up
+## June 2026 — SpaceX IPO ✓ LISTED + Q2 Earnings Run-up
+
+> **✓ UPDATED 2026-06-13**: SpaceX listed 2026-06-12. IPO price $135, close $160.95 (+19.2%), day-1 mkt cap ~$2.1T. 90-day blackout clock started. See [[../philosophy/entities/spacex]] + [[inbox/2026-06-13-spacex-ipo-market-impact]].
 
 ### Major events
-- **SpaceX IPO roadshow begins June 4** — $1.75T valuation, $75B raise (per [[01_macro_state]] §4b)
-- **FOMC** mid-month (Warsh second meeting; first non-Powell meeting)
+- **SpaceX IPO ✓ DONE 2026-06-12** — listed $135 → closed $160.95; $75B raised; mkt cap ~$2.1T; **blackout active through 2026-10-08**
+- **FOMC 2026-06-17** — Warsh; event-risk window active (no new positions 3 days pre/post)
 - **Mag 7 Q2 earnings preview** — NVDA pre-announce window late June
 
 ### Watchlist (most likely to react)
-- **TSLA** — Musk-SpaceX governance overhang; potential volatility
+- **TSLA** — Musk-ecosystem co-move: +1.8% on IPO day; watch for divergence from SPCX
+- **RKLB, SPCE** — competitor displacement; capital migrated to SPCX; reassess
 - **NVDA, TSM** — pre-Q2 earnings staging; "180-220" range likely tested
 - **LMT, NOC, RTX** — Iran/geopolitical risk persistence
 - **MSFT, GOOGL** — pre-earnings AI-revenue chatter
 
 ### Operational
-- **DO NOT touch SpaceX IPO** for 90 days post-listing (per [[../philosophy/06-exclusions]])
-- **TSLA proxy trade**: short-window observation only, no new position
+- **SPCX: blackout through 2026-10-08** — zero signal slots until then (per [[../philosophy/06-exclusions]])
+- **TSLA proxy trade**: short-window observation only, no new position; FOMC event window adds further restriction
+- **Future watch**: SPCX Nasdaq-100/QQQ inclusion (requires profitable quarter) — passive-fund buying trigger when it happens; add to Oct/Nov 2026 watch list
 
 ---
 

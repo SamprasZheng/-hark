@@ -12,6 +12,23 @@ Where `<action>` ∈ `{ingest, query, lint, recommendation, halt, universe, raw_
 
 ---
 
+## [2026-06-13 11:00 TW] ingest | Grok agent-integration conversation → cross-tool orchestration page (grade D, reconciled)
+
+- **Source**: a single Grok conversation dump (`wiki/grok.md`, scratch paste, 1835 lines with literally duplicated blocks) in which Grok self-describes how to be wired as a headless cross-reviewer/Risk Officer under Claude — grok agent stdio/ACP, custom MCP server, Claude subagents, Zellij/tmux layouts, multi-agent orchestration patterns. **Grade D** (LLM self-description / opinion; per [[../CLAUDE]] §5 informs research only, never opens a position — N/A here, it's ops tooling).
+- **Compiled** → [[25_cross_tool_agent_orchestration]] (synthesis, author_role compiler). Distilled the durable taxonomy (5 integration approaches, 3 orchestration patterns, + a worktree-isolation recipe for safe write-loops §3b with the git-hardlink `chmod`/watcher caveat) and **reconciled each claim against the operator's verified 2026-06-13 tests** rather than presenting Grok's speculation as fact.
+- **Contradiction flagged**: the source's most-repeated recommendation — inline `grok -p "..."` — is the one method the operator found **broken** (truncates to the first word through the PowerShell→wsl→bash quoting layers). Verified method is `--prompt-file`; recorded in the `grok-headless-cross-review` memory + [[windows-env-quirks]]. Page §4 also flags a stale model id (`claude-3-5-sonnet-20241022`) and *nix/macOS env mismatch in the snippets.
+- **Reconciliation**: no new rules — the patterns map onto existing [[../AGENTS]] §3 (multi-agent/worktree) + [[../CLAUDE]] §1 (roles). MCP-server / persistent-subagent / `grok agent stdio` ACP routes recorded as **research backlog**, not commitments.
+- **Raw source archived** as an immutable snapshot at [[inbox/2026-06-13-grok-agent-integration-conversation]] (cited in the page's `source_paths`). The live scratch `wiki/grok.md` was left in place — it is open in the operator's editor and still being appended to (1835→3429 lines during this session), so it is **not** removed; the inbox copy is the frozen point-in-time source. `wiki/index.md` updated (new page #25). No signal slot, no position, no code change.
+
+## [2026-06-13 08:00 TW] ingest | SpaceX IPO listed 2026-06-12 — entity page + market-impact synthesis + calendar update
+
+- **Event**: SPCX (SpaceX) listed on Nasdaq 2026-06-12. IPO price $135, first-day close **$160.95 (+19.2%)**, $75B raised, day-1 market cap ~$2.1T — largest US IPO in history. xAI (Grok) merged in at IPO; no separate xAI listing. Operating loss; Starlink ~61% of ~$18.7B FY2025 revenue.
+- **New entity page**: [[../philosophy/entities/spacex]] — tier `observation-only`; post-IPO 90-day blackout through **2026-10-08**; after blackout classify as Tier 3 pending profitability gating.
+- **Synthesis**: [[inbox/2026-06-13-spacex-ipo-market-impact]] — macro impact (S&P +0.5%, Nasdaq +0.3%, Dow +0.7% on IPO day); TSLA +1.8% Musk-halo; RKLB/SPCE competitor displacement; bubble_guard flag (P/S ~95× on loss-making company); CFRA sell-rated at listing.
+- **Forward calendar updated**: `wiki/08_forward_calendar.md` June 2026 block — SpaceX row marked ✓ DONE; blackout expiry, FOMC event-window, and QQQ inclusion watch-item added.
+- **No signal slot populated** — 90-day blackout rule is active and FOMC event window (06-17) further restricts new position openings.
+- **Contradiction / open item**: SPCX bubble_guard score cannot be computed until it clears the blackout and enters the FOM screener. Valuation at loss-making + P/S ~95× places it in the same risk tier as the names already on `wiki/07_ai_bubble_audit`'s at-risk list; flagged for post-blackout evaluation.
+
 ## [2026-05-31 03:35 TW] build | crypto Part B content — cycle reconciliation (B4) + DOT postmortem (B3)
 
 - **B4 [[../crypto/cycle-and-institutional]]** (live-data reconciliation): the [[../philosophy/concepts/btc-halving-cycle]] page's peak is **stale** — live ATH is **$126,080 @ 2025-10-06** (higher + 3 months later than the cited "2025-07 $115,758 monthly close"); BTC now **−41.3%** from ATH (not −37%), peak multiple ~+97%/~1.9× (not 1.7×). The falsification trigger *technically* fired but on a wording artifact (that high WAS the cycle peak, not a post-bear reclaim) → proposed a trigger rewrite. To-date the shallow −41% (vs prior −77%/−84%) **leans weakly toward the [[../philosophy/concepts/institutional-btc-anchor]] thesis**, but the 2026Q4-2027Q1 bottoming window is still ahead → unresolved. **Contradiction flag added to the older btc-halving-cycle page** per wiki rules.
@@ -639,6 +656,11 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **A**:call_log 增 summary_range(近 N 日累計);brief API 用量行升級「當日 ｜ 7 日累計」(週對週趨勢等記錄滿兩週才有意義,不發明)。
 - **B**:`watchlist/delisted_candidates.yaml` — 17 檔 curated 高價值真亡者(BBBY/SIVB/FRC/SDC/FSR/TUP… 深殺後死亡型,每檔附 why;ABMD 留作可得性探針);`_candidate_queue` 升級 curated 永遠隊首(_load_curated 目標式解析,_yamlite 不支援列表故不用)。**作用日=阻斷解除日**(Polygon Starter 或 Tiingo key):reset-thin 清假條目 → curated 17 檔最先回填,每檔都是 deep-kill 分母的真貨。顧問提的 Stooq 已否證不採;Tiingo 需 key,留待主理人決策時一併考慮(免費 tier 是否服務下市票未驗證,不寫進承諾)。
 - **C**:夜班續跑,23:05 巡檢輪不變。tests +5(curated 3 + summary_range 1 + 已有 reset-thin 2 計入前條),全套 1165 綠。
+## 2026-06-12(w)— [10:39 ET] ingest | computer-hardware 看板截圖 digest:儲存複合體領漲 = mania 晚段確認
+- 主理人傳入券商 watchlist 截圖(32 檔)→ raw/market_data/screenshot-hardware-board-2026-06-12.md(全表轉錄)+ wiki/inbox digest(grade D,盤中 ≈10:39 ET)。
+- 結構:前五占四為 Phase 1 儲存(QMCO +9.2/STX +7.0/WDC +6.3/SNDK +4.9,真量)— 對照 alpha_library Phase 1(T12M 已 9-10×)與 bubble audit mania 分數(STX 77.1/WDC 73.3)= 晚段強勢確認非窪地;ANET +4.9(台鏈 0.9);quantum 分歧(RGTI/QUBT 漲 vs IONQ/QBTS 平);礦機/無人機/周邊收跌 = 魚缸只餵 AI-infra;6 檔成交 <10k 股屬噪音層(06-exclusions 閘下)。
+- 裁決:不變更今日 10-signal(long_new/short_new 維持 null);持倉交集僅 HPQ(+1.3%,無動作);TBD:收盤後 lake 對賬價格、P/QCLS/BRAI/AMCI 身分未驗證不入 watchlist。
+
 ## 2026-06-13(a)— [12:30 TW] ingest | Finviz Elite live 全宇宙拉取 + header 比對 bug 修復(沉默殺死核心軸)
 - 主理人指令「不要忘了 finvizapi 請繼續執行」→ 趁訂閱在線跑 live 全宇宙 rally 掃描(626 候選 → 603 rows)。**point-in-time 原始匯出落盤** `raw/market_data/finviz-export-universe-2026-06-13.csv`(自 06-10 以來首次新鮮 PIT 捕捉;06-10 主理人指令要求「訂閱在線時保存原始資料供日後離線回測」之兌現)。
 - **發現並修復沉默 bug**(`data/finviz_elite.py` `_num`):Custom view(152)匯出用 Title Case 欄名(`52-Week High` / `EPS Growth Next Year` / `50-Day Simple Moving Average`),但 `_num` 用大小寫敏感的精確字串比對 → **`dist_ath_pct`(核心「深跌離高」軸)與 `growth` 自 06-09→06-12 全部 0/603 沉默歸零**;SMA50/200 貢獻亦被丟棄(`overshoot_200d` 連帶失能)。修法:`_num` 改大小寫不敏感(lowercased key map fallback)+ 補差異措辭別名(`52-Week High`/`50-Day`·`200-Day Simple Moving Average`)。覆蓋率 dist_ath 0→**603/603**、growth 0→**601/603**;overshoot_200d 現標 **111 檔**。`tests/test_finviz_elite.py` 25 綠,無回歸。

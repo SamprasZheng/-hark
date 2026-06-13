@@ -42,6 +42,7 @@ updated: 2026-06-12
 - [[22_streamlit_page11_deep_research_ai]] — Streamlit Deep Research 頁
 - [[23_world_model]] — **世界模型**:GSCPI/GPR 事件 → DNA 權重/分桶/sizing(2026-06-12 上線;§4a 歷史鏡頭)
 - [[24_exposure_validation]] — 曝險地圖網證覆核(台鏈/光通訊/中國營收,Round 1+2)
+- [[25_cross_tool_agent_orchestration]] — 跨工具 agent 編排:把 Grok 當 headless cross-reviewer(`--prompt-file` 已驗證;MCP/subagent/ACP 為待辦)
 
 ## 其他
 
