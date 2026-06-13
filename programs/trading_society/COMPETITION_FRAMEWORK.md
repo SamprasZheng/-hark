@@ -52,8 +52,18 @@ allocation:
 - Long-biased (long-only diversified book); shorts remain gated to HARD_DEFENSE in
   the simple path + live portfolio (CLAUDE §10).
 
-Still TODO: real fundamentals (Capex/FCF/ROIC) for selection quality; multi-regime
-out-of-sample validation.
+**Out-of-sample validation (`walk_forward_validation.py`):** train 2018-2022 (20q,
+evolving, 4 bear quarters) → freeze genomes → validate 2023-2026 (14q, frozen). All
+7 traders held their risk-adjusted rank; **LT_BALANCED stayed #1 → #1** (rank
+stability = the real positive). **But honest caveat:** the validation window has **0
+bear quarters** (vs 4 in training), so the uniformly higher out-of-sample Sharpe is a
+**regime-difficulty artifact, not proof of cross-regime robustness**. A genuine bear
+out-of-sample isn't available post-2022 in this data; cross-regime/bear robustness can
+only be judged from the in-sample bears (where LT_TREND was the only positive-in-bear
+trader). Verdict: the mechanism is **rank-stable in a bull**, not yet bear-validated.
+
+Still TODO: real fundamentals (Capex/FCF/ROIC) for selection quality; a bear-
+containing OOS window (e.g. when the next drawdown arrives) for true cross-regime proof.
 
 ## Layer 3 — 10-year potential scorecard
 

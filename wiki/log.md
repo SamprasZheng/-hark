@@ -787,3 +787,9 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **B 跨風格公平 fitness**(`_fair_fitness`):第二張排行榜按 風險調整 + regime-aware composite(40% 季 Sharpe + 30% 正規化累積 + 30% 回撤控制)排序,並報各 trader 牛季/熊季平均報酬 + 命中率。**Fair 冠軍 = LT_BALANCED**(Sharpe 1.50、命中 77%、maxDD -16%、**熊季近持平 -0.1%**)——與 raw 冠軍一致 = 其勝出是風險調整後的真本事、非單股運氣。**發現:LT_TREND 是唯一熊季正報酬(+2.8%);RISK_OFFICER 回撤控制最佳(-12.2%)但牛市墊底**。
 - **2026 H2 預測**改由更穩健的 LT_BALANCED(mom/lb4)產出;regime=MEAN_REVERSION、§10 防禦 floor 35% 仍綁。`COMPETITION_FRAMEWORK.md` L2 段更新(優化完成);輸出加 `fair_leaderboard_risk_adjusted` + `fair_champion`。
 - recommend-only、long-biased(分散書 long-only;放空仍鎖 HARD_DEFENSE 簡單路徑);import-smoke 綠。**待辦**:真實 Capex/FCF/ROIC 提升選股品質、多 regime out-of-sample 驗證。
+
+## 2026-06-13(o)— feat | Layer 2 樣本外驗證(2018-22 訓練→2023-26 驗證)+ 誠實揭露 regime 混淆
+- cross-review 強烈建議先驗證機制(剛強化的分散+公平 fitness)是否過擬合,而非急著補數據。建 `simulation/walk_forward_validation.py`:2018-2022(20 季、演化、4 熊季)訓練→凍結基因→2023-2026(14 季、凍結、不演化)驗證。
+- **結果**:**7/7 交易員 OOS 保住風險調整排名;LT_BALANCED 1→1 維持冠軍**(val_sharpe 1.74)。排名穩定=正面信號(訓練冠軍未崩)。
+- **誠實揭露(關鍵,主動抓出)**:**全員 OOS Sharpe 都高於訓練(retention >1)= 可疑**。根因:**驗證窗 2023-2026 有 0 個熊季(訓練有 4 個)**——所以「人人變強」是**regime 難度差的假象、非跨 regime 穩健性證據**。真正可信的只有「排名穩定」;真正的熊市/跨 regime 穩健只能從**樣本內熊季**判斷(那裡 LT_TREND 是唯一熊季正報酬)。更強的測試需要含熊市的 OOS 窗,2022 後此數據沒有。輸出加 `regime_confound` warning + conclusion 自帶此 caveat。
+- **可信度結論**:機制在**牛市內排名穩定**(過擬合風險低),但**尚未通過熊市驗證**——等下次真實回撤才能證。recommend-only;import-smoke 綠。`COMPETITION_FRAMEWORK.md`/wiki/26 同步。**下一步**:真實 Capex/FCF/ROIC(選股品質)或等熊市 OOS。

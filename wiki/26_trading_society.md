@@ -228,6 +228,19 @@ Caveat unchanged: returns are **relative rankings, not realistic P&L** (no costs
 slippage / sizing). Recommend-only; the canonical 10-signal pipeline + Risk-Officer
 gate remain the authority.
 
+**Rigor (review): diversified books + fair fitness + out-of-sample test.**
+- Diversified per-quarter book (≤10 names, 80/20 large/small, 12%/6% caps) cut the
+  champion's inflated cumulative **+231× → +18.5×** — single-stock domination gone.
+- A cross-style **fair leaderboard** (risk-adjusted: 40% Sharpe + 30% cum + 30%
+  drawdown) crowns **LT_BALANCED** (Sharpe 1.50, 77% hit, −16% maxDD, ~flat in bear
+  quarters) — and it's the raw champion too, so the win is risk-adjusted-real.
+- **Out-of-sample** (`walk_forward_validation.py`): train 2018-2022 (evolving) →
+  freeze → validate 2023-2026. **7/7 held rank; LT_BALANCED stayed #1.** *Honest
+  caveat:* the validation window has **0 bear quarters** (vs 4 in training), so the
+  uniformly higher OOS Sharpe is a **regime-difficulty artifact, not cross-regime
+  robustness** — rank stability is the real signal; bear-validation awaits the next
+  real drawdown.
+
 ## 3-layer competition framework (short-term + 10-year)
 
 Full design: `programs/trading_society/COMPETITION_FRAMEWORK.md`. Three layers, all
