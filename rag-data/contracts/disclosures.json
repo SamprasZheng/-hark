@@ -46,7 +46,16 @@
     "Enforce 03-long-short-taxonomy.md four-quadrant routing on every signal: 2 long_new (genuine bull only), 2 short_new (genuine bear or sentiment-bull via Put-only), 6 position_followup. No padding.",
     "TD-9 (concepts/td-9-sequential.md) volume-validation guard is mandatory: volume contracting + sentiment peak = true exhaustion (short/trim); volume expanding + fundamental validation = continuation (hold/ignore TD-9).",
     "No p-hacking: LLM strategy generation must be constrained to hyperparameter ranges only; never rewrite core quant logic. Validation must use Combinatorial Purged Cross-Validation (CPCV), not single-axis walk-forward. Any backtest-driven rewrite loop is forbidden.",
-    "Crypto high-freq (weekend or mode-switch) MUST use ccxt_client.py (public Websocket/REST, read-only, no keys) for orderbook + OHLCV. yfinance/Polygon/Finnhub are insufficient for crypto L2/orderbook imbalance."
+    "Crypto high-freq (weekend or mode-switch) MUST use ccxt_client.py (public Websocket/REST, read-only, no keys) for orderbook + OHLCV. yfinance/Polygon/Finnhub are insufficient for crypto L2/orderbook imbalance.",
+    "Momentum Decoupling Lock: When institutional_buying_streak >=3 AND volume_breakthrough, any SHORT proposal on that ticker MUST be rejected until TD-9 exhaustion is confirmed (prevents Huang-style institutional momentum chasing from colliding with TD-9 counter-trend shorting).",
+    "Risk Officer RAG scan root MUST be the active git worktree when one is provided (via -Worktree in cross-review.ps1 or equivalent). Never use stale main-repo context while Writer is editing in ../hark-write-xxx.",
+    "Position sizing MUST apply hard clipping: actual_bet = min(theoretical_bet, available_buying_power * tail_winsorization_cap). balance_data is always explicit human-provided input (export from broker/paper statement). No live broker keys or execution inside the system.",
+    "Tax, lending-income, and overseas-gain threshold calculations MUST be separated into low-frequency weekly/monthly auditing tasks (read outputs/realized_pnl.json, write priority adjustments to a gitignored data/financial_priorities.json). Never embed personal financial figures in the daily signal loop.",
+    "Perception hooks (Macro_News_Ingest_Hook, Supply_Chain_Graph_Hook, KOL_Logic_Scraper_Hook) feed Brain Agents (SupplyChain_Hunter, Social_KOL_Validator, Macro_Regime_Shield). Outputs are Pydantic JSON only; Risk_Officer + Personal_Finance_Guardrail have veto. All feed the 2+2+6 daily signal (genuine bull long_new only; validated short_new; no padding).",
+    "SupplyChain_Hunter: genuine_bull only for Dragon subs (low-base + momentum from CAPEX).",
+    "Social_KOL_Validator: chips + TD-9 volume guard + exclusions (SI>20%, mktcap floor) required; reject traps.",
+    "Macro_Regime_Shield: HIGH (Fed hawk + geo) forces DEFENSIVE + short_allowed + vol target down.",
+    "Personal_Finance_Guardrail: human-provided external limits (debt-paydown / tax priority) can force the discretionary sleeve toward zero and trigger loss-harvest or delay; these are private human inputs, never model outputs or repo-embedded figures."
   ],
   "retrieval": {
     "preferred_sources": [

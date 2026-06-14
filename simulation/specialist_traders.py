@@ -27,6 +27,7 @@ Run: python simulation/specialist_traders.py   (live picks on the real universe)
 
 from __future__ import annotations
 
+import statistics
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -121,6 +122,28 @@ def value_quality_score(ticker, pts, ctx) -> Tuple[float, Dict[str, float]]:
             "mom_6m": round(mom_6m, 3), "max_dd_6m": round(mdd, 3)}
 
 
+def low_vol_score(ticker, pts, ctx) -> Tuple[float, Dict[str, float]]:
+    """Low-volatility defender (next phase, grok3.md roster expansion): low realized
+    volatility + shallow drawdown + steady (not falling-knife) drift. The anti-
+    fragile sleeve that earns its keep when the systemic-risk layer flags stress.
+    Works on any priced name with >=126 days -- no ctx gate."""
+    if len(pts) < 126:
+        return 0.0, {}
+    closes = [p.close for p in pts]
+    rets = [closes[i] / closes[i - 1] - 1.0
+            for i in range(1, len(closes)) if closes[i - 1] > 0]
+    if len(rets) < 63:
+        return 0.0, {}
+    vol = statistics.pstdev(rets[-63:]) * (252 ** 0.5)   # annualized realized vol
+    mom_6m = _ret(pts, 126) or 0.0
+    mdd = _max_drawdown(closes[-126:])
+    lowvol = _clip((0.50 - vol) / 0.35) * 45              # 15% vol -> ~1.0, 50% -> 0
+    quality = _clip(1.0 - abs(mdd) / 0.30) * 30          # shallow drawdown = durable
+    drift = (_clip((mom_6m + 0.05) / 0.30) * 25) if mom_6m > -0.05 else 0.0
+    return round(lowvol + quality + drift, 1), {"ann_vol": round(vol, 3),
+            "mom_6m": round(mom_6m, 3), "max_dd_6m": round(mdd, 3)}
+
+
 def _sleeve_momentum_score(ticker, pts, sleeve) -> Tuple[float, Dict[str, float]]:
     if ticker not in sleeve or len(pts) < 63:
         return 0.0, {}
@@ -152,6 +175,7 @@ def _size_smallcap(s): return 0.05 if s >= 85 else 0.03 if s >= 70 else 0.02 if 
 def _size_infra(s):    return 0.06 if s >= 85 else 0.04 if s >= 70 else 0.025 if s >= 55 else 0.0
 def _size_value(s):    return 0.06 if s >= 80 else 0.04 if s >= 65 else 0.025 if s >= 50 else 0.0
 def _size_sleeve(s):   return 0.05 if s >= 80 else 0.035 if s >= 65 else 0.02 if s >= 55 else 0.0
+def _size_lowvol(s):   return 0.06 if s >= 80 else 0.04 if s >= 65 else 0.025 if s >= 50 else 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -196,10 +220,14 @@ PELOSI_TRACKER = Specialist("PELOSI_TRACKER", "congress_13f",
 MUSK_ECOSYSTEM = Specialist("MUSK_ECOSYSTEM", "musk_ecosystem",
     "PARADIGM_BREAKTHROUGH", 0.07, musk_eco_score, _size_sleeve,
     grade_note="Grade-D curated ecosystem list.")
+LOW_VOL_DEFENDER = Specialist("LOW_VOL_DEFENDER", "low_volatility",
+    "HARD_DEFENSE", 0.08, low_vol_score, _size_lowvol,
+    grade_note="Next-phase (grok3) defensive sleeve; low realized vol + shallow DD.")
 
 SPECIALISTS: List[Specialist] = [
     SMALL_CAP_CATALYST_HUNTER, POWER_AI_INFRA_TRADER, VALUE_QUALITY_COMPOUNDER,
     DEFENSE_GEO_ANALYST, BIOTECH_HEALTH_SPECIALIST, PELOSI_TRACKER, MUSK_ECOSYSTEM,
+    LOW_VOL_DEFENDER,
 ]
 
 

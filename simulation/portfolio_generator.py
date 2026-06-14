@@ -204,6 +204,7 @@ def macro_risk_score(as_of: Optional[str] = None,
     return {"score_0_100": r["score_0_100"], "posture": r["posture"],
             "buffett_indicator": bi, "bubble_flag": bool(bi > 200),
             "components": r["components"], "sources": r["sources"],
+            "inputs": r["inputs"],  # raw series -> reused by the systemic-risk layer
             "n_live_series": r["n_live_series"],
             "is_point_in_time": r["is_point_in_time"],
             "note": "Real FRED composite (credit/curve/vix/M2/liquidity); "
@@ -341,6 +342,28 @@ def generate_portfolio(horizon: str, lookback_days: int,
     except Exception:
         regime = None
 
+    # grok3.md systemic-risk / black-swan layer (veto-class overlay). Classifies
+    # the active crisis typology (LIQUIDITY_CRISIS / VALUATION_BUBBLE /
+    # GEOPOLITICAL_SHOCK / INFLATION_SHOCK / SYSTEMIC_RISK) and raises the defensive
+    # floor by typology NOW; its per-type trader tilt is applied AFTER specialists
+    # join (so the whole roster is re-weighted once). Recommend-only; reuses the
+    # already-fetched `macro` to avoid a duplicate FRED pull.
+    systemic = None
+    _sys_tilt: Dict[str, float] = {}
+    systemic_tilt_applied = None
+    try:
+        from simulation.systemic_risk import from_live as _sys_from_live
+        _sv = _sys_from_live(macro=macro)
+        systemic = _sv.to_dict()
+        step = _sv.defensive_floor_step
+        if step > dleg["defensive_ratio"]:
+            dleg = {**dleg, "defensive_ratio": round(step, 3),
+                    "core_growth_ratio": round(1 - step, 3),
+                    "systemic_floor_applied": _sv.risk_type}
+        _sys_tilt = _sv.trader_tilt or {}
+    except Exception:
+        systemic = None
+
     # Phase-1 specialists (grok2.md roster): Small Cap Catalyst Hunter +
     # Power & AI Infrastructure Trader join the vote with base weight x regime
     # tilt; everything renormalizes. Their picks come from the full series.
@@ -369,6 +392,15 @@ def generate_portfolio(horizon: str, lookback_days: int,
             specialist_info = {"weights": spec_w, "top_picks": chosen}
     except Exception:
         specialist_info = None
+
+    # grok3.md adjust_trader_weights_by_risk_type: apply the systemic-risk tilt over
+    # the FULL combined roster (core + specialists), once, after specialists joined.
+    if _sys_tilt:
+        tw = {k: wb["weights"][k] * _sys_tilt.get(k, 1.0) for k in wb["weights"]}
+        tot = sum(tw.values()) or 1.0
+        wb = {"weights": {k: round(v / tot, 4) for k, v in tw.items()},
+              "champions": wb["champions"]}
+        systemic_tilt_applied = systemic.get("risk_type") if systemic else None
 
     # Real Finviz industry map for every voting trader's names -> finer
     # concentration cap; fall back to the hardcoded sector map where Finviz has none.
@@ -408,6 +440,8 @@ def generate_portfolio(horizon: str, lookback_days: int,
         "macro_risk_environment": macro,
         "capex_momentum": capex,
         "regime_guardrail": regime,
+        "systemic_risk": systemic,
+        "systemic_trader_tilt_applied": systemic_tilt_applied,
         "defensive_decision": dleg,
         "concentration_caps": {"max_name": MAX_NAME_WEIGHT,
                                "max_sector": MAX_SECTOR_WEIGHT,
@@ -455,7 +489,9 @@ def main() -> int:
             "include a 10bps round-trip cost; single-name <=10% / single-sector "
             "<=35% caps; grok2.md regime guardrail applied (HARD_DEFENSE floor / "
             "Momentum-Decoupling-Lock). Capex is real (polygon) when cached, else a "
-            "flagged price proxy. Promotion needs human + Risk-Officer gate + review."),
+            "flagged price proxy. grok3.md systemic-risk / black-swan layer applied "
+            "(typology-specific defensive floor + trader tilt). Promotion needs "
+            "human + Risk-Officer gate + review."),
     }
 
     out = REPO / "outputs" / f"trading-society-portfolio-{result['as_of_timestamp'][:10]}.json"
@@ -486,6 +522,12 @@ def _print_summary(r: Dict[str, Any]) -> None:
             print(f"  Regime guardrail: {rg['regime']} "
                   f"(smallcap_cap={rg['smallcap_allocation_cap']}, "
                   f"floor={rg['defensive_floor']}, winsor={rg['winsorization']}){lock}")
+        sr = p.get("systemic_risk")
+        if sr:
+            applied = p.get("systemic_trader_tilt_applied")
+            print(f"  Systemic-risk layer: {sr['risk_type']} ({sr['risk_level']}, "
+                  f"score {sr['score_0_100']}) floor_step={sr['defensive_floor_step']}"
+                  + (f", tilt applied" if applied else ""))
         dd = p["defensive_decision"]
         cc = p["concentration_caps"]
         print(f"  Posture: {dd['posture']} -> defensive {dd['defensive_ratio']:.0%} / "

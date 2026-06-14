@@ -87,3 +87,62 @@ Re-read `CLAUDE.md` → **ask the human.** Pausing beats committing a corrupted 
 - **Canonical source first.** For any trading/stock/portfolio question, read existing repo state (`wiki/`, `outputs/`, `watchlist/`, `portfolio/`) BEFORE any web/API pull. Grade-D web/KOL never overrides repo A/B/C analysis.
 - **Scoped commits.** Stage only the files a change intends (`git add <paths>`); never `git add .` / `-A`. Commit only when asked; never `git push` private data; don't nag about `gh auth` (the human handles it).
 - **PowerShell scripts ASCII-only** (this is a cp950 box); put non-ASCII content in a separate UTF-8 data file. Target PS 5.1; force `[Console]::OutputEncoding = UTF8` + `Get-Content -Encoding UTF8`.
+
+
+# AGENTS.md — Multi-Agent Tournament & Skinner Box Contract
+
+> System Governance: Multi-Agent Evolutionary Tournament (Layer 2).
+> Target: Force agents to evolve higher risk-adjusted compounding returns through relentless Darwinian elimination.
+
+---
+
+## 0. Evolutionary Tournament Loop (Layer 2)
+The framework operates as a continuous Skinner Box. Individual trader genomes are judged by their quarterly performance, reset to a base capital configuration each epoch to eliminate survivorship luck.
+
+---
+
+## 1. Agent Lineup & Personality Parameters
+
+### A. Momentum Breakout Specialist (`LT_BREAKOUT`)
+- **Core Intent**: Exploit price waves, platform extensions, and institutional trend-following loops (H黃靖哲飆股 DNA).
+- **Hard weights**: Price-based = 0.55, Fundamental = 0.20, Sharpe = 0.25.
+- **Guardrail Rule**: When market classification registers `AI_BULL_MOMENTUM`, override all TD-9 overbought signals. Ride the gamma squeeze to the absolute apex.
+
+### B. Small-Cap Catalyst Hunter (`SMALL_CAP_HUNTER`)
+- **Core Intent**: Scan low-base market capitalization names with sudden earnings/orders acceleration (Computex 2026 setups).
+- **Hard weights**: Price-based = 0.40, Fundamental = 0.35, Sharpe = 0.25.
+- **Pre-Filter Hook**: Block micro-cap assets with negative ROIC or declining gross margin trends to prevent luck-driven distortions.
+
+### C. Risk & Frictional Analyst (`RISK_OFFICER`)
+- **Core Intent**: Measure portfolio health and mathematical expectations.
+- **Hard weights**: Price-based = 0.20, Fundamental = 0.35, Sharpe = 0.45.
+- **Mandate**: Calculate execution drag. Apply sharp penalty multipliers $e^{-5 \cdot (MDD - 0.20)}$ if max drawdown breaches 20% barrier.
+
+---
+
+## 2. Dynamic Fitness Engine Formula
+Genomes are evaluated at the end of each quarterly epoch via the unified hybrid score:
+
+$$\text{Final Fitness} = (\text{Price Fitness} \times W_p) + (\text{Fundamental Score} \times W_f) + (\text{Sharpe Score} \times W_s)$$
+
+- **Hard Clipping Trigger**: If an agent's projected monthly returns fall below the annualized opportunity cost of active capital leverage, the genome fitness is immediately clipped by 90%, forcing rapid generational replacement.
+
+---
+
+## 3. Autonomous Handoff Protocol (`grok agent stdio`)
+When agents trigger a cross-review or state mutation debate, they must communicate via structured standard schemas:
+
+```json
+{
+  "call_skill": "simulation.society_orchestrator.execute_society_epoch",
+  "meta": {
+    "author_role": "Orchestrator",
+    "regime_context": "MEAN_REVERSION_HIGH_VAL"
+  },
+  "target": "outputs/recommendations.json",
+  "payload": {
+    "year": 2026,
+    "quarter": "Q4",
+    "allocation_leverage_allowed": true
+  }
+}

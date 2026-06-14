@@ -88,3 +88,12 @@
 {"ts": "2026-06-13T00:01:50.449724+00:00", "source": "polygon", "endpoint": "aggs-delisted", "ok": true, "latency_ms": 750}
 {"ts": "2026-06-13T00:02:04.667448+00:00", "source": "polygon", "endpoint": "aggs-delisted", "ok": true, "latency_ms": 1219}
 {"ts": "2026-06-13T00:02:18.494117+00:00", "source": "polygon", "endpoint": "aggs-delisted", "ok": true, "latency_ms": 828}
+{"ts": "2026-06-13T18:59:38.298894+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 734}
+{"ts": "2026-06-13T19:12:02.706181+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 905}
+{"ts": "2026-06-13T23:58:24.319909+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 828}
+{"ts": "2026-06-13T23:58:25.028841+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 718}
+{"ts": "2026-06-13T23:58:25.739444+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 703}
+{"ts": "2026-06-13T23:58:26.446484+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 703}
+{"ts": "2026-06-13T23:58:27.167572+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 718}
+{"ts": "2026-06-13T23:58:27.873899+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 703}
+{"ts": "2026-06-13T23:58:28.582330+00:00", "source": "polygon", "endpoint": "financials", "ok": true, "latency_ms": 703}
