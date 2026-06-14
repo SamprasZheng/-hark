@@ -106,15 +106,40 @@ def _moat_map() -> Dict[str, float]:
             return {}
 
 
-def score_name(ticker: str, fund: Dict[str, Any], moat_map: Dict[str, float]
+def _real_fundamental_scores(ticker: str, fin: Optional[Dict[str, Any]]
+                             ) -> Tuple[float, float]:
+    """Return (capital_allocation, fcf_quality) 0-100 from REAL Polygon financials
+    when available, else neutral 50. ROIC + ROIC trend -> capital allocation;
+    OCF margin + OCF growth -> FCF quality."""
+    if not fin or fin.get("source") != "polygon_real":
+        return 50.0, 50.0
+    roic, roic_tr = fin.get("roic"), fin.get("roic_trend")
+    ocf_m, ocf_g = fin.get("ocf_margin"), fin.get("ocf_yoy")
+    # capital allocation: ROIC level (10% ROIC -> ~70) nudged by its trend
+    cap = 50.0
+    if roic is not None:
+        cap = max(0.0, min(100.0, 40 + roic * 200))       # ROIC 0.10 -> 60, 0.25 -> 90
+        if roic_tr is not None:
+            cap = max(0.0, min(100.0, cap + roic_tr * 150))
+    fcf = 50.0
+    if ocf_m is not None:
+        fcf = max(0.0, min(100.0, 35 + ocf_m * 120))      # OCF margin 0.30 -> 71
+        if ocf_g is not None:
+            fcf = max(0.0, min(100.0, fcf + ocf_g * 40))
+    return round(cap, 1), round(fcf, 1)
+
+
+def score_name(ticker: str, fund: Dict[str, Any], moat_map: Dict[str, float],
+               fin: Optional[Dict[str, Any]] = None
                ) -> Tuple[float, Dict[str, float], str, str]:
     industry = (fund or {}).get("industry") or ""
     pe = (fund or {}).get("pe")
+    cap_alloc, fcf_q = _real_fundamental_scores(ticker, fin)
     comp = {
         "industry_trend": INDUSTRY_TREND.get(industry, DEFAULT_TREND),
         "moat": moat_map.get(ticker, 50.0),               # REAL where known
-        "capital_allocation": 50.0,                       # PROXY (neutral) -- TODO real
-        "fcf_quality": 50.0,                              # PROXY (neutral) -- TODO real
+        "capital_allocation": cap_alloc,                  # REAL (ROIC) if data, else 50
+        "fcf_quality": fcf_q,                             # REAL (OCF margin) if data, else 50
         "valuation": _valuation_score(pe),                # REAL (Finviz P/E)
         "management": 50.0,                               # PROXY (neutral) -- TODO
         "geopolitical": _geo_score(ticker),               # curated
@@ -141,13 +166,20 @@ def run(top_n: int = 30) -> Dict[str, Any]:
     uni = build_universe(max_names=200)
     funds = get_fundamentals(uni["tickers"])
     moat_map = _moat_map()
+    fin_store = None
+    try:
+        from simulation.data_pipeline.financials_store import store
+        fin_store = store() if store().available else None
+    except Exception:
+        fin_store = None
 
     rows = []
     for tkr in uni["tickers"]:
         f = funds.get(tkr)
         if not f:
             continue
-        score, comp, driver, risk = score_name(tkr, f, moat_map)
+        fin = fin_store.metrics(tkr) if fin_store else None
+        score, comp, driver, risk = score_name(tkr, f, moat_map, fin)
         rows.append({"ticker": tkr, "potential_score": score,
                      "industry": f.get("industry"), "pe": f.get("pe"),
                      "main_driver": driver, "risk_flag": risk,
@@ -167,11 +199,16 @@ def run(top_n: int = 30) -> Dict[str, Any]:
         "llm_involvement": "none", "layer": 3, "horizon": "10-year",
         "weights": WEIGHTS,
         "data_honesty": {
-            "real": ["moat (IP_DEFENSIBILITY)", "valuation (Finviz P/E)"],
+            "real": ["moat (IP_DEFENSIBILITY)", "valuation (Finviz P/E)",
+                     "capital_allocation (REAL ROIC=NI/(equity+debt) where Polygon data)",
+                     "fcf_quality (REAL OCF margin+growth where Polygon data)"],
             "curated": ["industry_trend", "geopolitical"],
-            "proxy_neutral_TODO": ["capital_allocation", "fcf_quality", "management"],
-            "note": "capital_allocation / fcf_quality / management are neutral (50) "
-                    "until real financials (polygon FCF/ROIC) + governance data wired."},
+            "proxy_neutral_TODO": ["management (no governance data source)"],
+            "financials_cache": (fin_store.cache_path() if fin_store else None),
+            "note": "capital_allocation + fcf_quality now use REAL Polygon financials "
+                    "(ROIC, OCF) where available, else neutral 50. management stays a "
+                    "neutral proxy (no governance data). Pure capex unavailable on "
+                    "Polygon -> investing-CF intensity used elsewhere."},
         "top_potential": top,
         "n_scored": len(rows),
         "disclaimer": ("Layer-3 10-year potential ranking. Recommend-only RESEARCH; "

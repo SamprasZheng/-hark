@@ -166,6 +166,20 @@ def _proxy_from_series(series: Dict[str, List[Any]]) -> Dict[str, Any]:
 def get_capex_momentum(series: Optional[Dict[str, List[Any]]] = None,
                        as_of: Optional[str] = None,
                        max_cache_age_days: int = 45) -> Dict[str, Any]:
+    # Prefer REAL Polygon financials (investing-CF intensity growth/acceleration)
+    # from the local parquet store -- no network at read time.
+    try:
+        from simulation.data_pipeline.financials_store import store
+        st = store()
+        if st.available:
+            scored = st.sleeve_capex_score(SLEEVE, as_of)
+            if scored:
+                return {**scored, "source": "polygon_real_financials",
+                        "cache": st.cache_path(),
+                        "note": "REAL investing-CF intensity (Polygon has no pure "
+                                "capex line; |investing_cf|/revenue 1st+2nd derivative)."}
+    except Exception:
+        pass
     cache = _latest_cache()
     if cache and cache.get("derivatives"):
         # freshness check
