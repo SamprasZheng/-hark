@@ -793,3 +793,11 @@ Principal: ABC都做 + 掃SP500更多個股 + 建立估值系統(動態目標價
 - **結果**:**7/7 交易員 OOS 保住風險調整排名;LT_BALANCED 1→1 維持冠軍**(val_sharpe 1.74)。排名穩定=正面信號(訓練冠軍未崩)。
 - **誠實揭露(關鍵,主動抓出)**:**全員 OOS Sharpe 都高於訓練(retention >1)= 可疑**。根因:**驗證窗 2023-2026 有 0 個熊季(訓練有 4 個)**——所以「人人變強」是**regime 難度差的假象、非跨 regime 穩健性證據**。真正可信的只有「排名穩定」;真正的熊市/跨 regime 穩健只能從**樣本內熊季**判斷(那裡 LT_TREND 是唯一熊季正報酬)。更強的測試需要含熊市的 OOS 窗,2022 後此數據沒有。輸出加 `regime_confound` warning + conclusion 自帶此 caveat。
 - **可信度結論**:機制在**牛市內排名穩定**(過擬合風險低),但**尚未通過熊市驗證**——等下次真實回撤才能證。recommend-only;import-smoke 綠。`COMPETITION_FRAMEWORK.md`/wiki/26 同步。**下一步**:真實 Capex/FCF/ROIC(選股品質)或等熊市 OOS。
+
+## 2026-06-13(p)— feat | 主理人付費 Polygon → 真實財報 pipeline(capex/FCF/ROIC);關鍵發現:Polygon 無 capex 科目
+- 主理人付費 Polygon。**關鍵實測發現:付費版標準化財報仍無 capex 行**(NVDA/KLAC/AAPL/MSFT/AMD/LMT 全 null;只有營運/投資/融資現金流彙總)。**不照抄主理人方案的 `getattr(f,"capex")`(每檔都 None)**,改建在真實存在欄位上。
+- **`data_pipeline/pull_financials.py`**:批次拉 Polygon 真實欄位(營收/毛利/淨利/OCF/投資現金流/權益/資產/長債)→ `data/financials/*.parquet`(PIT via filing_date;gitignore;離線重讀降 API 依賴)。**全宇宙拉 157 檔、2988 季、156 檔可算 ROIC**。
+- **`data_pipeline/financials_store.py`**:parquet → 真實指標。**ROIC = TTM 淨利/(權益+長債)**、**OCF margin + 成長**(FCF 品質)、營收成長、淨利率、**capex proxy = |投資現金流|/營收 一二階**(Polygon 無純 capex,標注 investing_cf 近似)。實測:NVDA ROIC 66%/OCF margin 62%/營收 +172%、AAPL ROIC 63%、KLAC 37%。
+- **接線**:`capex_provider` 改**優先真實財報**(source=polygon_real_financials;sleeve 分數 100=AI 設備鏈投資強度爆發);**Layer 3 資本配置→真實 ROIC、FCF 品質→真實 OCF**(原中性 proxy 50)。**7 維現 5 維真實(moat/估值/ROIC/OCF/+ curated industry/geo),只剩經營層 proxy**。
+- **真實數據重排 Top 30**:高 ROIC/高利潤複利股上升 —— **MSFT 86(原 71.8)、NVDA 84.5(原 70.5)、INTU 81、ADBE 80、KLAC 79.5、AVGO 77、CRM 76、MRVL 76、GOOGL 75、QCOM 74**。risk 標籤改數據驅動(low ROIC=GOOGL/META、rich valuation=NVDA/AVGO、weak cash gen=QCOM、governance unrated=MSFT/INTU 唯一弱維)。
+- 誠實 flag:**純 capex Polygon 拿不到**→ 投資現金流強度近似(資本密集股準、現金牛 NVDA/AAPL 高估,取中位數降噪);經營層無治理數據源仍 proxy;ADR(TSM)無標準化財報。recommend-only;import-smoke 綠。

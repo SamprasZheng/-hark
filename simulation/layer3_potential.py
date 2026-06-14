@@ -152,11 +152,17 @@ def score_name(ticker: str, fund: Dict[str, Any], moat_map: Dict[str, float],
                                                         "moat") else 999)
     driver_txt = {"industry_trend": f"10yr industry trend ({industry})",
                   "moat": "moat", "valuation": "valuation",
-                  "geopolitical": "geo-immunity"}.get(driver, driver)
-    risk_txt = ("rich valuation" if comp["valuation"] < 40 else
-                "geo / China exposure" if comp["geopolitical"] < 40 else
-                "weak moat" if comp["moat"] < 45 else
-                "capital-alloc / FCF need real data")
+                  "geopolitical": "geo-immunity",
+                  "capital_allocation": "capital allocation (ROIC)",
+                  "fcf_quality": "cash generation"}.get(driver, driver)
+    weakest = min(comp, key=comp.get)
+    real_fin = bool(fin and fin.get("source") == "polygon_real")
+    risk_map = {"valuation": "rich valuation", "geopolitical": "geo / China exposure",
+                "moat": "weak moat", "industry_trend": "slower-growth industry",
+                "capital_allocation": ("low ROIC" if real_fin else "ROIC unrated (no Polygon data)"),
+                "fcf_quality": ("weak cash generation" if real_fin else "FCF unrated (no Polygon data)"),
+                "management": "governance unrated (proxy)"}
+    risk_txt = risk_map.get(weakest, weakest)
     return round(score, 1), comp, driver_txt, risk_txt
 
 
@@ -226,8 +232,9 @@ def main() -> int:
     print("=" * 74)
     print("TRADING SOCIETY -- Layer 3: 10-year potential Top 30 (recommend-only)")
     print("=" * 74)
-    print(f"Scored {r['n_scored']} names | real dims: moat + valuation; curated: "
-          f"industry+geo; PROXY: capital-alloc/FCF/mgmt (flagged)")
+    fc = r["data_honesty"].get("financials_cache")
+    print(f"Scored {r['n_scored']} names | REAL: moat + valuation + ROIC(capital-alloc) "
+          f"+ OCF(FCF) [{fc or 'no fin cache'}]; curated: industry+geo; proxy: mgmt only")
     print(f"\n  {'#':<3}{'ticker':<7}{'score':>6}  {'bucket':<22}{'driver / risk'}")
     for i, x in enumerate(r["top_potential"], 1):
         print(f"  {i:<3}{x['ticker']:<7}{x['potential_score']:>6}  "

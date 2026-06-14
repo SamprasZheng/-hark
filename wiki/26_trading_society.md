@@ -258,13 +258,14 @@ recommend-only:
   2018-2026 long-horizon competition (above). Optimization TODO: per-quarter reset,
   risk-adjusted fitness, cross-style fairness.
 - **Layer 3 — 10-year potential** (`simulation/layer3_potential.py`): a 0-100,
-  7-dimension scorecard (industry trend 25% · **moat 20% real via
-  `fom.IP_DEFENSIBILITY`** · capital-allocation 15% *proxy* · FCF 15% *proxy* ·
-  **valuation 10% real Finviz P/E** · management 10% *proxy* · geopolitical 5%
-  curated). Top-30 today: **MSFT 71.8, NOC, NVDA, TSM, ASML, LMT, QCOM, GOOGL,
-  RTX, CRM...** (mega-cap tech + defense + semis), each tagged `core_long_term`
-  vs `high_growth_high_risk`. Honest: 3 of 7 dimensions are neutral proxies pending
-  real financials.
+  7-dimension scorecard. After the Polygon paid upgrade, **5 of 7 dims are now real**:
+  industry trend 25% *curated* · **moat 20% real** (`fom.IP_DEFENSIBILITY`) ·
+  **capital-allocation 15% real ROIC** (TTM NI/(equity+debt)) · **FCF 15% real OCF
+  margin+growth** · **valuation 10% real Finviz P/E** · management 10% *proxy (no
+  governance source)* · geopolitical 5% *curated*. With real ROIC/FCF the high-margin
+  compounders rose: Top-10 = **MSFT 86, NVDA 84.5, INTU 81, ADBE 80, KLAC 79.5, AVGO
+  77, CRM 76, MRVL 76, GOOGL 75, QCOM 74**. Only **pure capex** is unavailable on
+  Polygon (no line item) → investing-CF intensity used as the labelled proxy.
 
 ## 2018–2026 evolving competition + 2026 H2 forecast
 
